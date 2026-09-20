@@ -179,3 +179,31 @@ async def update_user_token(email: str, token: str):
         "UPDATE users SET token = :token WHERE email = :email",
         {"email": email, "token": token},
     )
+
+
+async def create_user(
+    email: str,
+    hashed_password: str,
+    name: str | None = None,
+    shop_name: str | None = None,
+    role: str = "free",
+):
+    """เพิ่มผู้ใช้ใหม่ 1 แถว แล้วคืนแถวนั้นกลับไป
+
+    รับ hash มาแล้วเท่านั้น (ดู services/security.hash_password)
+    ฟังก์ชันนี้ไม่เคยเห็นรหัสผ่านจริงของผู้ใช้
+    """
+    return await database.fetch_one(
+        """
+        INSERT INTO users (email, password, name, shop_name, role)
+        VALUES (:email, :password, :name, :shop_name, :role)
+        RETURNING email, name, shop_name, role, create_at
+        """,
+        {
+            "email": email,
+            "password": hashed_password,
+            "name": name,
+            "shop_name": shop_name,
+            "role": role,
+        },
+    )
