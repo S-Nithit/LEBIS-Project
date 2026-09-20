@@ -1,0 +1,26 @@
+# ปักเวอร์ชันทุกตัว เพื่อให้ทุกเครื่องในทีมได้ของชุดเดียวกันเป๊ะ
+# เวลาจะเพิ่ม package ใหม่ ให้ใส่เวอร์ชันด้วยเสมอ ห้ามเขียนชื่อเปล่าๆ
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# ฐานข้อมูล
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+
+# อ่านค่าจาก .env
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# auth (ใช้จริงใน Phase 2)
+# หมายเหตุ: ใช้ PyJWT กับ bcrypt เรียกตรงๆ ห้ามใช้ passlib
+# เพราะ passlib รุ่นล่าสุดอ่านเวอร์ชันของ bcrypt 4.x ไม่ได้ แล้วพังตอน import
+PyJWT==2.10.1
+bcrypt==4.2.1
+python-multipart==0.0.20
+
+# เรียก LINE Messaging API (Phase 3)
+httpx==0.28.1
+
+# เทส
+pytest==8.3.4

@@ -1,0 +1,34 @@
+# ===== ความลับ ห้ามขึ้น git เด็ดขาด =====
+.env
+.env.local
+.env.*.local
+*.pem
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# ===== Node / Next.js =====
+node_modules/
+.next/
+out/
+.turbo/
+npm-debug.log*
+yarn-error.log*
+
+# ===== macOS / editor =====
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+
+# ===== อื่นๆ =====
+*.log
