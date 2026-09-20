@@ -43,6 +43,10 @@ services:
       POSTGRES_PASSWORD: temp
       POSTGRES_DB: advcompro
       POSTGRES_HOST: db
+      # กุญแจที่ใช้เซ็น JWT — อ่านจากไฟล์ .env ที่อยู่ข้างๆ docker-compose.yaml
+      # ไฟล์ .env ไม่ขึ้น git (ดู .gitignore) ห้ามเขียนค่าจริงลงในไฟล์นี้
+      # ยังไม่มี .env ให้ทำตามหัวข้อ "วิธีติดตั้งและรัน" ใน README
+      JWT_SECRET: ${JWT_SECRET}
     command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       db:

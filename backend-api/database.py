@@ -145,22 +145,67 @@ async def setup_db():
     for statement in ALTER_USERS:
         await database.execute(statement)
 
-    # บัญชีทดลองที่ติดมากับ boilerplate — demo@example.com / password
-    demo_password = bcrypt.hashpw(b"password", bcrypt.gensalt()).decode("utf-8")
-    await database.execute(
-        """
-        INSERT INTO users (email, password, name, shop_name, role)
-        VALUES (:email, :password, :name, :shop_name, :role)
-        ON CONFLICT (email) DO NOTHING
-        """,
-        {
-            "email": "demo@example.com",
-            "password": demo_password,
-            "name": "Demo User",
-            "shop_name": "Demo Rental Shop",
-            "role": "pro",
-        },
-    )
+    await seed_demo_accounts()
+
+
+# 🔴 บัญชี seed สำหรับ "ทดสอบบนเครื่องตัวเอง" เท่านั้น ไม่ใช่บัญชีผู้ใช้จริง
+#
+#    ระบบสร้างให้เองตอนสตาร์ท เพื่อให้ทุกคนในทีมมีของเล่นเหมือนกันตั้งแต่วินาทีแรก
+#    ที่ docker compose ขึ้น โดยไม่ต้องไปนั่ง INSERT เองใน psql
+#    (Kul ใช้เทียบ free/pro ตอนทดสอบระบบล็อกฟีเจอร์ · Sea ใช้เปิดหน้า admin)
+#
+#    รหัสผ่านที่เขียนไว้ตรงนี้ไม่ใช่ความลับ ทุกคนที่ clone repo ก็เห็น —
+#    และนั่นคือเหตุผลที่ตอน deploy ขึ้นใช้งานจริง ต้องลบสองบัญชีนี้ทิ้ง
+#    หรือเปลี่ยนรหัสก่อนเสมอ ไม่งั้นเท่ากับเปิดประตูทิ้งไว้ให้ใครก็ได้
+#
+#    อีเมลต้องเป็นโดเมนปกติที่ EmailStr ยอมรับ ห้ามใช้ .local .test .localhost
+#    ไม่งั้นบัญชีจะมีแถวอยู่ใน DB แต่ login ไม่ได้ (ได้ 422 ตั้งแต่ชั้นตรวจข้อมูล)
+DEMO_ACCOUNTS = [
+    # บัญชีที่ติดมากับ boilerplate — คงแพ็กเกจ pro ไว้เหมือนเดิม
+    {
+        "email": "demo@example.com",
+        "password": "password",
+        "name": "Demo User",
+        "shop_name": "Demo Rental Shop",
+        "role": "pro",
+    },
+    # บัญชีผู้ดูแลระบบ — Sea ใช้เปิดหน้า admin, Kul ใช้เทียบกับบัญชี free
+    # ตอนทดสอบว่าระบบล็อกฟีเจอร์ตามแพ็กเกจจริงมั้ย
+    {
+        "email": "admin@lebis-demo.com",
+        "password": "admin1234",
+        "name": "LEBIS Admin",
+        "shop_name": None,
+        "role": "admin",
+    },
+]
+
+
+async def seed_demo_accounts():
+    """ใส่บัญชีทดสอบถ้ายังไม่มี — มีอยู่แล้วก็ข้ามไป ไม่ไปทับของเดิม
+
+    ON CONFLICT DO NOTHING คือจุดสำคัญ: ถ้าใครเปลี่ยนรหัสหรือเปลี่ยน role
+    ของบัญชีพวกนี้ไว้ การรีสตาร์ท backend จะไม่ไปรีเซ็ตทับของเขา
+    """
+    for account in DEMO_ACCOUNTS:
+        hashed = bcrypt.hashpw(
+            account["password"].encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
+
+        await database.execute(
+            """
+            INSERT INTO users (email, password, name, shop_name, role)
+            VALUES (:email, :password, :name, :shop_name, :role)
+            ON CONFLICT (email) DO NOTHING
+            """,
+            {
+                "email": account["email"],
+                "password": hashed,
+                "name": account["name"],
+                "shop_name": account["shop_name"],
+                "role": account["role"],
+            },
+        )
 
 
 async def get_user_by_email(email: str):
@@ -178,4 +223,32 @@ async def update_user_token(email: str, token: str):
     await database.execute(
         "UPDATE users SET token = :token WHERE email = :email",
         {"email": email, "token": token},
+    )
+
+
+async def create_user(
+    email: str,
+    hashed_password: str,
+    name: str | None = None,
+    shop_name: str | None = None,
+    role: str = "free",
+):
+    """เพิ่มผู้ใช้ใหม่ 1 แถว แล้วคืนแถวนั้นกลับไป
+
+    รับ hash มาแล้วเท่านั้น (ดู services/security.hash_password)
+    ฟังก์ชันนี้ไม่เคยเห็นรหัสผ่านจริงของผู้ใช้
+    """
+    return await database.fetch_one(
+        """
+        INSERT INTO users (email, password, name, shop_name, role)
+        VALUES (:email, :password, :name, :shop_name, :role)
+        RETURNING email, name, shop_name, role, create_at
+        """,
+        {
+            "email": email,
+            "password": hashed_password,
+            "name": name,
+            "shop_name": shop_name,
+            "role": role,
+        },
     )

@@ -1,7 +1,18 @@
+// หน้าเข้าสู่ระบบ
+//
+// ทางเดินของข้อมูล
+//   1. ผู้ใช้พิมพ์อีเมล/รหัส -> state ของหน้านี้
+//   2. กดปุ่ม -> handleSubmit() -> apiFetch("/api/auth/login")
+//   3. FastAPI: routes/auth.py -> login() -> verify_password() เทียบ hash ใน DB
+//   4. ถูก -> backend คืน JWT -> saveToken() เก็บลง localStorage -> ไปหน้าแรก
+//      ผิด -> backend ตอบ 401 -> apiFetch throw -> ขึ้น toast แดง
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { toast } from "sonner";
 
+import { apiFetch, saveToken } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,36 +25,31 @@ import { Input } from "@/components/ui/input";
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("password");
-  const [error, setError] = useState("");
+
+  // ช่องทั้งสองเริ่มจากว่างเสมอ — ห้ามใส่อีเมล/รหัสไว้ให้ล่วงหน้า
+  // เพราะหน้านี้คือหน้าที่ลูกค้าและอาจารย์เปิดจากลิงก์จริง
+  // บัญชีทดสอบอยู่ในตาราง "บัญชีทดสอบ" ของ README
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/login", {
+      const data = await apiFetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        body: { email, password },
       });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || "Login failed");
-      }
+      saveToken(data.access_token);
 
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("email", data.email);
-      router.push("/");
-    } catch (err) {
-      setError(err.message);
+      toast.success("เข้าสู่ระบบสำเร็จ");
+      router.replace("/");
+    } catch (error) {
+      // ข้อความมาจาก backend เช่น "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -53,16 +59,17 @@ export default function Login() {
     <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Log in</CardTitle>
+          <CardTitle>เข้าสู่ระบบ</CardTitle>
           <CardDescription>
-            Use your email and password to access the starter application.
+            ใช้อีเมลและรหัสผ่านที่สมัครไว้เพื่อเข้าใช้งาน LEBIS
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                อีเมล
               </label>
               <Input
                 id="email"
@@ -76,7 +83,7 @@ export default function Login() {
 
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                รหัสผ่าน
               </label>
               <Input
                 id="password"
@@ -88,15 +95,16 @@ export default function Login() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Log in"}
+              {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </Button>
 
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/">Back to landing page</Link>
-            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+              ยังไม่มีบัญชี?{" "}
+              <Link href="/register" className="font-medium underline">
+                สมัครสมาชิก
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>
