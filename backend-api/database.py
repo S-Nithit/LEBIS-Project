@@ -145,22 +145,61 @@ async def setup_db():
     for statement in ALTER_USERS:
         await database.execute(statement)
 
-    # บัญชีทดลองที่ติดมากับ boilerplate — demo@example.com / password
-    demo_password = bcrypt.hashpw(b"password", bcrypt.gensalt()).decode("utf-8")
-    await database.execute(
-        """
-        INSERT INTO users (email, password, name, shop_name, role)
-        VALUES (:email, :password, :name, :shop_name, :role)
-        ON CONFLICT (email) DO NOTHING
-        """,
-        {
-            "email": "demo@example.com",
-            "password": demo_password,
-            "name": "Demo User",
-            "shop_name": "Demo Rental Shop",
-            "role": "pro",
-        },
-    )
+    await seed_demo_accounts()
+
+
+# บัญชีทดสอบที่ระบบสร้างให้เองตอนสตาร์ท เพื่อให้ทุกคนในทีมมีของเล่นเหมือนกัน
+# ตั้งแต่วินาทีแรกที่ docker compose ขึ้น โดยไม่ต้องไปนั่ง INSERT เองใน psql
+#
+# 🔴 ทั้งสองบัญชีนี้เป็นของสำหรับ "เครื่องตัวเองตอนพัฒนา" เท่านั้น
+#    ตอน deploy ขึ้นใช้งานจริงต้องลบทิ้งหรือเปลี่ยนรหัสก่อนเสมอ
+#    รหัสที่เขียนไว้ตรงนี้ไม่ใช่ความลับ เพราะทุกคนที่ clone repo ก็เห็นอยู่แล้ว
+DEMO_ACCOUNTS = [
+    # บัญชีที่ติดมากับ boilerplate — คงแพ็กเกจ pro ไว้เหมือนเดิม
+    {
+        "email": "demo@example.com",
+        "password": "password",
+        "name": "Demo User",
+        "shop_name": "Demo Rental Shop",
+        "role": "pro",
+    },
+    # บัญชีผู้ดูแลระบบ — Sea ใช้เปิดหน้า admin, Kul ใช้เทียบกับบัญชี free
+    # ตอนทดสอบว่าระบบล็อกฟีเจอร์ตามแพ็กเกจจริงมั้ย
+    {
+        "email": "admin@lebis.local",
+        "password": "admin1234",
+        "name": "LEBIS Admin",
+        "shop_name": None,
+        "role": "admin",
+    },
+]
+
+
+async def seed_demo_accounts():
+    """ใส่บัญชีทดสอบถ้ายังไม่มี — มีอยู่แล้วก็ข้ามไป ไม่ไปทับของเดิม
+
+    ON CONFLICT DO NOTHING คือจุดสำคัญ: ถ้าใครเปลี่ยนรหัสหรือเปลี่ยน role
+    ของบัญชีพวกนี้ไว้ การรีสตาร์ท backend จะไม่ไปรีเซ็ตทับของเขา
+    """
+    for account in DEMO_ACCOUNTS:
+        hashed = bcrypt.hashpw(
+            account["password"].encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
+
+        await database.execute(
+            """
+            INSERT INTO users (email, password, name, shop_name, role)
+            VALUES (:email, :password, :name, :shop_name, :role)
+            ON CONFLICT (email) DO NOTHING
+            """,
+            {
+                "email": account["email"],
+                "password": hashed,
+                "name": account["name"],
+                "shop_name": account["shop_name"],
+                "role": account["role"],
+            },
+        )
 
 
 async def get_user_by_email(email: str):

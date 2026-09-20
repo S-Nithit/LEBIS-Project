@@ -40,7 +40,14 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    # ตรงนี้เป็น str ธรรมดา ไม่ใช่ EmailStr เหมือนตอนสมัคร — ตั้งใจให้ต่างกัน
+    # ตอนสมัครต้องเข้มเพราะเป็นอีเมลที่ระบบจะใช้ติดต่อจริง
+    # แต่ตอน login ถ้าเข้มด้วยจะเกิด 2 ปัญหา
+    #   1. พิมพ์อีเมลผิดรูปจะได้ 422 ซึ่งบอกใบ้ว่า "รูปแบบผิด" ไม่ใช่ "รหัสผิด"
+    #      ทั้งที่ควรตอบ 401 เหมือนกันหมด ไม่ให้เดาว่าอีเมลไหนมีในระบบ
+    #   2. บัญชีที่ระบบ seed ไว้เองอย่าง admin@lebis.local จะ login ไม่ได้เลย
+    #      เพราะ .local เป็นโดเมนสงวน ตัวตรวจอีเมลไม่ยอมรับ
+    email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=1, max_length=72)
 
 
@@ -49,14 +56,15 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
-    email: EmailStr
+    # เป็น str เพราะต้องรองรับบัญชี seed อย่าง admin@lebis.local ด้วย (ดู LoginRequest)
+    email: str
     role: str
 
 
 class UserResponse(BaseModel):
     """ข้อมูล user ที่ปล่อยให้หน้าเว็บเห็นได้ — สังเกตว่าไม่มี password"""
 
-    email: EmailStr
+    email: str
     name: str | None
     shop_name: str | None
     role: str

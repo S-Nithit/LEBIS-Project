@@ -23,9 +23,18 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from database import get_user_by_email
 
-# กุญแจที่ใช้เซ็น JWT — ของจริงต้องมาจาก environment variable เท่านั้น
-# ค่า default ข้างล่างมีไว้ให้รันบนเครื่องตัวเองได้สะดวก ห้ามใช้ตอน deploy จริง
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-change-me")
+# กุญแจที่ใช้เซ็น JWT — มาจาก environment variable เท่านั้น ไม่มีค่า default
+# ใครถือกุญแจนี้ปลอม token เป็นใครก็ได้ในระบบ เลยห้ามเขียนค่าจริงลงไฟล์ใดๆ ใน repo
+# บนเครื่องตัวเองค่านี้มาจากไฟล์ .env (ดู README) ตอน deploy ตั้งที่ Railway/Render
+JWT_SECRET = os.getenv("JWT_SECRET", "")
+
+if not JWT_SECRET:
+    # ตั้งใจให้ backend ไม่ขึ้นเลยถ้าไม่มีกุญแจ ดีกว่าขึ้นมาแล้วใช้กุญแจที่ใครก็เดาได้
+    raise RuntimeError(
+        "ยังไม่ได้ตั้งค่า JWT_SECRET — สร้างไฟล์ .env ที่รากโปรเจกต์ด้วยคำสั่ง\n"
+        '    printf \'JWT_SECRET=%s\\n\' "$(openssl rand -hex 32)" > .env\n'
+        "แล้วสั่ง docker compose up --build ใหม่อีกครั้ง (ดูหัวข้อวิธีติดตั้งใน README)"
+    )
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
