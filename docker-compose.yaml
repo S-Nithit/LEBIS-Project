@@ -15,7 +15,10 @@ services:
   db:
     image: postgres:13
     ports:
-      - "5432:5432"
+      # ซ้าย = พอร์ตบนเครื่องเรา / ขวา = พอร์ตใน container
+      # ใช้ 5433 เพราะเครื่องคนทำมี postgres ตัวอื่นจอง 5432 อยู่แล้ว
+      # ข้างในเครือข่าย compose ยังคุยกันที่ db:5432 เหมือนเดิม (POSTGRES_HOST=db)
+      - "5433:5432"
     environment:
       POSTGRES_USER: temp
       POSTGRES_PASSWORD: temp
