@@ -1,0 +1,15 @@
+{
+  // VS Code จะเด้งถามให้ลง extension ชุดนี้อัตโนมัติตอนเปิดโปรเจค
+  // กด Install ให้ครบ แล้วทุกคนจะได้สภาพแวดล้อมเหมือนกัน
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+    "bradlc.vscode-tailwindcss",
+    "dsznajder.es7-react-js-snippets",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-azuretools.vscode-docker",
+    "anthropic.claude-code"
+  ]
+}

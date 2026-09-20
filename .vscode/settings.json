@@ -1,0 +1,40 @@
+{
+  // ---------- Python ----------
+  // ชี้ไป virtualenv ของ backend ถ้ายังไม่มี ให้สร้างด้วย:
+  //   cd backend && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+  // (ไม่สร้างก็รันผ่าน docker ได้ แต่ editor จะขีดเส้นแดงใต้ import เพราะหา package ไม่เจอ)
+  "python.defaultInterpreterPath": "./backend/.venv/bin/python",
+  "python.analysis.extraPaths": ["./backend"],
+  "python.analysis.typeCheckingMode": "basic",
+
+  // ---------- จัดรูปแบบโค้ดอัตโนมัติตอนกด Save ----------
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[javascript][javascriptreact][typescript][typescriptreact][json][jsonc][css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ---------- ซ่อนไฟล์ที่ไม่ต้องดู ----------
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.DS_Store": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.venv": true
+  },
+
+  "files.eol": "\n",
+  "editor.rulers": [100]
+}
