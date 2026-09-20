@@ -26,9 +26,11 @@ import { Input } from "@/components/ui/input";
 export default function Login() {
   const router = useRouter();
 
-  // ใส่บัญชีทดลองไว้เป็นค่าเริ่มต้น ให้กดเข้าดูระบบได้เร็วๆ ตอนพัฒนา
-  const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("password");
+  // ช่องทั้งสองเริ่มจากว่างเสมอ — ห้ามใส่อีเมล/รหัสไว้ให้ล่วงหน้า
+  // เพราะหน้านี้คือหน้าที่ลูกค้าและอาจารย์เปิดจากลิงก์จริง
+  // บัญชีทดสอบอยู่ในตาราง "บัญชีทดสอบ" ของ README
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event) {
