@@ -1,10 +1,10 @@
 {
   // ---------- Python ----------
   // ชี้ไป virtualenv ของ backend ถ้ายังไม่มี ให้สร้างด้วย:
-  //   cd backend && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+  //   cd backend-api && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
   // (ไม่สร้างก็รันผ่าน docker ได้ แต่ editor จะขีดเส้นแดงใต้ import เพราะหา package ไม่เจอ)
-  "python.defaultInterpreterPath": "./backend/.venv/bin/python",
-  "python.analysis.extraPaths": ["./backend"],
+  "python.defaultInterpreterPath": "./backend-api/.venv/bin/python",
+  "python.analysis.extraPaths": ["./backend-api"],
   "python.analysis.typeCheckingMode": "basic",
 
   // ---------- จัดรูปแบบโค้ดอัตโนมัติตอนกด Save ----------
@@ -12,10 +12,23 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
+  // ต้องแยกเป็นบล็อกต่อภาษา VS Code ไม่รองรับการรวมหลายภาษาไว้ในคีย์เดียว
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
-  "[javascript][javascriptreact][typescript][typescriptreact][json][jsonc][css]": {
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
@@ -30,6 +43,7 @@
     "**/.DS_Store": true
   },
   "search.exclude": {
+    "**/__pycache__": true,
     "**/node_modules": true,
     "**/.next": true,
     "**/.venv": true
