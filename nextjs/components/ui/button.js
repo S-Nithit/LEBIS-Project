@@ -1,36 +1,35 @@
+// ปุ่มมาตรฐานของ LEBIS
+//
+// วิธีใช้
+//   import { Button } from "@/components/ui/button";
+//
+//   <Button>บันทึก</Button>                          ปุ่มหลัก — มีได้หน้าละ 1 ปุ่ม
+//   <Button variant="secondary">ยกเลิก</Button>       ปุ่มรอง
+//   <Button variant="ghost" size="sm">แก้ไข</Button>   ปุ่มเล็กในแถวตาราง
+//   <Button variant="danger">ลบอุปกรณ์</Button>        ปุ่มที่ทำแล้วย้อนยาก
+//   <Button asChild><Link href="/x">ไปหน้า x</Link></Button>
+//
+// ความสูง 44px มุมมน 8px ตาม docs/brand.md — ห้ามแก้สีหรือขนาดในหน้าตัวเอง
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        outline: "border border-input bg-background hover:bg-secondary",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-);
+const VARIANTS = {
+  primary: "btn-primary",
+  secondary: "btn-secondary",
+  ghost: "btn-ghost",
+  danger: "btn-danger",
+};
 
 const Button = React.forwardRef(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant = "primary", size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        className={cn("btn", VARIANTS[variant] || VARIANTS.primary, size === "sm" && "btn-sm", className)}
         {...props}
       />
     );
@@ -38,4 +37,4 @@ const Button = React.forwardRef(
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button };

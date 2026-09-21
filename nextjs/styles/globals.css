@@ -2,29 +2,424 @@
 @tailwind components;
 @tailwind utilities;
 
+/*! LEBIS design system — สร้างจาก docs/brand.md ทุกบรรทัด
+    ห้ามแก้ค่าสีหรือขนาดในหน้าใดหน้าหนึ่ง ถ้าต้องเปลี่ยนให้แก้ที่ brand.md ก่อน
+    แล้วค่อยลงมาแก้ไฟล์นี้ที่เดียว ทั้งเว็บจะเปลี่ยนตาม */
+
+/* ---------------------------------------------------------------------------
+   Space Grotesk กับ DM Sans โหลดจาก Google Fonts ใน pages/_app.js (brand.md หัวข้อ 3)
+   ทั้งสองตัวไม่มีตัวอักษรไทย เลยใส่ Prompt ที่มากับ boilerplate ต่อท้ายไว้
+   เพื่อให้ภาษาไทยได้ฟอนต์ที่ออกแบบมาเหมือนกันทุกเครื่อง ไม่ใช่ฟอนต์ของระบบ
+   ที่หน้าตาต่างกันระหว่าง Mac กับ Windows
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Prompt";
+  src: url("/Prompt/Prompt-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Prompt";
+  src: url("/Prompt/Prompt-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Prompt";
+  src: url("/Prompt/Prompt-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-display: swap;
+}
+
 @layer base {
+  /* -------------------------------------------------------------------------
+     สีทั้งหมดตามตารางหัวข้อ 2 ของ brand.md
+     🔴 หน้าเว็บของแต่ละคนห้ามเขียนค่าสีเอง ให้เรียกผ่านชื่อพวกนี้เท่านั้น
+     ------------------------------------------------------------------------- */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    color-scheme: light;
+
+    --ink: #0f3b43; /* ตัวอักษรหลัก แถบหัวเว็บ ปุ่มหลัก เส้นโลโก้ */
+    --ink-2: #1a5a66; /* พื้นที่ยกขึ้นมาบนโหมดมืด และสีตอนเอาเมาส์ชี้ปุ่มหลัก */
+    --amber: #e09540; /* สีเน้น — รูของป้ายแท็ก ไฮไลต์ 1 จุดต่อหน้า ป้าย Pro */
+    --amber-text: #b4761f; /* อำพันเวอร์ชันที่ใช้เป็นตัวอักษรได้ (สีดิบอ่านไม่ออกบนพื้นขาว) */
+    /* อำพันเข้มขึ้นสำหรับตัวอักษรขนาดเล็ก 13px — #B4761F ได้ 3.8:1 บนพื้นขาว
+       ซึ่งผ่านเฉพาะตัวอักษรใหญ่ ตัวนี้ได้ 5.0:1 จึงผ่านเกณฑ์ 4.5:1 ของทุกขนาด */
+    --amber-text-sm: #99641a;
+    /* ขอบช่องกรอกต้องเห็นชัดว่าเป็นช่องให้กรอก (WCAG 1.4.11 ต้องได้ 3:1)
+       เส้น --line ใช้กับเส้นคั่นตกแต่งซึ่งไม่มีเกณฑ์นี้ */
+    --line-strong: #7d9094;
+    /* สีตัวอักษรของป้ายสถานะขนาด 13px บนพื้นอ่อนของสีตัวเอง
+       เข้มกว่าสีสถานะปกติเล็กน้อย เพื่อให้วัดจริงแล้วผ่าน 4.5:1 ทุกป้าย */
+    --badge-success-text: #2f7d5d;
+    --badge-warning-text: #99641a;
+    --badge-danger-text: #b3453b;
+    --paper: #f7f9f9; /* พื้นหลังของหน้า */
+    --surface: #ffffff; /* การ์ด ตาราง ช่องกรอก */
+    --line: #dce6e7; /* เส้นขอบและเส้นคั่น */
+    --muted: #4a6268; /* ตัวอักษรรอง คำบรรยาย หัวคอลัมน์ */
+    --success: #2f7d5d; /* ว่าง คืนแล้ว */
+    --warning: #b4761f; /* ใกล้ครบกำหนด ของใกล้หมด */
+    --danger: #b3453b; /* เกินกำหนด ชำรุด ปุ่มที่ทำแล้วย้อนยาก */
+
+    /* สีที่วางบนพื้นเข้ม */
+    --on-ink: #ffffff;
+
+    /* ---- ขนาดตัวอักษรตามหัวข้อ 3 ---- */
+    --text-page-title: 2rem; /* 32px · Space Grotesk 600 */
+    --text-section: 1.25rem; /* 20px · Space Grotesk 600 */
+    --text-bignum: 2.5rem; /* 40px · Space Grotesk 600 */
+    --text-body: 0.9375rem; /* 15px · DM Sans 400 */
+    --text-label: 0.8125rem; /* 13px · DM Sans 500 */
+    --text-caption: 0.8125rem; /* 13px · DM Sans 400 สี muted */
+    --text-eyebrow: 0.75rem; /* 12px · Space Grotesk 600 ถ่างตัว */
+
+    /* ---- ระยะห่างตามหัวข้อ 4 — มีแค่ 8 ค่านี้ ห้ามใช้ค่าอื่น ---- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+
+    /* ---- ความมนของมุม ตามหัวข้อ 4 ---- */
+    --radius-control: 8px; /* ช่องกรอกและปุ่ม */
+    --radius-badge: 12px; /* การ์ดเล็กและป้ายสถานะ */
+    --radius-card: 20px; /* การ์ดใหญ่และแผงเนื้อหา */
+
+    --shell-max: 72rem;
+
+    /* ชื่อที่ component ของ shadcn ใน components/ui/ เรียกใช้
+       ผูกกลับมาที่สีของแบรนด์ จะได้มีชุดสีชุดเดียวทั้งเว็บ */
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card-bg: var(--surface);
+    --border-color: var(--line);
+    --primary: var(--ink);
+    --primary-foreground: var(--on-ink);
+  }
+
+  /* -------------------------------------------------------------------------
+     โหมดมืด — เปลี่ยนแค่ค่าของตัวแปร ไม่มีอะไรอย่างอื่นเปลี่ยน (ตาม brand.md)
+     ------------------------------------------------------------------------- */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+
+      --paper: #0b2126; /* พื้นหน้าจอ เข้มกว่าแถบหัวเว็บ */
+      --surface: #103139; /* การ์ดและตาราง */
+      --ink: #eef5f5; /* ตัวอักษรหลักกลับเป็นสีอ่อน */
+      --ink-2: #1a5a66;
+      --line: #234e56;
+      --muted: #9db6bb; /* อ่อนพอให้อ่านออกบนพื้นเข้ม */
+      --amber-text: #e6a65a; /* อำพันบนพื้นเข้มใช้สีสว่างขึ้นได้ */
+      --amber-text-sm: #e6a65a;
+      --line-strong: #729298;
+      --badge-success-text: #57b58c;
+      --badge-warning-text: #e6a65a;
+      --badge-danger-text: #e4847a;
+      --success: #57b58c;
+      --warning: #e0a45c;
+      --danger: #e4847a; /* สว่างขึ้นเล็กน้อยเพื่อให้ป้ายผ่าน 4.5:1 บนพื้นเข้ม */
+      --on-ink: #0b2126;
+
+      --background: var(--paper);
+      --foreground: var(--ink);
+      --card-bg: var(--surface);
+      --border-color: var(--line);
+      --primary: #1a5a66;
+      --primary-foreground: #ffffff;
+    }
   }
 
   * {
-    @apply border-border;
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--paper);
+    color: var(--ink);
+    /* DM Sans สำหรับเนื้อความทั้งหมด (หัวข้อ 3) */
+    font-family: "DM Sans", "Prompt", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--text-body);
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* -------------------------------------------------------------------------
+     ส่วนที่เบราว์เซอร์วาดเอง ถ้าไม่กำหนดจะใช้สีมาตรฐานที่ไม่เข้ากับแบรนด์
+     ------------------------------------------------------------------------- */
+  ::selection {
+    background: color-mix(in srgb, var(--amber) 32%, transparent);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  input,
+  textarea,
+  select {
+    caret-color: var(--ink);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 999px;
+    border: 3px solid var(--paper);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /* -------------------------------------------------------------------------
+     คลาสข้อความตามตารางหัวข้อ 3 — เรียกใช้แทนการตั้งขนาดเอง
+     ------------------------------------------------------------------------- */
+  .t-page-title {
+    font-family: "Space Grotesk", "Prompt", ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.625rem; /* จอเล็กย่อลงให้พออ่าน */
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  @media (min-width: 640px) {
+    .t-page-title {
+      font-size: var(--text-page-title);
+    }
+  }
+
+  .t-section {
+    font-family: "Space Grotesk", "Prompt", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--text-section);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .t-bignum {
+    font-family: "Space Grotesk", "Prompt", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--text-bignum);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .t-body {
+    font-size: var(--text-body);
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  .t-label {
+    font-size: var(--text-label);
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+
+  .t-caption {
+    font-size: var(--text-caption);
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .t-eyebrow {
+    font-family: "Space Grotesk", "Prompt", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* กรอบความกว้างของเนื้อหา มีขอบข้างเสมอบนจอมือถือ */
+  .app-container {
+    width: 100%;
+    max-width: var(--shell-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  @media (min-width: 768px) {
+    .app-container {
+      padding-left: var(--space-5);
+      padding-right: var(--space-5);
+    }
+  }
+
+  /* ช่องกรอกมาตรฐาน — สูง 44px ตามหัวข้อ 6 (กดด้วยนิ้วโป้งได้) */
+  .field-input {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px var(--space-3);
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    font-family: inherit;
+    font-size: 1rem; /* กัน iOS ซูมหน้าจอตอนโฟกัส */
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  @media (min-width: 640px) {
+    .field-input {
+      font-size: var(--text-body);
+    }
+  }
+
+  .field-input::placeholder {
+    color: var(--muted);
+    opacity: 0.85;
+  }
+
+  .field-input:focus-visible {
+    border-color: var(--ink);
+    outline: 2px solid var(--amber);
+    outline-offset: 1px;
+  }
+
+  .field-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* ปุ่ม — มุมมน 8px สูง 44px */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-control);
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: var(--text-body);
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--ink-2);
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--line);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--ink);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--ink);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #ffffff;
+  }
+
+  /* ป้ายสถานะ — พื้นอ่อนของสีนั้นๆ ขอบบาง ตัวอักษรสีที่อ่านออกบนพื้นขาว
+     ใช้ color-mix เพื่อผสมสีกับพื้น จะได้ไม่ต้องประกาศสีเพิ่มอีกชุด */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid;
+    border-radius: var(--radius-badge);
+    padding: 4px var(--space-3);
+    font-size: var(--text-label);
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  .badge-neutral {
+    color: var(--muted);
+    border-color: var(--line);
+    background: var(--paper);
+  }
+
+  .badge-success {
+    color: var(--badge-success-text);
+    border-color: color-mix(in srgb, var(--success) 35%, transparent);
+    background: color-mix(in srgb, var(--success) 8%, var(--surface));
+  }
+
+  .badge-warning {
+    color: var(--badge-warning-text);
+    border-color: color-mix(in srgb, var(--warning) 35%, transparent);
+    background: color-mix(in srgb, var(--warning) 8%, var(--surface));
+  }
+
+  .badge-danger {
+    color: var(--badge-danger-text);
+    border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+    background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+  }
+
+  /* ป้ายแพ็กเกจ Pro — ใช้อำพันเวอร์ชันตัวอักษร ไม่ใช่สีดิบ (ข้อห้ามใน brand.md) */
+  .badge-accent {
+    color: var(--badge-warning-text);
+    border-color: color-mix(in srgb, var(--amber) 45%, transparent);
+    background: color-mix(in srgb, var(--amber) 12%, var(--surface));
+  }
+
+  .btn-sm {
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    font-size: var(--text-label);
   }
 }

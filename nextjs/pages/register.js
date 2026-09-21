@@ -18,18 +18,14 @@ import { useRouter } from "next/router";
 import { toast } from "sonner";
 
 import { apiFetch, saveToken } from "@/lib/api";
+import { useLanguage } from "@/lib/useLanguage";
+import { AuthLayout } from "@/components/AuthLayout";
+import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 export default function Register() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   // 1) ช่องในฟอร์ม — 1 ช่อง 1 state อ่านง่ายกว่าเก็บรวมเป็น object เดียว
   const [email, setEmail] = useState("");
@@ -42,10 +38,10 @@ export default function Register() {
 
   // 3) ตรวจข้อมูลก่อนส่ง — คืนข้อความ error ถ้าเจอปัญหา คืน null ถ้าผ่าน
   function findProblem() {
-    if (!email.includes("@")) return "อีเมลไม่ถูกต้อง";
-    if (name.trim().length === 0) return "กรุณากรอกชื่อ";
-    if (password.length < 8) return "รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร";
-    if (password !== confirmPassword) return "รหัสผ่านสองช่องไม่ตรงกัน";
+    if (!email.includes("@")) return t("validate.email");
+    if (name.trim().length === 0) return t("validate.name");
+    if (password.length < 8) return t("validate.passwordShort");
+    if (password !== confirmPassword) return t("validate.passwordMismatch");
     return null;
   }
 
@@ -76,7 +72,7 @@ export default function Register() {
       // 6) เก็บ JWT ที่ backend ส่งมา หน้าอื่นจะหยิบไปใช้ต่อผ่าน apiFetch
       saveToken(data.access_token);
 
-      toast.success("สมัครสมาชิกสำเร็จ ยินดีต้อนรับ");
+      toast.success(t("register.success"));
       router.replace("/"); // 7) replace ไม่ push เพื่อไม่ให้กด back กลับมาหน้าสมัครได้
     } catch (error) {
       toast.error(error.message);
@@ -86,100 +82,80 @@ export default function Register() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>สมัครสมาชิก</CardTitle>
-          <CardDescription>
-            เปิดใช้งาน LEBIS ฟรี จัดการอุปกรณ์ได้ถึง 50 ชิ้น
-          </CardDescription>
-        </CardHeader>
+    <AuthLayout
+      title={t("register.title")}
+      description={t("register.subtitle")}
+      footer={
+        <p className="t-caption">
+          {t("register.hasAccount")}{" "}
+          <Link
+            href="/login"
+            className="font-medium text-ink underline underline-offset-4 hover:no-underline"
+          >
+            {t("register.goLogin")}
+          </Link>
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <FormField
+          id="email"
+          label={t("register.email")}
+          hint={t("register.emailHint")}
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
+          required
+        />
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                อีเมล
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
-                required
-              />
-            </div>
+        <FormField
+          id="name"
+          label={t("register.name")}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder={t("register.namePlaceholder")}
+          autoComplete="name"
+          required
+        />
 
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                ชื่อผู้ใช้
-              </label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="ชื่อที่ให้ระบบเรียก"
-                autoComplete="name"
-                required
-              />
-            </div>
+        <FormField
+          id="shopName"
+          label={t("register.shopName")}
+          badge={t("register.shopNameOptional")}
+          value={shopName}
+          onChange={(event) => setShopName(event.target.value)}
+          placeholder={t("register.shopNamePlaceholder")}
+        />
 
-            <div className="space-y-2">
-              <label htmlFor="shopName" className="text-sm font-medium">
-                ชื่อร้าน <span className="text-muted-foreground">(ไม่บังคับ)</span>
-              </label>
-              <Input
-                id="shopName"
-                value={shopName}
-                onChange={(event) => setShopName(event.target.value)}
-                placeholder="เช่น นิธิศ เช่ากล้อง"
-              />
-            </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FormField
+            id="password"
+            label={t("register.password")}
+            hint={t("register.passwordHint")}
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="new-password"
+            required
+          />
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                รหัสผ่าน
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="อย่างน้อย 8 ตัวอักษร"
-                autoComplete="new-password"
-                required
-              />
-            </div>
+          <FormField
+            id="confirmPassword"
+            label={t("register.confirmPassword")}
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            autoComplete="new-password"
+            required
+          />
+        </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
-                ยืนยันรหัสผ่าน
-              </label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                autoComplete="new-password"
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "กำลังสมัคร..." : "สมัครสมาชิก"}
-            </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              มีบัญชีอยู่แล้ว?{" "}
-              <Link href="/login" className="font-medium underline">
-                เข้าสู่ระบบ
-              </Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </main>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? t("register.submitting") : t("register.submit")}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

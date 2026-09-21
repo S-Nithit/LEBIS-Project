@@ -6,6 +6,9 @@
 //   3. FastAPI: routes/auth.py -> login() -> verify_password() เทียบ hash ใน DB
 //   4. ถูก -> backend คืน JWT -> saveToken() เก็บลง localStorage -> ไปหน้าแรก
 //      ผิด -> backend ตอบ 401 -> apiFetch throw -> ขึ้น toast แดง
+//
+// หน้าตาของหน้านี้มาจากระบบดีไซน์กลาง ไม่มีการกำหนดสีเองแม้แต่จุดเดียว
+// อยากรู้ว่ามีอะไรให้ใช้บ้าง อ่าน docs/ui-guide.md
 
 import { useState } from "react";
 import Link from "next/link";
@@ -13,18 +16,14 @@ import { useRouter } from "next/router";
 import { toast } from "sonner";
 
 import { apiFetch, saveToken } from "@/lib/api";
+import { useLanguage } from "@/lib/useLanguage";
+import { AuthLayout } from "@/components/AuthLayout";
+import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 export default function Login() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   // ช่องทั้งสองเริ่มจากว่างเสมอ — ห้ามใส่อีเมล/รหัสไว้ให้ล่วงหน้า
   // เพราะหน้านี้คือหน้าที่ลูกค้าและอาจารย์เปิดจากลิงก์จริง
@@ -45,7 +44,7 @@ export default function Login() {
 
       saveToken(data.access_token);
 
-      toast.success("เข้าสู่ระบบสำเร็จ");
+      toast.success(t("login.success"));
       router.replace("/");
     } catch (error) {
       // ข้อความมาจาก backend เช่น "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
@@ -56,58 +55,47 @@ export default function Login() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>เข้าสู่ระบบ</CardTitle>
-          <CardDescription>
-            ใช้อีเมลและรหัสผ่านที่สมัครไว้เพื่อเข้าใช้งาน LEBIS
-          </CardDescription>
-        </CardHeader>
+    <AuthLayout
+      title={t("login.title")}
+      description={t("login.subtitle")}
+      footer={
+        <p className="t-caption">
+          {t("login.noAccount")}{" "}
+          <Link
+            href="/register"
+            className="font-medium text-ink underline underline-offset-4 hover:no-underline"
+          >
+            {t("login.goRegister")}
+          </Link>
+        </p>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <FormField
+          id="email"
+          label={t("login.email")}
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
+          required
+        />
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                อีเมล
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                autoComplete="email"
-                required
-              />
-            </div>
+        <FormField
+          id="password"
+          label={t("login.password")}
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+        />
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                รหัสผ่าน
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
-            </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              ยังไม่มีบัญชี?{" "}
-              <Link href="/register" className="font-medium underline">
-                สมัครสมาชิก
-              </Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </main>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? t("login.submitting") : t("login.submit")}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

@@ -1,17 +1,16 @@
+// ช่องกรอกมาตรฐานของ LEBIS
+//
+// ปกติไม่ต้องเรียกตัวนี้ตรงๆ ให้ใช้ <FormField> ซึ่งมีป้ายกำกับให้พร้อม
+//   import { FormField } from "@/components/FormField";
+//
+// ความสูง 44px มุมมน 8px ตาม docs/brand.md
+
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Input = React.forwardRef(({ className, type, ...props }, ref) => (
-  <input
-    type={type}
-    className={cn(
-      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-      className
-    )}
-    ref={ref}
-    {...props}
-  />
+const Input = React.forwardRef(({ className, type = "text", ...props }, ref) => (
+  <input ref={ref} type={type} className={cn("field-input", className)} {...props} />
 ));
 Input.displayName = "Input";
 
