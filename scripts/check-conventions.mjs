@@ -93,10 +93,12 @@ for (const file of files) {
 // ── กฎ 3 · <FormError> ทุกที่ต้องมีทางให้ลองใหม่
 for (const file of files) {
   if (file.rel.endsWith("components/FormError.js")) continue;
-  const re = /<FormError\b[^>]*?\/>/gs;
-  for (const match of file.text.matchAll(re)) {
-    const n = file.text.slice(0, match.index).split("\n").length;
-    if (!match[0].includes("onRetry") || !match[0].includes("retrying")) {
+  // ต้องจับทั้ง <FormError ... /> และ <FormError ...>...</FormError>
+  // ของเดิมจับแบบปิดในตัวอย่างเดียว เขียนอีกแบบก็ผ่านฉลุย
+  for (const match of file.code.matchAll(/<FormError\b/g)) {
+    const attrs = readTag(file.code, match.index + "<FormError".length);
+    const n = file.code.slice(0, match.index).split("\n").length;
+    if (!attrs.includes("onRetry") || !attrs.includes("retrying")) {
       fail("formerror-retry", file.rel, n, "ขาด onRetry หรือ retrying — กล่องบอกว่าพังแล้วไม่มีปุ่มให้กด");
     }
   }
@@ -105,9 +107,12 @@ for (const file of files) {
 // ── กฎ 4 · สีต้องมาจาก token ไม่ใช่เขียนค่าลงหน้า
 for (const file of files) {
   if (file.rel.endsWith("components/Logo.js")) continue; // โลโก้ใช้สีตายตัวตาม brand.md หัวข้อ 1
-  eachLine(file, (line, n) => {
-    // <meta name="theme-color"> รับค่า CSS variable ไม่ได้ ต้องเป็นค่าสีตรงๆ เท่านั้น
-    if (line.includes("theme-color")) return;
+  // 🔴 อ่านจากโค้ดที่ตัดคอมเมนต์ออกแล้ว และยกเว้นเฉพาะ "ค่าใน content=" ของ meta
+  //    ของเดิมยกเว้นทั้งบรรทัดที่มีคำว่า theme-color อยู่ที่ไหนก็ได้ รวมถึงในคอมเมนต์
+  //    ซึ่งเป็นรูแบบเดียวกับ :root-ในคอมเมนต์ ที่เพิ่งอุดไปในคอมมิตเดียวกัน
+  file.code.split("\n").forEach((raw, index) => {
+    const n = index + 1;
+    const line = /name="theme-color"/.test(raw) ? raw.replace(/content="[^"]*"/g, 'content=""') : raw;
     if (COLOUR.test(line)) fail("no-hardcoded-color", file.rel, n, "เขียนค่าสีลงไฟล์โดยตรง ให้ใช้ token ใน globals.css");
   });
 }
@@ -188,8 +193,24 @@ for (const file of files) {
     if (TOUCH_EXEMPT.test(attrs)) continue;
     // 🔴 ต้องดูเฉพาะค่าใน className ไม่ใช่ทั้งก้อน attribute
     //    ไม่งั้น aria-label="btn" หรือ href="/btn" จะถูกนับว่าเป็นคลาส btn
-    const classes = [...attrs.matchAll(/className=(?:"([^"]*)"|\{([^}]*)\})/g)]
-      .map((c) => c[1] || c[2] || "")
+    // 🔴 className={`${x} min-h-[44px]`} มีปีกกาซ้อนอยู่ข้างใน
+    //    ของเดิมใช้ [^}]* จึงตัดจบที่ปีกกาตัวแรกแล้วมองไม่เห็นคลาสที่อยู่ข้างหลัง
+    //    ผลคือรายงานว่าโค้ดที่ "ถูกแล้ว" ผิด ซึ่งสอนให้คนกดข้ามผลของสคริปต์
+    const classes = [...attrs.matchAll(/className=/g)]
+      .map((m) => {
+        const rest = attrs.slice(m.index + m[0].length);
+        if (rest.startsWith('"')) return rest.slice(1, rest.indexOf('"', 1));
+        if (!rest.startsWith("{")) return "";
+        let depth = 0;
+        for (let i = 0; i < rest.length; i += 1) {
+          if (rest[i] === "{") depth += 1;
+          else if (rest[i] === "}") {
+            depth -= 1;
+            if (depth === 0) return rest.slice(1, i);
+          }
+        }
+        return rest;
+      })
       .join(" ");
     if (TOUCH_OK.test(classes)) continue;
     fail("touch-target", file.rel, n, `<${m[1]}> ไม่รับประกันความสูง 44px — ใส่ min-h-[44px] ใช้ <Button> หรือเขียน ok-touch-target พร้อมเหตุผล`);
@@ -222,6 +243,24 @@ for (const file of files) {
       fail("busy-not-faded", file.rel, i + 1, "ทำให้ปุ่มจางตอนกำลังทำงาน — ใช้ป้ายที่เปลี่ยนข้อความแทน");
     }
   });
+}
+
+// 🔴 ของที่กฎนี้คุ้มครองอยู่ใน globals.css ไม่ใช่ในไฟล์ .js
+//    กฎเวอร์ชันแรกไล่แต่ .js/.jsx จึงคุ้มครองไม่ได้แม้แต่นิดเดียว
+//    ลบทั้งก้อนที่เป็นเนื้อของการแก้ทิ้ง สคริปต์ก็ยังขึ้นว่าผ่าน
+{
+  const busyCss = readFileSync(join(WEB, "styles/globals.css"), "utf8");
+  const escape = busyCss.match(/\.btn\[aria-busy="true"\]:disabled\s*\{([^}]*)\}/);
+  if (!escape) {
+    fail("busy-not-faded", "nextjs/styles/globals.css", 1,
+      'ไม่มีกฎ .btn[aria-busy="true"]:disabled — ปุ่มที่กำลังทำงานจะจางลงจนอ่านไม่ออก');
+  } else {
+    const opacity = escape[1].match(/opacity:\s*([\d.]+)/);
+    if (!opacity || Number(opacity[1]) < 1) {
+      fail("busy-not-faded", "nextjs/styles/globals.css", 1,
+        `ปุ่มที่กำลังทำงานถูกทำให้จาง (opacity: ${opacity ? opacity[1] : "ไม่ได้ตั้ง"}) ต้องเป็น 1`);
+    }
+  }
 }
 
 // ── กฎ 8 · ระบบดีไซน์อยู่ใน globals.css ซึ่งกฎ 4 มองไม่เห็นเพราะไล่แค่ไฟล์ .js

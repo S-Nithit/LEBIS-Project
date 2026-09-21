@@ -1,12 +1,12 @@
 import Head from "next/head";
 import { Toaster } from "sonner";
 
-import { LanguageProvider } from "@/lib/useLanguage";
+import { LanguageProvider, STORAGE_KEY } from "@/lib/useLanguage";
 import "@/styles/globals.css";
 
-export default function App({ Component, pageProps }) {
+export default function App({ Component, pageProps, initialLanguage }) {
   return (
-    <LanguageProvider>
+    <LanguageProvider initialLanguage={initialLanguage}>
       <Head>
         <title>LEBIS</title>
         <meta
@@ -73,3 +73,15 @@ export default function App({ Component, pageProps }) {
     </LanguageProvider>
   );
 }
+
+// อ่านภาษาจากคุกกี้ "ก่อน" วาดหน้า ทั้งฝั่งเซิร์ฟเวอร์และฝั่งเบราว์เซอร์
+//
+// 🔴 การมี getInitialProps ทำให้ทุกหน้าเลิกเป็น static ไปเป็น server-rendered
+//    ซึ่งเป็นสิ่งที่เราต้องการพอดี: หน้า login/register/forgot ต้องถูกวาดใหม่
+//    ทุกครั้งตามภาษาของคนที่เปิด ไม่ใช่ถูกอบไว้เป็นภาษาไทยตั้งแต่ตอน build
+//    แล้วค่อยเปลี่ยนเป็นอังกฤษให้ผู้ใช้เห็นหลังโหลดเสร็จ
+App.getInitialProps = async ({ ctx }) => {
+  const raw = ctx?.req?.headers?.cookie || (typeof document !== "undefined" ? document.cookie : "");
+  const match = String(raw).match(new RegExp(`${STORAGE_KEY}=([^;]+)`));
+  return { initialLanguage: match ? match[1] : null };
+};

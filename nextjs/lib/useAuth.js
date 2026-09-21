@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-import { apiFetch, clearToken, getToken } from "@/lib/api";
+import { TOKEN_KEY, apiFetch, clearToken, getToken } from "@/lib/api";
 
 export function useAuth(options = {}) {
   const { redirectTo } = options;
@@ -54,11 +54,7 @@ export function useAuth(options = {}) {
         // แต่ถ้าแค่เน็ตหลุดหรือเซิร์ฟเวอร์ไม่ตอบ token ยังใช้ได้อยู่
         // ถ้าลบทิ้งด้วย เจ้าของร้านจะถูกเตะออกจากระบบกลางคันทั้งที่ลูกค้ายืนรออยู่
         // เพราะสัญญาณหลุดไปไม่กี่วินาที
-        const tokenIsDead = ["token_expired", "token_invalid", "user_not_found", "not_signed_in"].includes(
-          error?.code
-        );
-
-        if (tokenIsDead) {
+        if (isDeadToken(error)) {
           clearToken();
           if (redirectTo) router.replace(redirectTo);
         } else if (!cancelled) {
@@ -77,8 +73,35 @@ export function useAuth(options = {}) {
     };
   }, [redirectTo, router, reloadCount]);
 
+  // ออกจากระบบที่แท็บหนึ่ง แท็บอื่นที่เปิดค้างไว้ต้องออกตาม
+  //
+  // 🔴 เครื่องที่หน้าร้านมักเปิดหลายแท็บค้างไว้ ถ้าปิดแค่แท็บเดียว อีกแท็บจะยัง
+  //    โชว์อีเมลกับชื่อร้านของคนก่อนต่อไปเรื่อยๆ ซึ่งเป็นสิ่งเดียวกับที่บรรทัด
+  //    ลบ lebis_last_email ข้างล่างพยายามกันไว้ แต่กันได้แค่แท็บเดียว
+  useEffect(() => {
+    function onStorage(event) {
+      if (event.key === TOKEN_KEY && !event.newValue) {
+        setUser(null);
+        if (redirectTo) router.replace(redirectTo);
+      }
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [redirectTo, router]);
+
   // สั่งโหลดข้อมูลผู้ใช้ใหม่ ใช้กับปุ่ม "ลองอีกครั้ง" ตอนเน็ตหลุด
   const reload = useCallback(() => setReloadCount((n) => n + 1), []);
+
+  // อัปเดตข้อมูลผู้ใช้ที่ถืออยู่ในหน้าทันที โดยไม่ต้องรอเซิร์ฟเวอร์ตอบ
+  //
+  // 🔴 ทำไมต้องมี: เดิมหน้าบัญชีกดบันทึกสำเร็จ แล้วเรียก reload() เพื่อดึงข้อมูลใหม่
+  //    ถ้าการดึงรอบนั้น "ล้มเหลว" (เน็ตสะดุดพอดี) หน้าจะขึ้น "บันทึกเรียบร้อยแล้ว"
+  //    ทั้งที่แถวยังโชว์ชื่อเดิม และไม่มีกล่องแดงที่ไหนเลย
+  //    เจ้าของร้านจะกดบันทึกซ้ำอีกรอบเพราะคิดว่าไม่ติด
+  //    ข้อความว่าสำเร็จ ห้ามเป็นสิ่งเดียวที่เปลี่ยนบนหน้าจอ
+  const applyUser = useCallback((patch) => {
+    setUser((current) => (current ? { ...current, ...patch } : current));
+  }, []);
 
   function logout() {
     clearToken();
@@ -93,6 +116,7 @@ export function useAuth(options = {}) {
   }
 
   return {
+    applyUser,
     user, // ข้อมูล user จาก /api/auth/me (null ถ้ายังไม่ login)
     loading, // true ระหว่างที่ยังถาม backend ไม่เสร็จ
     loadError, // มีค่าเมื่อโหลดข้อมูลไม่สำเร็จเพราะเน็ต/เซิร์ฟเวอร์ (token ยังอยู่)
@@ -100,4 +124,16 @@ export function useAuth(options = {}) {
     isLoggedIn: user !== null,
     logout,
   };
+}
+
+// "token ตายแล้ว" กับ "ติดต่อเซิร์ฟเวอร์ไม่ได้" ต้องแยกกันทุกที่ที่ยิง API
+// ไม่ใช่แยกเฉพาะตอนโหลดหน้าครั้งแรก
+//
+// 🔴 เดิมกฎนี้อยู่ใน useAuth ที่เดียว ส่วนการบันทึกในหน้าเรียก apiFetch ตรงๆ
+//    พอ token หมดอายุระหว่างเปิดหน้าค้างไว้ การกดบันทึกจะได้กล่องแดงเฉยๆ
+//    ปุ่ม "ลองอีกครั้ง" ก็ส่ง token ใบเดิมที่ตายแล้วซ้ำไปเรื่อยๆ ไม่มีวันสำเร็จ
+//    ทางออกเดียวที่ใช้ได้จริงคือปุ่ม "ออกจากระบบ" ซึ่งเขียนว่าออกจากระบบ
+//    ทั้งที่จริงๆ ระบบพาเขาออกไปแล้ว
+export function isDeadToken(error) {
+  return ["token_expired", "token_invalid", "user_not_found", "not_signed_in"].includes(error?.code);
 }

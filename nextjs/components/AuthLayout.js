@@ -38,6 +38,10 @@ const SAMPLE_ROWS = [
 // ไม่ขึ้นกับนาฬิกา ไม่ขึ้นกับเขตเวลา ไม่ขึ้นกับว่า build เมื่อไหร่
 // และสำหรับเจ้าของร้านที่ยืนอยู่หน้าเคาน์เตอร์ "อีก 3 วัน" อ่านง่ายกว่า "25 ก.ย." ด้วย
 function dueLabel(offsetDays, t) {
+  // ภาษาอังกฤษต้องแยกเอกพจน์ ไม่งั้นได้ "in 1 days" ซึ่งเป็นข้อความที่ผิดจริงๆ
+  // ภาษาไทยไม่มีพหูพจน์ แต่ "พรุ่งนี้" อ่านเป็นธรรมชาติกว่า "อีก 1 วัน" อยู่ดี
+  if (offsetDays === 1) return t("sample.dueInOne");
+  if (offsetDays === -1) return t("sample.lateByOne");
   if (offsetDays > 0) return t("sample.dueIn").replace("{n}", String(offsetDays));
   if (offsetDays === 0) return t("sample.dueToday");
   return t("sample.lateBy").replace("{n}", String(-offsetDays));

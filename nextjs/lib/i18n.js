@@ -76,6 +76,8 @@ const TEXT = {
     // ใช้ "อีกกี่วัน" ไม่ใช่วันที่ เพราะวันที่ต้องคำนวณจากนาฬิกา
     // ซึ่งเซิร์ฟเวอร์กับเบราว์เซอร์คนละเขตเวลากัน (ดูคอมเมนต์ใน AuthLayout.js)
     "sample.dueIn": "อีก {n} วัน",
+    "sample.dueInOne": "พรุ่งนี้",
+    "sample.lateByOne": "เกินมา 1 วัน",
     "sample.dueToday": "วันนี้",
     "sample.lateBy": "เกินมา {n} วัน",
     "sample.status.ok": "อยู่ในกำหนด",
@@ -153,6 +155,7 @@ const TEXT = {
     "help.register": "สมัครบัญชีใหม่",
 
     "state.loading": "กำลังโหลดข้อมูล...",
+    "state.slow": "ยังติดต่อเซิร์ฟเวอร์อยู่ ช้ากว่าปกติเล็กน้อย กรุณารออีกสักครู่",
 
     // ใช้เฉพาะหน้าแม่แบบ pages/template.js (เปิดได้เฉพาะตอน dev)
     "template.title": "หน้าแม่แบบ",
@@ -218,6 +221,8 @@ const TEXT = {
     "sample.caption": "Sample borrow log (illustrative data)",
     "sample.colDue": "Due",
     "sample.dueIn": "in {n} days",
+    "sample.dueInOne": "tomorrow",
+    "sample.lateByOne": "1 day late",
     "sample.dueToday": "today",
     "sample.lateBy": "{n} days late",
     "sample.status.ok": "On time",
@@ -290,6 +295,7 @@ const TEXT = {
     "help.register": "Register a new account",
 
     "state.loading": "Loading...",
+    "state.slow": "Still connecting — this is slower than usual. Please hold on.",
 
     "template.title": "Page template",
     "template.subtitle": "Copy pages/template.js to start a new page",

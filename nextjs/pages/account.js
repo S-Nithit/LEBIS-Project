@@ -21,8 +21,9 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/FormField";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
-import { useAuth } from "@/lib/useAuth";
+import { isDeadToken, useAuth } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
+import { useSlowRequest } from "@/lib/useSlowRequest";
 
 // หนึ่งบรรทัดข้อมูล: ป้ายซ้าย ค่าขวา
 //
@@ -45,7 +46,7 @@ function Row({ label, value, children, hideLabel = false }) {
 }
 
 export default function Account() {
-  const { user, loading, loadError, reload, logout } = useAuth({ redirectTo: "/login" });
+  const { user, loading, loadError, reload, logout, applyUser } = useAuth({ redirectTo: "/login" });
   const { t } = useLanguage();
 
   // แก้ชื่อผู้ใช้งานกับชื่อร้านได้จากหน้านี้ — สองอย่างนี้กรอกตอนสมัครแล้วไม่มีที่ไหน
@@ -58,6 +59,7 @@ export default function Account() {
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const slow = useSlowRequest(saving);
   const [fieldError, setFieldError] = useState(""); // ผิดที่ช่อง ไม่ใช่ผิดทั้งฟอร์ม
   const editButtonRefs = useRef({});
 
@@ -107,6 +109,13 @@ export default function Account() {
     try {
       await apiFetch("/api/auth/me", { method: "PATCH", body: { [editing]: value } });
 
+      // 🔴 อัปเดตค่าที่แสดงอยู่ "ทันที" จากค่าที่เพิ่งส่งไปสำเร็จ
+      //    ไม่ใช่รอให้ reload() ดึงมาใหม่แล้วค่อยเปลี่ยน
+      //    เพราะถ้าการดึงรอบนั้นล้มเหลว (เน็ตสะดุดพอดี) หน้าจะขึ้นว่า
+      //    "บันทึกเรียบร้อยแล้ว" ทั้งที่แถวยังเป็นชื่อเดิม และไม่มีกล่องแดงที่ไหนเลย
+      //    เจ้าของร้านจะกดบันทึกซ้ำเพราะคิดว่าไม่ติด
+      applyUser({ [editing]: value });
+
       toast.success(t("account.saved"));
       const saved = editing;
       setEditing(null);
@@ -114,6 +123,14 @@ export default function Account() {
       requestAnimationFrame(() => editButtonRefs.current[saved]?.focus());
       reload(); // ดึงข้อมูลใหม่ ชื่อบนแถบหัวเว็บจะได้เปลี่ยนตาม
     } catch (error) {
+      // 🔴 token หมดอายุระหว่างเปิดหน้าค้างไว้ ต้องพาออกไปหน้าเข้าสู่ระบบจริงๆ
+      //    ไม่ใช่ขึ้นกล่องแดงแล้วให้กด "ลองอีกครั้ง" ซึ่งส่ง token ใบที่ตายแล้ว
+      //    ซ้ำไปเรื่อยๆ ไม่มีวันสำเร็จ และทางออกที่ใช้ได้จริงกลับเขียนว่า "ออกจากระบบ"
+      //    ทั้งที่ระบบพาเขาออกไปแล้ว
+      if (isDeadToken(error)) {
+        logout();
+        return;
+      }
       // ขึ้นในหน้าเหมือนหน้าอื่นของระบบ ไม่ใช่ toast ที่หายเอง
       setSaveError(errorMessage(error, t));
     } finally {
@@ -203,6 +220,12 @@ export default function Account() {
                    กล่องแดงไปโผล่ห่างจากปุ่มบันทึก 110px คนละฝั่งของแถว "ชื่อร้าน"
                    ผู้ใช้จะไปไล่ดูแถวที่ไม่ได้แตะเลยว่าผิดตรงไหน
                    (docs/brand.md หัวข้อ 6 · คอมเมนต์หัวไฟล์ FormError.js) */}
+            {slow ? (
+              <p role="status" className="t-caption w-full">
+                {t("state.slow")}
+              </p>
+            ) : null}
+
             {saveError ? (
               <div className="w-full">
                 <FormError message={saveError} onRetry={handleSave} retrying={saving} />
@@ -243,6 +266,15 @@ export default function Account() {
                คนละคำ ที่ทำสิ่งเดียวกัน ห่างกัน 220px ผู้ใช้ต้องมานั่งเดาว่าต่างกันยังไง
                (ดู docs/brand.md หัวข้อ 5 ฉบับแก้ไข 21 ก.ย. 2569) */}
         <PageHeader title={t("account.title")} description={t("account.subtitle")} />
+
+        {/* 🔴 loadError ตอน "โหลดซ้ำ" ต้องเห็นด้วย ไม่ใช่เห็นเฉพาะตอนยังไม่มีข้อมูลเลย
+               เดิมกล่องนี้ถูกวาดเฉพาะตอน !user ซึ่งแปลว่าถ้ามีข้อมูลเก่าค้างอยู่
+               แล้วดึงใหม่ไม่สำเร็จ หน้าจะเงียบสนิทและโชว์ของเก่าเหมือนไม่มีอะไรเกิดขึ้น */}
+        {loadError ? (
+          <div className="mb-5">
+            <FormError message={errorMessage(loadError, t)} onRetry={reload} retrying={loading} />
+          </div>
+        ) : null}
 
         {/* หน้านี้มีเนื้อหาไม่กี่บรรทัด ถ้าปล่อยให้การ์ดกว้างเต็ม 1100px
             บนจอคอม จะเหลือพื้นที่ว่างเป็นบริเวณกว้างจนดูเหมือนหน้ายังโหลดไม่เสร็จ

@@ -7,7 +7,7 @@
 // Next.js จะ rewrite /api/* ไปที่ FastAPI ให้เอง (ดู next.config.mjs)
 // เลยไม่ต้องใส่ URL ของ backend และไม่ต้องตั้ง CORS
 
-const TOKEN_KEY = "token";
+export const TOKEN_KEY = "token";
 
 // ---------------------------------------------------------------------------
 // เก็บ / อ่าน / ลบ token

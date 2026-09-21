@@ -21,6 +21,7 @@ import { toast } from "sonner";
 
 import { apiFetch, errorMessage, fieldToInputId, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
+import { useSlowRequest } from "@/lib/useSlowRequest";
 import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
 import { FormField } from "@/components/FormField";
@@ -42,6 +43,7 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  const slow = useSlowRequest(loading);
   const emailRef = useRef(null);
 
   // โฟกัสช่องแรกให้เฉพาะเครื่องที่มีเมาส์ (คอมพิวเตอร์) — กฎเดียวกับหน้าเข้าสู่ระบบ
@@ -83,9 +85,15 @@ export default function Register() {
 
     const found = validate();
     setErrors(found);
-    // ล้างข้อความระดับฟอร์มของรอบก่อนทิ้ง ไม่งั้นข้อความเก่าที่ไม่จริงแล้ว
-    // (เช่น "เชื่อมต่อไม่ได้") จะค้างอยู่คู่กับข้อความใหม่ที่คนละเรื่องกัน
-    setFormError("");
+    // 🔴 ห้ามล้างข้อความระดับฟอร์มตรงนี้
+    //    เคยล้างตอนเริ่มส่ง เพื่อไม่ให้ข้อความเก่าค้างคู่กับข้อความใหม่
+    //    แต่ผลคือพอกด "ลองอีกครั้ง" กล่องแดงหายไปทั้งก้อน หน้าเด้งขึ้น 124px
+    //    (วัดที่ 390px) แล้วเด้งกลับลงมาเมื่อพลาดอีกครั้ง ปุ่มที่นิ้วเล็งอยู่เลื่อนหนี
+    //    และคำอธิบายว่าพังเพราะอะไรก็หายไปพร้อมกัน ทั้งที่ brand.md หัวข้อ 6
+    //    เขียนว่าความล้มเหลวต้องอยู่จนกว่าผู้ใช้จะแก้ — การกดลองใหม่ไม่ใช่การแก้
+    //
+    //    ข้อความเก่าไม่ค้างอยู่แล้ว เพราะรอบใหม่จะเขียนทับด้วย setFormError(ข้อความใหม่)
+    //    หรือถูกล้างเมื่อสำเร็จ หรือเมื่อผู้ใช้เริ่มพิมพ์แก้ (clearError)
 
     if (Object.keys(found).length > 0) {
       // ไม่ขึ้น toast ซ้ำ ข้อความอยู่ใต้ช่องที่ผิดแล้ว
@@ -259,6 +267,14 @@ export default function Register() {
           <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
             {loading ? t("register.submitting") : t("register.submit")}
           </Button>
+
+          {/* หลัง 6 วินาที บอกเพิ่มว่ายังรออยู่ ไม่ใช่ปล่อยให้คำเดิมคำเดียวนิ่ง 15 วินาที
+              คนที่มีลูกค้ายืนรอจะคิดว่าเครื่องค้างแล้วกดรีเฟรช ซึ่งทำให้ที่พิมพ์ไว้หายหมด */}
+          {slow ? (
+            <p role="status" className="t-caption mt-2 text-center">
+              {t("state.slow")}
+            </p>
+          ) : null}
         </form>
       </AuthLayout>
     </>
