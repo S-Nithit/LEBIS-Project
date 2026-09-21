@@ -1,17 +1,67 @@
 import os
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import bcrypt
 from databases import Database
 
+# ตัวแปรสำหรับตอนรันในเครื่อง (ค่าตรงกับ docker-compose.yaml)
 POSTGRES_USER = os.getenv("POSTGRES_USER", "temp")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "temp")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "advcompro")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
 
-DATABASE_URL = (
-    f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-    f"@{POSTGRES_HOST}/{POSTGRES_DB}"
-)
+# ใส่บัญชีทดสอบให้อัตโนมัติตอนสตาร์ทหรือไม่
+# ในเครื่อง = ใส่ (ค่าเริ่มต้น) · ตอน deploy จริง = ต้องตั้งเป็น false
+TRUE_VALUES = ("1", "true", "yes", "on")
+SEED_DEMO_ACCOUNTS = os.getenv("SEED_DEMO_ACCOUNTS", "true").strip().lower() in TRUE_VALUES
+
+
+def normalize_database_url(url: str) -> str:
+    """แปลง connection string ของผู้ให้บริการให้เป็นรูปที่ไลบรารีนี้ใช้ได้
+
+    ผู้ให้บริการอย่าง Railway ให้ URL มาหน้าตาแบบนี้
+        postgresql://user:password@host:5432/railway
+    แต่ไลบรารี databases ต้องรู้ว่าจะคุยด้วย driver ตัวไหน เลยต้องเป็น
+        postgresql+asyncpg://user:password@host:5432/railway
+
+    อีกเรื่องคือพารามิเตอร์ sslmode ที่บางเจ้าติดมาท้าย URL — อันนั้นเป็นของ
+    libpq (ไลบรารีฝั่ง C) ส่ง asyncpg ตรงๆ จะ error เลยต้องแปลงเป็น ssl=true
+    """
+    parts = urlsplit(url)
+
+    scheme = parts.scheme
+    if scheme in ("postgres", "postgresql"):
+        scheme = "postgresql+asyncpg"
+
+    query = dict(parse_qsl(parts.query))
+    sslmode = query.pop("sslmode", None)
+    if sslmode and sslmode not in ("disable", "allow", "prefer"):
+        query["ssl"] = "true"
+
+    return urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+def build_database_url() -> str:
+    """เลือกที่มาของค่าเชื่อมต่อฐานข้อมูล
+
+    ลำดับความสำคัญ
+      1. DATABASE_URL — ผู้ให้บริการบนคลาวด์ให้มาเป็นสตริงชุดเดียว
+      2. POSTGRES_* แยกตัว — แบบที่ docker-compose.yaml ใช้ตอนรันในเครื่อง
+
+    🔴 ห้าม print หรือ log ค่าที่ฟังก์ชันนี้คืน เพราะมีรหัสผ่านฐานข้อมูลอยู่ในนั้น
+    """
+    url_from_provider = os.getenv("DATABASE_URL", "").strip()
+
+    if url_from_provider:
+        return normalize_database_url(url_from_provider)
+
+    return (
+        f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
+        f"@{POSTGRES_HOST}/{POSTGRES_DB}"
+    )
+
+
+DATABASE_URL = build_database_url()
 
 database = Database(DATABASE_URL)
 
@@ -145,7 +195,16 @@ async def setup_db():
     for statement in ALTER_USERS:
         await database.execute(statement)
 
-    await seed_demo_accounts()
+    if SEED_DEMO_ACCOUNTS:
+        await seed_demo_accounts()
+        # เตือนดังๆ ในล็อก เผื่อลืมปิดตอน deploy จะได้เห็นตั้งแต่บรรทัดแรกที่สตาร์ท
+        print(
+            "[LEBIS] ⚠️  SEED_DEMO_ACCOUNTS เปิดอยู่ — ใส่บัญชีทดสอบที่รหัสผ่าน"
+            " เปิดเผยในโค้ดแล้ว ตอน deploy จริงต้องตั้งเป็น false",
+            flush=True,
+        )
+    else:
+        print("[LEBIS] ข้ามการใส่บัญชีทดสอบ (SEED_DEMO_ACCOUNTS=false)", flush=True)
 
 
 # 🔴 บัญชี seed สำหรับ "ทดสอบบนเครื่องตัวเอง" เท่านั้น ไม่ใช่บัญชีผู้ใช้จริง
@@ -155,8 +214,9 @@ async def setup_db():
 #    (Kul ใช้เทียบ free/pro ตอนทดสอบระบบล็อกฟีเจอร์ · Sea ใช้เปิดหน้า admin)
 #
 #    รหัสผ่านที่เขียนไว้ตรงนี้ไม่ใช่ความลับ ทุกคนที่ clone repo ก็เห็น —
-#    และนั่นคือเหตุผลที่ตอน deploy ขึ้นใช้งานจริง ต้องลบสองบัญชีนี้ทิ้ง
-#    หรือเปลี่ยนรหัสก่อนเสมอ ไม่งั้นเท่ากับเปิดประตูทิ้งไว้ให้ใครก็ได้
+#    และนั่นคือเหตุผลที่ตอน deploy ขึ้นใช้งานจริงต้องตั้ง SEED_DEMO_ACCOUNTS=false
+#    ไม่งั้นระบบจะสร้างบัญชี admin ที่ทุกคนรู้รหัสไว้บนอินเทอร์เน็ต
+#    เท่ากับเปิดประตูทิ้งไว้ให้ใครก็ได้
 #
 #    อีเมลต้องเป็นโดเมนปกติที่ EmailStr ยอมรับ ห้ามใช้ .local .test .localhost
 #    ไม่งั้นบัญชีจะมีแถวอยู่ใน DB แต่ login ไม่ได้ (ได้ 422 ตั้งแต่ชั้นตรวจข้อมูล)
