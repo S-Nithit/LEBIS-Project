@@ -41,7 +41,7 @@ export function AppShell({ user, onLogout, children }) {
   return (
     <div className="flex min-h-screen flex-col bg-paper">
       {/* แถบหัวเว็บ — พื้นสีหมึก โลโก้ใช้ variant dark */}
-      <header className="sticky top-0 z-20 bg-ink text-white">
+      <header className="sticky top-0 z-20 bg-header-bg text-header-fg">
         <div className="app-container flex h-16 items-center justify-between gap-4">
           <Link href="/" aria-label="LEBIS" className="rounded-control">
             <Logo variant="dark" size={26} />
@@ -50,7 +50,7 @@ export function AppShell({ user, onLogout, children }) {
           <div className="flex items-center gap-3">
             {user ? (
               <div className="hidden items-center gap-3 md:flex">
-                <span className="text-[13px] text-white/85">
+                <span className="text-label text-header-fg/85">
                   {user.shop_name || user.name || user.email}
                 </span>
                 {/* ป้ายแพ็กเกจ — Pro ได้สีอำพัน ซึ่งเป็นไฮไลต์จุดเดียวของแถบนี้ */}
@@ -66,7 +66,7 @@ export function AppShell({ user, onLogout, children }) {
               <button
                 type="button"
                 onClick={onLogout}
-                className="btn btn-sm min-h-[44px] rounded-control border border-white/25 bg-transparent px-4 text-white hover:border-white/60"
+                className="btn btn-sm min-h-[44px] rounded-control border border-header-fg/30 bg-transparent px-4 text-header-fg hover:border-header-fg/70"
               >
                 {t("nav.logout")}
               </button>

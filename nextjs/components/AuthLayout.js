@@ -16,13 +16,24 @@ import { useLanguage } from "@/lib/useLanguage";
 // ข้อมูลสมมติสำหรับโชว์หน้าตาของระบบ — ไม่ใช่ข้อมูลจริงของร้านใด
 // มีคำกำกับว่าเป็นตัวอย่างอยู่เหนือรายการเสมอ
 const SAMPLE_ROWS = [
-  { code: "CAM-0102", key: "row1", tone: "success", statusKey: "sample.status.ok" },
-  { code: "LEN-0044", key: "row2", tone: "warning", statusKey: "sample.status.due" },
-  { code: "TRI-0009", key: "row3", tone: "danger", statusKey: "sample.status.late" },
+  { code: "CAM-0102", key: "row1", tone: "success", statusKey: "sample.status.ok", offsetDays: 3 },
+  { code: "LEN-0044", key: "row2", tone: "warning", statusKey: "sample.status.due", offsetDays: 1 },
+  { code: "TRI-0009", key: "row3", tone: "danger", statusKey: "sample.status.late", offsetDays: -3 },
 ];
 
+// วันที่ในตัวอย่างนับจากวันนี้เสมอ ไม่ได้เขียนตายตัว
+// ไม่งั้นอีกสองเดือนจะกลายเป็นวันที่ผ่านมาแล้วแต่ป้ายยังเขียนว่า "อยู่ในกำหนด"
+function dueLabel(offsetDays, language) {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  return date.toLocaleDateString(language === "en" ? "en-GB" : "th-TH", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 export function AuthLayout({ title, description, children, footer }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <main className="flex min-h-screen flex-col bg-paper py-5 md:justify-center md:py-7">
@@ -33,9 +44,9 @@ export function AuthLayout({ title, description, children, footer }) {
           <LanguageToggle />
         </div>
 
-        <div className="mt-5 grid items-start gap-5 md:mt-6 md:grid-cols-[1fr_1.05fr] md:gap-6">
+        <div className="mt-5 grid items-start gap-5 md:mt-6 md:grid-cols-[1.15fr_0.85fr] md:gap-6">
           {/* การ์ดฟอร์ม — บนมือถือมาก่อนเสมอ */}
-          <section className="order-1 rounded-card border border-line bg-surface p-5 md:order-2 md:p-6">
+          <section className="rounded-card border border-line bg-surface p-5 md:p-6">
             <h1 className="t-page-title">{title}</h1>
             {description ? <p className="t-caption mt-2">{description}</p> : null}
 
@@ -47,7 +58,7 @@ export function AuthLayout({ title, description, children, footer }) {
           </section>
 
           {/* ตัวอย่างบันทึกการยืม — ให้คนที่เพิ่งเข้ามาเห็นว่าระบบเก็บอะไรให้ */}
-          <aside className="order-2 rounded-card border border-line bg-surface p-5 md:order-1 md:p-6">
+          <aside className="rounded-card border border-line bg-paper p-5 md:p-6">
             <p className="t-eyebrow">{t("sample.caption")}</p>
 
             <ul className="mt-4 flex flex-col">
@@ -57,12 +68,12 @@ export function AuthLayout({ title, description, children, footer }) {
                   className="flex flex-wrap items-center justify-between gap-3 border-b border-line py-3 last:border-b-0 last:pb-0"
                 >
                   <div className="min-w-0">
-                    <p className="font-display text-[15px] font-medium text-ink">
+                    <p className="font-display text-body font-medium text-ink">
                       {row.code}
                     </p>
                     <p className="t-caption">
                       {t(`sample.${row.key}.customer`)} · {t("sample.colDue")}{" "}
-                      {t(`sample.${row.key}.due`)}
+                      {dueLabel(row.offsetDays, language)}
                     </p>
                   </div>
 

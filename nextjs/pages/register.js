@@ -1,23 +1,25 @@
 // หน้าสมัครสมาชิก
 //
 // ทางเดินของข้อมูลทั้งเส้น อ่านจากบนลงล่างได้เลย
-//   1. ผู้ใช้พิมพ์ในฟอร์ม  -> เก็บไว้ใน state (useState) ของหน้านี้
-//   2. กดปุ่มสมัคร        -> handleSubmit()
-//   3. validate ฝั่งหน้าเว็บ (กันพิมพ์ผิดเบื้องต้น ไม่ใช่การกันจริง)
-//   4. apiFetch("/api/auth/register")  -> FastAPI: routes/auth.py -> register()
+//   1. ผู้ใช้พิมพ์ในฟอร์ม -> เก็บไว้ใน state ของหน้านี้
+//   2. กดปุ่มสมัคร -> handleSubmit()
+//   3. validate() ตรวจ "ทุกช่องพร้อมกัน" แล้วคืนข้อความผิดพลาดแยกรายช่อง
+//      (ไม่ใช่หยุดที่ช่องแรกที่ผิด ไม่งั้นผู้ใช้ต้องกดส่งหลายรอบกว่าจะรู้ครบ)
+//   4. apiFetch("/api/auth/register") -> FastAPI: routes/auth.py -> register()
 //   5. backend hash รหัสผ่าน แล้ว INSERT ลงตาราง users
-//   6. backend คืน JWT กลับมา -> saveToken() เก็บลง localStorage
+//   6. backend คืน JWT -> saveToken() เก็บลง localStorage
 //   7. พาไปหน้าแรก
 //
 // 🔴 validate ในไฟล์นี้เป็นแค่ความสะดวกของผู้ใช้ ตัวที่กันจริงคือ Pydantic
 // กับ dependency ที่ฝั่ง backend เพราะคนแก้ JavaScript ในเบราว์เซอร์ได้
 
 import { useState } from "react";
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 
-import { apiFetch, saveToken } from "@/lib/api";
+import { apiFetch, errorMessage, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
 import { AuthLayout } from "@/components/AuthLayout";
 import { FormField } from "@/components/FormField";
@@ -27,135 +29,155 @@ export default function Register() {
   const router = useRouter();
   const { t } = useLanguage();
 
-  // 1) ช่องในฟอร์ม — 1 ช่อง 1 state อ่านง่ายกว่าเก็บรวมเป็น object เดียว
+  // 1 ช่อง 1 state อ่านง่ายกว่าเก็บรวมเป็น object เดียว
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [shopName, setShopName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // 3) ตรวจข้อมูลก่อนส่ง — คืนข้อความ error ถ้าเจอปัญหา คืน null ถ้าผ่าน
-  function findProblem() {
-    if (!email.includes("@")) return t("validate.email");
-    if (name.trim().length === 0) return t("validate.name");
-    if (password.length < 8) return t("validate.passwordShort");
-    if (password !== confirmPassword) return t("validate.passwordMismatch");
-    return null;
+  // ตรวจทุกช่องพร้อมกัน คืน object ที่ key คือ id ของช่องที่ผิด
+  function validate() {
+    const found = {};
+    if (!email.trim().includes("@")) found.email = t("validate.email");
+    if (name.trim().length === 0) found.name = t("validate.name");
+    if (password.length < 8) found.password = t("validate.passwordShort");
+    if (confirmPassword !== password) {
+      found.confirmPassword = t("validate.passwordMismatch");
+    }
+    return found;
   }
 
   async function handleSubmit(event) {
     event.preventDefault(); // กันเบราว์เซอร์ refresh หน้าเองตามพฤติกรรมเดิมของฟอร์ม
 
-    const problem = findProblem();
-    if (problem) {
-      toast.error(problem);
+    const found = validate();
+    setErrors(found);
+
+    if (Object.keys(found).length > 0) {
+      toast.error(t("error.summary"));
+      // พาโฟกัสไปที่ช่องแรกที่ผิด ผู้ใช้จะได้ไม่ต้องไล่หาเองว่าผิดตรงไหน
+      document.getElementById(Object.keys(found)[0])?.focus();
       return;
     }
 
     setLoading(true);
 
     try {
-      // 4) ยิงไป backend — ถ้า backend ตอบ error apiFetch จะ throw ให้ catch ข้างล่างรับ
       const data = await apiFetch("/api/auth/register", {
         method: "POST",
         body: {
-          email,
+          email: email.trim(),
           password,
-          name,
+          name: name.trim(),
           // ช่องนี้ไม่บังคับ ถ้าเว้นว่างส่ง null ไปแทนสตริงว่าง
-          shop_name: shopName.trim() === "" ? null : shopName,
+          shop_name: shopName.trim() === "" ? null : shopName.trim(),
         },
       });
 
-      // 6) เก็บ JWT ที่ backend ส่งมา หน้าอื่นจะหยิบไปใช้ต่อผ่าน apiFetch
       saveToken(data.access_token);
 
       toast.success(t("register.success"));
-      router.replace("/"); // 7) replace ไม่ push เพื่อไม่ให้กด back กลับมาหน้าสมัครได้
+      router.replace("/"); // replace ไม่ push เพื่อไม่ให้กด back กลับมาหน้าสมัครได้
     } catch (error) {
-      toast.error(error.message);
+      const message = errorMessage(error, t);
+      // อีเมลซ้ำเป็นความผิดของช่องอีเมล จึงแปะไว้ที่ช่องนั้นโดยตรง
+      setErrors(error?.code === "email_taken" ? { email: message } : {});
+      toast.error(message);
     } finally {
       setLoading(false); // ปลดล็อกปุ่มทั้งกรณีสำเร็จและกรณีพลาด
     }
   }
 
   return (
-    <AuthLayout
-      title={t("register.title")}
-      description={t("register.subtitle")}
-      footer={
-        <p className="t-caption">
-          {t("register.hasAccount")}{" "}
-          <Link
-            href="/login"
-            className="font-medium text-ink underline underline-offset-4 hover:no-underline"
-          >
-            {t("register.goLogin")}
-          </Link>
-        </p>
-      }
-    >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <FormField
-          id="email"
-          label={t("register.email")}
-          hint={t("register.emailHint")}
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
-          autoComplete="email"
-          required
-        />
+    <>
+      <Head>
+        <title>{t("page.register")}</title>
+      </Head>
 
-        <FormField
-          id="name"
-          label={t("register.name")}
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder={t("register.namePlaceholder")}
-          autoComplete="name"
-          required
-        />
-
-        <FormField
-          id="shopName"
-          label={t("register.shopName")}
-          badge={t("register.shopNameOptional")}
-          value={shopName}
-          onChange={(event) => setShopName(event.target.value)}
-          placeholder={t("register.shopNamePlaceholder")}
-        />
-
-        <div className="grid gap-5 sm:grid-cols-2">
+      <AuthLayout
+        title={t("register.title")}
+        description={t("register.subtitle")}
+        footer={
+          <p className="t-caption">
+            {t("register.hasAccount")}{" "}
+            <Link
+              href="/login"
+              className="font-medium text-ink underline underline-offset-4 hover:no-underline"
+            >
+              {t("register.goLogin")}
+            </Link>
+          </p>
+        }
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
           <FormField
-            id="password"
-            label={t("register.password")}
-            hint={t("register.passwordHint")}
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="new-password"
+            id="email"
+            label={t("register.email")}
+            hint={t("register.emailHint")}
+            error={errors.email}
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
             required
           />
 
           <FormField
-            id="confirmPassword"
-            label={t("register.confirmPassword")}
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            autoComplete="new-password"
+            id="name"
+            label={t("register.name")}
+            error={errors.name}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("register.namePlaceholder")}
+            autoComplete="name"
             required
           />
-        </div>
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? t("register.submitting") : t("register.submit")}
-        </Button>
-      </form>
-    </AuthLayout>
+          <FormField
+            id="shopName"
+            label={t("register.shopName")}
+            badge={t("register.shopNameOptional")}
+            value={shopName}
+            onChange={(event) => setShopName(event.target.value)}
+            placeholder={t("register.shopNamePlaceholder")}
+          />
+
+          {/* รหัสผ่านสองช่องอยู่คนละบรรทัดบนมือถือ และเรียงคู่กันบนจอใหญ่ */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <FormField
+              id="password"
+              label={t("register.password")}
+              hint={t("register.passwordHint")}
+              error={errors.password}
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="new-password"
+              required
+            />
+
+            <FormField
+              id="confirmPassword"
+              label={t("register.confirmPassword")}
+              error={errors.confirmPassword}
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </div>
+
+          <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
+            {loading ? t("register.submitting") : t("register.submit")}
+          </Button>
+        </form>
+      </AuthLayout>
+    </>
   );
 }

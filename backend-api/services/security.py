@@ -97,13 +97,13 @@ def decode_access_token(token: str) -> dict:
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token หมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่",
+            detail={"code": "token_expired", "message": "Token หมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่"},
             headers={"WWW-Authenticate": "Bearer"},
         )
     except jwt.PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token ไม่ถูกต้อง",
+            detail={"code": "token_invalid", "message": "Token ไม่ถูกต้อง"},
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -125,7 +125,7 @@ async def get_current_user(
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="ต้องเข้าสู่ระบบก่อน",
+            detail={"code": "not_signed_in", "message": "ต้องเข้าสู่ระบบก่อน"},
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -137,7 +137,7 @@ async def get_current_user(
         # token ถูกต้องแต่หา user ไม่เจอ (เช่นถูกลบไปแล้ว)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="ไม่พบผู้ใช้ของ token นี้",
+            detail={"code": "user_not_found", "message": "ไม่พบผู้ใช้ของ token นี้"},
             headers={"WWW-Authenticate": "Bearer"},
         )
 

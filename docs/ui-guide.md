@@ -8,13 +8,15 @@
 
 ---
 
-## กฎ 3 ข้อ
+## กฎ 4 ข้อ
 
 1. **ห้ามใส่ค่าสีเอง** ไม่ว่าจะเป็น `text-blue-600`, `bg-[#0F3B43]` หรือ `style={{ color: "..." }}`
    ให้ใช้ชื่อสีของระบบเท่านั้น (ตารางข้างล่าง) เพราะสีของระบบสลับโหมดมืดให้เอง
    ถ้าใส่ค่าสีเอง โหมดมืดจะพัง
 2. **ห้ามตั้งขนาดตัวอักษรเอง** ใช้คลาส `t-page-title` `t-section` `t-body` `t-label` `t-caption` `t-eyebrow`
 3. **ข้อความทุกคำต้องผ่าน `t()`** เพราะเว็บนี้มีสองภาษา (ดูหัวข้อ "ข้อความสองภาษา")
+4. **ข้อผิดพลาดต้องบอกใต้ช่องที่ผิดเสมอ** ไม่ใช่บอกผ่าน toast อย่างเดียว
+   เพราะ toast ไม่ได้บอกว่าช่องไหนผิดและหายไปเอง (ดูหัวข้อ "บอกข้อผิดพลาดให้ถูกวิธี")
 
 ---
 
@@ -108,6 +110,66 @@ export default function Workspace() {
 
 ---
 
+## บอกข้อผิดพลาดให้ถูกวิธี
+
+ทุกหน้าที่มีฟอร์มทำเหมือนกันหมด 3 ขั้น
+
+```jsx
+import { apiFetch, errorMessage } from "@/lib/api";
+
+const [errors, setErrors] = useState({});
+
+// 1) ตรวจ "ทุกช่องพร้อมกัน" คืน object ที่ key คือ id ของช่องที่ผิด
+//    อย่าหยุดที่ช่องแรกที่ผิด ไม่งั้นผู้ใช้ต้องกดส่งหลายรอบกว่าจะรู้ครบ
+function validate() {
+  const found = {};
+  if (!email.includes("@")) found.email = t("validate.email");
+  if (password.length < 8) found.password = t("validate.passwordShort");
+  return found;
+}
+
+async function handleSubmit(event) {
+  event.preventDefault();
+
+  const found = validate();
+  setErrors(found);
+  if (Object.keys(found).length > 0) {
+    toast.error(t("error.summary"));
+    // 2) พาโฟกัสไปช่องแรกที่ผิด ผู้ใช้จะได้ไม่ต้องไล่หาเอง
+    document.getElementById(Object.keys(found)[0])?.focus();
+    return;
+  }
+
+  try {
+    await apiFetch("/api/items", { method: "POST", body: {...} });
+    toast.success(t("items.created"));
+  } catch (error) {
+    // 3) แปลรหัสข้อผิดพลาดจาก backend เป็นภาษาที่ผู้ใช้เลือกอยู่
+    //    🔴 ห้ามใช้ error.message ตรงๆ เพราะอาจเป็นภาษาไทยเสมอ
+    //       หรือเป็นข้อความของเบราว์เซอร์อย่าง "Failed to fetch"
+    toast.error(errorMessage(error, t));
+  }
+}
+```
+
+แล้วส่งข้อความเข้า `FormField` ผ่าน prop `error` — ตัว component จัดการให้หมด
+ทั้งกรอบแดง ข้อความใต้ช่อง และการบอกโปรแกรมอ่านหน้าจอ
+
+```jsx
+<FormField id="email" label={t("items.email")} error={errors.email} ... />
+```
+
+ฟอร์มทุกอันใส่ `noValidate` ด้วย เพื่อปิดกล่องเตือนของเบราว์เซอร์
+ซึ่งขึ้นเป็นภาษาของเบราว์เซอร์ ไม่ใช่ภาษาที่ผู้ใช้เลือกในเว็บเรา
+
+**เพิ่มข้อความผิดพลาดใหม่จาก backend:** ให้ backend ส่ง
+`detail={"code": "ชื่อรหัส", "message": "..."}` แล้วเติมคีย์ `error.ชื่อรหัส`
+ทั้งใน th และ en ที่ `lib/i18n.js`
+
+ช่องที่เป็น `type="password"` จะมีปุ่ม แสดง/ซ่อน ให้อัตโนมัติ ไม่ต้องทำเอง
+
+---
+
 ## ชื่อสีของระบบ
 
 | ใช้กับอะไร | เขียนว่า |
@@ -117,7 +179,7 @@ export default function Workspace() {
 | ตัวอักษรหลัก แถบหัวเว็บ ปุ่มหลัก | `text-ink` · `bg-ink` |
 | ตัวอักษรรอง คำบรรยาย หัวคอลัมน์ | `text-muted` |
 | เส้นขอบ เส้นคั่น | `border-line` |
-| สีเน้น (รูของแท็ก ป้าย Pro) | `bg-amber` · `text-amber-text` |
+| สีเน้น (รูของแท็ก ป้าย Pro) | `bg-amber` · `text-amber-text` (อำพันที่อ่านออกบนพื้นขาว) |
 | ว่าง / คืนแล้ว | `text-success` |
 | ใกล้ครบกำหนด | `text-warning` |
 | เกินกำหนด / ปุ่มลบ | `text-danger` |
@@ -185,6 +247,8 @@ const { t } = useLanguage();
 - [ ] ข้อความทุกคำผ่าน `t()` และเติมครบทั้ง th และ en
 - [ ] หน้ามีครบ 3 สถานะ: กำลังโหลด / ไม่มีข้อมูล / มีข้อมูล
 - [ ] ทุกการกดที่เปลี่ยนข้อมูลมี toast ทั้งตอนสำเร็จและตอนพลาด
+- [ ] ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่แค่ toast
+- [ ] ข้อความผิดพลาดจาก backend ผ่าน `errorMessage(error, t)` ไม่ใช่ `error.message`
 - [ ] เปิดที่ 390px แล้วไม่มีอะไรล้นออกนอกจอ
 - [ ] ลองสลับเป็นโหมดมืดแล้วยังอ่านออกทุกบรรทัด
 - [ ] โลโก้เรียกผ่าน `<Logo />` ไม่ได้วาดเองหรือใส่รูปเอง

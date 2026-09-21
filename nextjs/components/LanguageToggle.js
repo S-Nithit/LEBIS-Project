@@ -17,7 +17,7 @@ export function LanguageToggle({ onDark = false, className }) {
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-control border p-[3px]",
+        "inline-flex items-center rounded-control border p-1",
         onDark ? "border-white/25" : "border-line bg-surface",
         className
       )}
@@ -32,7 +32,7 @@ export function LanguageToggle({ onDark = false, className }) {
             aria-pressed={active}
             className={cn(
               // สูงพอให้กดด้วยนิ้วโป้งบนมือถือ (brand.md หัวข้อ 6)
-              "inline-flex h-11 min-w-[44px] items-center justify-center rounded-[6px] px-3 text-[13px] font-medium transition-colors",
+              "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-inner px-3 text-label font-medium transition-colors",
               active
                 ? onDark
                   ? "bg-white text-ink"

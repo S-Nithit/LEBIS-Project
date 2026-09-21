@@ -42,10 +42,11 @@
     --ink: #0f3b43; /* ตัวอักษรหลัก แถบหัวเว็บ ปุ่มหลัก เส้นโลโก้ */
     --ink-2: #1a5a66; /* พื้นที่ยกขึ้นมาบนโหมดมืด และสีตอนเอาเมาส์ชี้ปุ่มหลัก */
     --amber: #e09540; /* สีเน้น — รูของป้ายแท็ก ไฮไลต์ 1 จุดต่อหน้า ป้าย Pro */
-    --amber-text: #b4761f; /* อำพันเวอร์ชันที่ใช้เป็นตัวอักษรได้ (สีดิบอ่านไม่ออกบนพื้นขาว) */
-    /* อำพันเข้มขึ้นสำหรับตัวอักษรขนาดเล็ก 13px — #B4761F ได้ 3.8:1 บนพื้นขาว
-       ซึ่งผ่านเฉพาะตัวอักษรใหญ่ ตัวนี้ได้ 5.0:1 จึงผ่านเกณฑ์ 4.5:1 ของทุกขนาด */
-    --amber-text-sm: #99641a;
+    /* อำพันเวอร์ชันที่ใช้เป็นตัวอักษรได้ — brand.md เขียนไว้ที่ #B4761F
+       แต่ค่านั้นได้ 3.8:1 บนพื้นขาว ซึ่งผ่านเฉพาะตัวอักษรใหญ่
+       จึงเข้มขึ้นเป็นค่านี้ (5.0:1) เพื่อให้ผ่านเกณฑ์ 4.5:1 ที่ brand.md
+       เขียนไว้เองในหัวข้อเดียวกัน — มีอำพันสำหรับตัวอักษรตัวเดียวทั้งระบบ */
+    --amber-text: #99641a;
     /* ขอบช่องกรอกต้องเห็นชัดว่าเป็นช่องให้กรอก (WCAG 1.4.11 ต้องได้ 3:1)
        เส้น --line ใช้กับเส้นคั่นตกแต่งซึ่งไม่มีเกณฑ์นี้ */
     --line-strong: #7d9094;
@@ -68,7 +69,6 @@
     /* ---- ขนาดตัวอักษรตามหัวข้อ 3 ---- */
     --text-page-title: 2rem; /* 32px · Space Grotesk 600 */
     --text-section: 1.25rem; /* 20px · Space Grotesk 600 */
-    --text-bignum: 2.5rem; /* 40px · Space Grotesk 600 */
     --text-body: 0.9375rem; /* 15px · DM Sans 400 */
     --text-label: 0.8125rem; /* 13px · DM Sans 500 */
     --text-caption: 0.8125rem; /* 13px · DM Sans 400 สี muted */
@@ -85,6 +85,7 @@
     --space-8: 64px;
 
     /* ---- ความมนของมุม ตามหัวข้อ 4 ---- */
+    --radius-inner: 6px; /* ปุ่มที่ซ้อนอยู่ในกรอบอีกที เช่นปุ่มสลับภาษา */
     --radius-control: 8px; /* ช่องกรอกและปุ่ม */
     --radius-badge: 12px; /* การ์ดเล็กและป้ายสถานะ */
     --radius-card: 20px; /* การ์ดใหญ่และแผงเนื้อหา */
@@ -93,12 +94,13 @@
 
     /* ชื่อที่ component ของ shadcn ใน components/ui/ เรียกใช้
        ผูกกลับมาที่สีของแบรนด์ จะได้มีชุดสีชุดเดียวทั้งเว็บ */
-    --background: var(--paper);
-    --foreground: var(--ink);
-    --card-bg: var(--surface);
-    --border-color: var(--line);
     --primary: var(--ink);
     --primary-foreground: var(--on-ink);
+    --primary-hover: var(--ink-2);
+    /* แถบหัวเว็บเป็นสีหมึกเข้มทั้งสองโหมด ไม่พลิกตาม --ink
+       ไม่งั้นโหมดมืดจะได้แถบสีขาวที่มีตัวหนังสือสีขาวอยู่บนนั้น */
+    --header-bg: #0f3b43;
+    --header-fg: #ffffff;
   }
 
   /* -------------------------------------------------------------------------
@@ -115,7 +117,6 @@
       --line: #234e56;
       --muted: #9db6bb; /* อ่อนพอให้อ่านออกบนพื้นเข้ม */
       --amber-text: #e6a65a; /* อำพันบนพื้นเข้มใช้สีสว่างขึ้นได้ */
-      --amber-text-sm: #e6a65a;
       --line-strong: #729298;
       --badge-success-text: #57b58c;
       --badge-warning-text: #e6a65a;
@@ -125,12 +126,11 @@
       --danger: #e4847a; /* สว่างขึ้นเล็กน้อยเพื่อให้ป้ายผ่าน 4.5:1 บนพื้นเข้ม */
       --on-ink: #0b2126;
 
-      --background: var(--paper);
-      --foreground: var(--ink);
-      --card-bg: var(--surface);
-      --border-color: var(--line);
-      --primary: #1a5a66;
-      --primary-foreground: #ffffff;
+              --primary: #4fb3c4; /* ฟ้าครามสว่างพอให้เป็นปุ่มหลักบนพื้นเข้ม */
+      --primary-foreground: #06232a;
+      --primary-hover: #6cc3d1;
+      --header-bg: #0a2a31;
+      --header-fg: #eef5f5;
     }
   }
 
@@ -161,8 +161,10 @@
     color: var(--ink);
   }
 
+  /* วงแหวนโฟกัส — ใช้อำพันเข้มเพราะอำพันดิบได้แค่ 2.5:1 บนพื้นขาว
+     WCAG 2.4.11 ต้องการ 3:1 สำหรับตัวบอกโฟกัส */
   :focus-visible {
-    outline: 2px solid var(--amber);
+    outline: 2px solid var(--amber-text);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -171,6 +173,19 @@
   textarea,
   select {
     caret-color: var(--ink);
+  }
+
+  /* ผู้ใช้ที่ตั้งเครื่องให้ลดการเคลื่อนไหว (เช่นคนที่เวียนหัวง่าย)
+     ต้องไม่เจอการเปลี่ยนสีหรือขยับใดๆ */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   * {
@@ -221,9 +236,10 @@
     color: var(--ink);
   }
 
+  /* ตัวเลขใหญ่บนหน้าแดชบอร์ด (brand.md หัวข้อ 3) — 40px Space Grotesk 600 */
   .t-bignum {
     font-family: "Space Grotesk", "Prompt", ui-sans-serif, system-ui, sans-serif;
-    font-size: var(--text-bignum);
+    font-size: 2.5rem;
     font-weight: 600;
     line-height: 1.1;
     letter-spacing: -0.02em;
@@ -283,7 +299,9 @@
     width: 100%;
     min-height: 44px;
     padding: 10px var(--space-3);
-    background: var(--surface);
+    /* พื้นของช่องกรอกจมลงจากพื้นการ์ดหนึ่งระดับ ทำให้เห็นว่าเป็นช่องให้กรอก
+       โดยไม่ต้องพึ่งเส้นขอบอย่างเดียว */
+    background: var(--paper);
     color: var(--ink);
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-control);
@@ -307,8 +325,19 @@
 
   .field-input:focus-visible {
     border-color: var(--ink);
-    outline: 2px solid var(--amber);
+    outline: 2px solid var(--amber-text);
     outline-offset: 1px;
+  }
+
+  /* ช่องที่กรอกผิด — กรอบแดงหนาขึ้น เห็นได้โดยไม่ต้องพึ่งสีอย่างเดียว
+     เพราะคนตาบอดสีแยกแดงกับเทาไม่ออก จึงมีข้อความใต้ช่องกำกับเสมอ */
+  .field-input-error {
+    border-color: var(--danger);
+    border-width: 2px;
+  }
+
+  .field-input-error:focus-visible {
+    border-color: var(--danger);
   }
 
   .field-input:disabled {
@@ -339,13 +368,15 @@
     cursor: not-allowed;
   }
 
+  /* ปุ่มหลักอ่านจาก --primary ไม่ใช่ --ink เพราะ --ink พลิกเป็นสีอ่อนในโหมดมืด
+     ถ้าอ่านจาก --ink ปุ่มจะกลายเป็นสีขาว และตอนเอาเมาส์ชี้จะอ่านไม่ออก */
   .btn-primary {
-    background: var(--ink);
-    color: var(--on-ink);
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: var(--ink-2);
+    background: var(--primary-hover);
   }
 
   .btn-secondary {

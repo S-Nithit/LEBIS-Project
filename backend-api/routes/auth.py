@@ -101,9 +101,11 @@ async def register(payload: RegisterRequest):
     # เช็กก่อนว่าอีเมลนี้มีคนใช้แล้วหรือยัง
     existing = await get_user_by_email(payload.email)
     if existing is not None:
+        # ส่ง code ไปด้วยเพื่อให้หน้าเว็บแปลเป็นภาษาที่ผู้ใช้เลือกได้
+        # (message เป็นข้อความสำรองสำหรับคนที่เรียก API ตรงๆ เช่นใน /docs)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="อีเมลนี้ถูกใช้สมัครไปแล้ว",
+            detail={"code": "email_taken", "message": "อีเมลนี้ถูกใช้สมัครไปแล้ว"},
         )
 
     # เก็บลง DB เป็น hash เท่านั้น ไม่เคยเก็บรหัสจริง
@@ -132,7 +134,10 @@ async def login(payload: LoginRequest):
     if user is None or not verify_password(payload.password, user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+            detail={
+                "code": "invalid_credentials",
+                "message": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+            },
         )
 
     token = create_access_token(user["email"])

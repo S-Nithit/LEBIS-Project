@@ -1,4 +1,4 @@
-// ช่องกรอกหนึ่งช่อง พร้อมป้ายกำกับและคำอธิบายใต้ช่อง
+// ช่องกรอกหนึ่งช่อง พร้อมป้ายกำกับ คำอธิบาย และข้อความบอกข้อผิดพลาด
 //
 // วิธีใช้
 //   import { FormField } from "@/components/FormField";
@@ -7,18 +7,43 @@
 //     id="email"
 //     label="อีเมล"
 //     hint="ใช้อีเมลนี้เข้าสู่ระบบในครั้งถัดไป"
+//     error={errors.email}          // ใส่ข้อความเมื่อกรอกผิด ไม่ผิดก็ส่ง undefined
 //     type="email"
 //     value={email}
 //     onChange={(event) => setEmail(event.target.value)}
 //     required
 //   />
 //
+// 🔴 เวลาผู้ใช้กรอกผิด ให้ส่งข้อความผ่าน prop error เสมอ อย่าบอกผ่าน toast อย่างเดียว
+//    เพราะ toast ไม่ได้บอกว่าช่องไหนผิด และหายไปเองภายในไม่กี่วินาที
+//    ตัว component จัดการให้แล้วทั้งกรอบสีแดง ข้อความใต้ช่อง และการบอกโปรแกรม
+//    อ่านหน้าจอ (aria-invalid / aria-describedby) — หน้าเว็บแค่ส่งข้อความมา
+//
 // prop อื่นๆ (placeholder, autoComplete, disabled) ส่งต่อให้ <input> ให้เอง
-// ป้ายกำกับเป็น <label> จริงที่ผูกกับช่องกรอกด้วย id ผู้ใช้จึงกดที่ป้ายแล้วโฟกัสได้
+
+import { forwardRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/lib/useLanguage";
+import { cn } from "@/lib/utils";
 
-export function FormField({ id, label, hint, badge, className, ...inputProps }) {
+export const FormField = forwardRef(function FormField(
+  { id, label, hint, badge, error, className, ...inputProps },
+  ref
+) {
+  const { t } = useLanguage();
+
+  // ช่องรหัสผ่านจะมีปุ่ม "ดู/ซ่อน" ให้อัตโนมัติ
+  // คนที่ยืนกรอกด้วยมือเดียวหน้าร้านพิมพ์ผิดง่าย ต้องมีทางตรวจว่าพิมพ์ถูกมั้ย
+  const isPassword = inputProps.type === "password";
+  const [revealed, setRevealed] = useState(false);
+  const inputType = isPassword && revealed ? "text" : inputProps.type;
+  const hintId = hint ? `${id}-hint` : undefined;
+  const errorId = error ? `${id}-error` : undefined;
+
+  // บอกโปรแกรมอ่านหน้าจอว่าข้อความไหนอธิบายช่องนี้อยู่
+  const describedBy = [errorId, hintId].filter(Boolean).join(" ") || undefined;
+
   return (
     <div className={className}>
       <div className="mb-2 flex items-baseline justify-between gap-2">
@@ -29,9 +54,42 @@ export function FormField({ id, label, hint, badge, className, ...inputProps }) 
         {badge ? <span className="t-caption">{badge}</span> : null}
       </div>
 
-      <Input id={id} {...inputProps} />
+      <div className={cn(isPassword && "relative")}>
+        <Input
+          id={id}
+          ref={ref}
+          aria-invalid={error ? "true" : undefined}
+          aria-describedby={describedBy}
+          className={cn(error && "field-input-error", isPassword && "pr-8")}
+          {...inputProps}
+          type={inputType}
+        />
 
-      {hint ? <p className="t-caption mt-2">{hint}</p> : null}
+        {isPassword ? (
+          <button
+            type="button"
+            onClick={() => setRevealed((current) => !current)}
+            aria-controls={id}
+            className="absolute inset-y-0 right-0 inline-flex min-h-[44px] items-center whitespace-nowrap rounded-control px-3 text-label font-medium text-muted underline underline-offset-4 hover:text-ink"
+          >
+            {revealed ? t("field.hide") : t("field.show")}
+          </button>
+        ) : null}
+      </div>
+
+      {/* ข้อความบอกข้อผิดพลาดอยู่ก่อนคำอธิบาย เพราะเป็นสิ่งที่ต้องอ่านก่อน
+          role="alert" ทำให้โปรแกรมอ่านหน้าจออ่านทันทีที่ข้อความโผล่ */}
+      {error ? (
+        <p id={errorId} role="alert" className="t-caption mt-2 text-danger">
+          {error}
+        </p>
+      ) : null}
+
+      {hint ? (
+        <p id={hintId} className="t-caption mt-2">
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
-}
+});

@@ -5,9 +5,8 @@
 //
 // path ที่ส่งเข้ามาเป็น path แบบสัมพัทธ์เสมอ เช่น "/api/auth/me"
 // Next.js จะ rewrite /api/* ไปที่ FastAPI ให้เอง (ดู next.config.mjs)
-// เลยไม่ต้องใส่ http://localhost:8000 และไม่ต้องตั้ง CORS
+// เลยไม่ต้องใส่ URL ของ backend และไม่ต้องตั้ง CORS
 
-// ชื่อช่องที่เก็บ token ใน localStorage ของเบราว์เซอร์
 const TOKEN_KEY = "token";
 
 // ---------------------------------------------------------------------------
@@ -32,63 +31,99 @@ export function clearToken() {
 }
 
 // ---------------------------------------------------------------------------
-// อ่านข้อความ error จาก FastAPI ให้เป็นประโยคที่คนอ่านรู้เรื่อง
+// ข้อผิดพลาดของ LEBIS
 //
-// FastAPI ตอบ error มา 2 แบบ
-//   1) เราโยน HTTPException เอง  ->  { "detail": "อีเมลหรือรหัสผ่านไม่ถูกต้อง" }
-//   2) Pydantic ตรวจข้อมูลไม่ผ่าน ->  { "detail": [ { "msg": "...", ... } ] }  (422)
+// backend ส่ง "รหัสข้อผิดพลาด" มาด้วย เช่น invalid_credentials
+// หน้าเว็บเอารหัสนั้นไปแปลเป็นภาษาที่ผู้ใช้เลือกอยู่ ด้วย errorMessage()
+// ข้อความจาก backend จึงไม่ถูกเอาไปโชว์ตรงๆ (ไม่งั้นคนเลือก EN จะเจอข้อความไทย)
 // ---------------------------------------------------------------------------
 
-function readErrorMessage(data, response) {
+export class ApiError extends Error {
+  constructor(code, { status = 0, fallback = "" } = {}) {
+    super(fallback || code);
+    this.name = "ApiError";
+    this.code = code; // เช่น "invalid_credentials" · "network" · "server"
+    this.status = status;
+  }
+}
+
+// แปลงสิ่งที่ backend ส่งกลับมาให้เป็นรหัสข้อผิดพลาดหนึ่งตัว
+function readErrorCode(data, response) {
   const detail = data?.detail;
 
-  if (typeof detail === "string") return detail;
-
-  if (Array.isArray(detail) && detail.length > 0) {
-    // เอาข้อความของข้อผิดพลาดตัวแรกมาแสดงพอ
-    return detail[0].msg || "ข้อมูลที่กรอกไม่ถูกต้อง";
+  // แบบใหม่: { "detail": { "code": "...", "message": "..." } }
+  if (detail && typeof detail === "object" && !Array.isArray(detail) && detail.code) {
+    return detail.code;
   }
 
-  return `เกิดข้อผิดพลาด (HTTP ${response.status})`;
+  // Pydantic ตรวจข้อมูลไม่ผ่าน จะส่ง list กลับมาพร้อมสถานะ 422
+  if (Array.isArray(detail)) return "invalid_input";
+
+  if (response.status === 401) return "invalid_credentials";
+  if (response.status === 409) return "email_taken";
+  if (response.status === 403) return "forbidden";
+  if (response.status >= 500) return "server";
+
+  return "unknown";
+}
+
+// แปลงรหัสข้อผิดพลาดเป็นประโยคในภาษาที่ผู้ใช้เลือก
+//
+//   import { errorMessage } from "@/lib/api";
+//   catch (error) { toast.error(errorMessage(error, t)); }
+//
+// 🔴 หน้าเว็บต้องเรียกตัวนี้เสมอ ห้ามเอา error.message ไปโชว์ตรงๆ
+//    เพราะข้อความดิบอาจเป็นภาษาไทยเสมอ หรือเป็นข้อความของเบราว์เซอร์
+//    อย่าง "Failed to fetch" ซึ่งเจ้าของร้านอ่านไม่รู้เรื่อง
+export function errorMessage(error, t) {
+  const code = error?.code || "unknown";
+  const key = `error.${code}`;
+  const text = t(key);
+
+  // หาไม่เจอในคลังคำแปล translate() จะคืนชื่อคีย์กลับมา แปลว่าเรายังไม่ได้เขียนคำนี้
+  return text === key ? t("error.unknown") : text;
 }
 
 // ---------------------------------------------------------------------------
 // ตัวหลัก: apiFetch
 //
-// ใช้แบบนี้
-//   const user = await apiFetch("/api/auth/me");                       // GET
+//   const user = await apiFetch("/api/auth/me");                        // GET
 //   await apiFetch("/api/auth/login", { method: "POST", body: {...} }); // POST
 //
 // body ส่งเป็น object ธรรมดาได้เลย ไม่ต้อง JSON.stringify เอง
 // ถ้ามี token อยู่ในเครื่อง จะแนบ header Authorization ให้อัตโนมัติ
-// ถ้า backend ตอบไม่ ok จะ throw Error ออกมา -> ฝั่งหน้าเว็บใช้ try/catch รับ
+// ถ้าไม่สำเร็จจะ throw ApiError -> ฝั่งหน้าเว็บใช้ try/catch รับ
 // ---------------------------------------------------------------------------
 
 export async function apiFetch(path, options = {}) {
   const { method = "GET", body, headers = {} } = options;
 
   const finalHeaders = { ...headers };
-
-  if (body !== undefined) {
-    finalHeaders["Content-Type"] = "application/json";
-  }
+  if (body !== undefined) finalHeaders["Content-Type"] = "application/json";
 
   const token = getToken();
-  if (token) {
-    finalHeaders["Authorization"] = `Bearer ${token}`;
-  }
+  if (token) finalHeaders["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(path, {
-    method,
-    headers: finalHeaders,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  let response;
+  try {
+    response = await fetch(path, {
+      method,
+      headers: finalHeaders,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch (networkError) {
+    // เน็ตหลุด หรือเซิร์ฟเวอร์ไม่ตอบ — เกิดบ่อยมากเวลาใช้มือถือหน้าร้าน
+    throw new ApiError("network", { fallback: "network error" });
+  }
 
   // อ่าน body เป็น JSON — บาง response ไม่มี body (เช่น 204) เลยต้องกัน error ไว้
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(readErrorMessage(data, response));
+    throw new ApiError(readErrorCode(data, response), {
+      status: response.status,
+      fallback: `HTTP ${response.status}`,
+    });
   }
 
   return data;

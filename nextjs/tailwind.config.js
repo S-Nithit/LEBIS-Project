@@ -20,22 +20,33 @@ module.exports = {
         warning: "var(--warning)",
         danger: "var(--danger)",
         "on-ink": "var(--on-ink)",
+        "header-bg": "var(--header-bg)",
+        "header-fg": "var(--header-fg)",
+      },
+      fontSize: {
+        // ขนาดตัวอักษรตามหัวข้อ 3 ของ brand.md — ใช้ชื่อพวกนี้แทนการใส่ px เอง
+        eyebrow: ["var(--text-eyebrow)", { lineHeight: "1.4" }],
+        label: ["var(--text-label)", { lineHeight: "1.4" }],
+        body: ["var(--text-body)", { lineHeight: "1.6" }],
+        section: ["var(--text-section)", { lineHeight: "1.3" }],
+        title: ["var(--text-page-title)", { lineHeight: "1.2" }],
       },
       borderRadius: {
+        inner: "var(--radius-inner)", // ปุ่มที่ซ้อนอยู่ในกรอบอีกที — 6px
         control: "var(--radius-control)", // ปุ่ม ช่องกรอก — 8px
         badge: "var(--radius-badge)", // ป้ายสถานะ การ์ดเล็ก — 12px
         card: "var(--radius-card)", // การ์ดใหญ่ แผงเนื้อหา — 20px
       },
       spacing: {
         // ระยะห่างตามหัวข้อ 4 ของ brand.md — มีแค่ 8 ค่านี้
-        1: "4px",
-        2: "8px",
-        3: "12px",
-        4: "16px",
-        5: "24px",
-        6: "32px",
-        7: "48px",
-        8: "64px",
+        1: "var(--space-1)",
+        2: "var(--space-2)",
+        3: "var(--space-3)",
+        4: "var(--space-4)",
+        5: "var(--space-5)",
+        6: "var(--space-6)",
+        7: "var(--space-7)",
+        8: "var(--space-8)",
       },
       fontFamily: {
         display: ["Space Grotesk", "Prompt", "ui-sans-serif", "system-ui", "sans-serif"],

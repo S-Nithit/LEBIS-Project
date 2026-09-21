@@ -23,6 +23,9 @@ const TEXT = {
   th: {
     "brand.name": "LEBIS",
     "brand.tagline": "ระบบยืม-คืนอุปกรณ์ของร้านให้เช่า",
+    "page.login": "เข้าสู่ระบบ · LEBIS",
+    "page.register": "สมัครสมาชิก · LEBIS",
+    "page.help": "ลืมรหัสผ่าน · LEBIS",
 
     "nav.logout": "ออกจากระบบ",
     "nav.language": "ภาษา",
@@ -39,7 +42,7 @@ const TEXT = {
     "login.password": "รหัสผ่าน",
     "login.submit": "เข้าสู่ระบบ",
     "login.submitting": "กำลังเข้าสู่ระบบ...",
-    "login.success": "ยินดีต้อนรับกลับมาค่ะ",
+    "login.success": "ยินดีต้อนรับกลับมา",
     "login.noAccount": "ยังไม่มีบัญชีใช่ไหม",
     "login.goRegister": "สมัครสมาชิก",
 
@@ -48,7 +51,7 @@ const TEXT = {
       "เปิดใช้งาน LEBIS ได้ฟรี จัดการอุปกรณ์ได้สูงสุด 50 ชิ้น ไม่มีค่าใช้จ่ายและไม่ต้องผูกบัตร",
     "register.email": "อีเมล",
     "register.emailHint": "ใช้อีเมลนี้เข้าสู่ระบบในครั้งถัดไป",
-    "register.name": "ชื่อผู้ใช้",
+    "register.name": "ชื่อของคุณ",
     "register.namePlaceholder": "ชื่อที่อยากให้ระบบเรียกคุณ",
     "register.shopName": "ชื่อร้าน",
     "register.shopNameOptional": "ไม่บังคับ",
@@ -58,14 +61,14 @@ const TEXT = {
     "register.confirmPassword": "ยืนยันรหัสผ่าน",
     "register.submit": "สมัครสมาชิก",
     "register.submitting": "กำลังสมัครสมาชิก...",
-    "register.success": "สมัครสมาชิกเรียบร้อยแล้ว ยินดีต้อนรับค่ะ",
+    "register.success": "สมัครสมาชิกเรียบร้อยแล้ว ยินดีต้อนรับสู่ LEBIS",
     "register.hasAccount": "มีบัญชีอยู่แล้วใช่ไหม",
     "register.goLogin": "เข้าสู่ระบบ",
 
-    "validate.email": "กรุณากรอกอีเมลให้ถูกต้อง",
-    "validate.name": "กรุณากรอกชื่อผู้ใช้",
-    "validate.passwordShort": "กรุณาตั้งรหัสผ่านให้ยาวอย่างน้อย 8 ตัวอักษร",
-    "validate.passwordMismatch": "รหัสผ่านทั้งสองช่องยังไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง",
+    "validate.email": "กรุณากรอกอีเมลให้ถูกต้อง เช่น you@example.com",
+    "validate.name": "กรุณากรอกชื่อของคุณ",
+    "validate.passwordShort": "รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร",
+    "validate.passwordMismatch": "รหัสผ่านทั้งสองช่องยังไม่ตรงกัน",
 
     "sample.caption": "ตัวอย่างหน้าจอบันทึกการยืม (ข้อมูลสมมติ)",
     "sample.colItem": "อุปกรณ์",
@@ -83,6 +86,31 @@ const TEXT = {
     "sample.row3.customer": "คุณวรรณา",
     "sample.row3.due": "18 ก.ย.",
 
+    // ---- ข้อผิดพลาด: รหัสจาก backend ถูกแปลเป็นประโยคตรงนี้ ----
+    "error.invalid_credentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบแล้วลองอีกครั้ง",
+    "error.email_taken": "อีเมลนี้มีบัญชีอยู่แล้ว หากเป็นบัญชีของคุณ กรุณาเข้าสู่ระบบ",
+    "error.invalid_input": "ข้อมูลที่กรอกยังไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
+    "error.forbidden": "บัญชีของคุณยังไม่มีสิทธิ์ใช้ส่วนนี้",
+    "error.network": "เชื่อมต่อไม่ได้ กรุณาตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง",
+    "error.server": "ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งในอีกสักครู่",
+    "error.unknown": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+    "error.token_expired": "เซสชันหมดอายุแล้ว กรุณาเข้าสู่ระบบอีกครั้ง",
+    "error.token_invalid": "เซสชันไม่ถูกต้อง กรุณาเข้าสู่ระบบอีกครั้ง",
+    "error.not_signed_in": "กรุณาเข้าสู่ระบบก่อนใช้งานส่วนนี้",
+    "error.user_not_found": "ไม่พบบัญชีนี้ในระบบ กรุณาเข้าสู่ระบบอีกครั้ง",
+    "error.summary": "ยังกรอกไม่ครบ กรุณาแก้ตามที่แจ้งไว้ใต้ช่องกรอก",
+
+    "login.forgot": "ลืมรหัสผ่าน",
+    "validate.passwordRequired": "กรุณากรอกรหัสผ่าน",
+    "field.show": "แสดง",
+    "field.hide": "ซ่อน",
+    "help.title": "ลืมรหัสผ่านใช่ไหม",
+    "help.body":
+      "ขณะนี้ระบบยังไม่มีการตั้งรหัสผ่านใหม่ด้วยตัวเอง หากเข้าสู่ระบบไม่ได้ กรุณาติดต่อผู้ที่เปิดบัญชีร้านให้คุณ เพื่อขอให้ตั้งรหัสผ่านใหม่ให้",
+    "help.note":
+      "ถ้าคุณเป็นผู้เปิดบัญชีเอง กรุณาติดต่อทีมงาน LEBIS ผ่านช่องทางที่ใช้ติดต่อกันอยู่",
+    "help.back": "กลับไปหน้าเข้าสู่ระบบ",
+
     "state.loading": "กำลังโหลดข้อมูล...",
     "state.emptyTitle": "ยังไม่มีข้อมูลในหน้านี้",
     "state.emptyBody": "เมื่อเริ่มบันทึกข้อมูลแล้ว รายการจะแสดงขึ้นที่นี่",
@@ -91,6 +119,9 @@ const TEXT = {
   en: {
     "brand.name": "LEBIS",
     "brand.tagline": "Borrow and return log for equipment rental shops",
+    "page.login": "Sign in · LEBIS",
+    "page.register": "Create account · LEBIS",
+    "page.help": "Forgotten password · LEBIS",
 
     "nav.logout": "Sign out",
     "nav.language": "Language",
@@ -117,7 +148,7 @@ const TEXT = {
     "register.email": "Email",
     "register.emailHint": "You will sign in with this address next time.",
     "register.name": "Your name",
-    "register.namePlaceholder": "The name the system should call you",
+    "register.namePlaceholder": "What should we call you?",
     "register.shopName": "Shop name",
     "register.shopNameOptional": "optional",
     "register.shopNamePlaceholder": "e.g. Nithit Camera Rental",
@@ -130,10 +161,10 @@ const TEXT = {
     "register.hasAccount": "Already have an account?",
     "register.goLogin": "Sign in",
 
-    "validate.email": "Please enter a valid email address.",
+    "validate.email": "Please enter a valid email address, for example you@example.com",
     "validate.name": "Please enter your name.",
-    "validate.passwordShort": "Please use a password of at least 8 characters.",
-    "validate.passwordMismatch": "The two passwords do not match yet. Please check them again.",
+    "validate.passwordShort": "Use at least 8 characters.",
+    "validate.passwordMismatch": "The two passwords do not match.",
 
     "sample.caption": "Sample borrow log (illustrative data)",
     "sample.colItem": "Item",
@@ -150,6 +181,31 @@ const TEXT = {
     "sample.row2.due": "22 Sep",
     "sample.row3.customer": "Wanna",
     "sample.row3.due": "18 Sep",
+
+    // ---- Errors: backend sends a code, it is turned into a sentence here ----
+    "error.invalid_credentials": "That email or password is not correct. Please check and try again.",
+    "error.email_taken": "An account already uses this email. If it is yours, please sign in.",
+    "error.invalid_input": "Some details are not right yet. Please check the fields below.",
+    "error.forbidden": "Your account does not have access to this part yet.",
+    "error.network": "Could not reach the server. Please check your connection and try again.",
+    "error.server": "The service is temporarily unavailable. Please try again in a moment.",
+    "error.unknown": "Something went wrong. Please try again.",
+    "error.token_expired": "Your session has expired. Please sign in again.",
+    "error.token_invalid": "Your session is not valid. Please sign in again.",
+    "error.not_signed_in": "Please sign in to use this part of LEBIS.",
+    "error.user_not_found": "That account no longer exists. Please sign in again.",
+    "error.summary": "Some fields still need attention. Please fix the notes below.",
+
+    "login.forgot": "Forgot your password?",
+    "validate.passwordRequired": "Please enter your password.",
+    "field.show": "Show",
+    "field.hide": "Hide",
+    "help.title": "Forgotten password",
+    "help.body":
+      "LEBIS cannot reset a password by itself yet. If you cannot sign in, please ask whoever opened the shop account for you to set a new password.",
+    "help.note":
+      "If you opened the account yourself, contact the LEBIS team through the channel you normally use.",
+    "help.back": "Back to sign in",
 
     "state.loading": "Loading...",
     "state.emptyTitle": "Nothing here yet",
