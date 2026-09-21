@@ -61,24 +61,22 @@ export default function ForgotPassword() {
             </Button>
           ) : null}
 
-          {/* ไม่มีช่องทางติดต่อ = ปุ่มกลับไปเข้าสู่ระบบกลายเป็นปุ่มหลักของหน้า
-              หน้าหนึ่งหน้าต้องมีปุ่มหลักเสมอ ไม่งั้นผู้ใช้ไม่รู้ว่าควรทำอะไรต่อ */}
-          <Button
-            asChild
-            variant={SUPPORT_CONTACT ? "secondary" : "primary"}
-            className="w-full sm:w-auto"
-          >
-            <Link href="/login">{t("help.back")}</Link>
-          </Button>
-
-          {/* ข้อความข้างบนบอกให้สมัครบัญชีใหม่ไปก่อน ถ้าไม่มีปุ่มไปหน้าสมัคร
-              ก็เท่ากับบอกให้ทำสิ่งที่หน้านี้ไม่มีทางให้ทำ ซึ่งเป็นความผิดเดียวกับ
-              การเขียนว่า "กรุณาติดต่อทีมงาน" ทั้งที่ไม่มีช่องทางติดต่อ */}
+          {/* 🔴 ปุ่มหลักต้องตรงกับสิ่งที่ย่อหน้าข้างบนแนะนำ
+                 ถ้ายังไม่มีช่องทางติดต่อ ย่อหน้าจะบอกให้ไปสมัครด้วยอีเมลอื่นก่อน
+                 ปุ่มที่เด่นที่สุดจึงต้องเป็นปุ่มนั้น ไม่ใช่ปุ่มพากลับไปหน้า
+                 ที่เขาเพิ่งเข้าไม่ได้ — ปุ่มดังที่ขัดกับย่อหน้า คือการบอกสองอย่าง
+                 พร้อมกันแล้วให้ผู้ใช้เดาเอาเองว่าอันไหนจริง
+                 (ส่วนเรื่องปุ่มหลักมีได้กี่ปุ่ม ดู docs/brand.md หัวข้อ 5
+                  ซึ่งนับต่อ "ส่วน" ของหน้า ไม่ใช่ต่อหน้า) */}
           {SUPPORT_CONTACT ? null : (
-            <Button asChild variant="secondary" className="w-full sm:w-auto">
+            <Button asChild className="w-full sm:w-auto">
               <Link href="/register">{t("help.register")}</Link>
             </Button>
           )}
+
+          <Button asChild variant="secondary" className="w-full sm:w-auto">
+            <Link href="/login">{t("help.back")}</Link>
+          </Button>
         </div>
       </AuthLayout>
     </>

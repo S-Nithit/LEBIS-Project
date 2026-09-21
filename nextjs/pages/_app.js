@@ -36,7 +36,20 @@ export default function App({ Component, pageProps }) {
       {/* ยกสูงจากขอบล่าง 72px เพราะท้ายหน้ามีลิงก์ช่วยเหลืออยู่ตรงนั้นพอดี
           ถ้าวางชิดขอบ ข้อความ "บันทึกแล้ว" จะทับลิงก์ช่วยเหลือบนมือถือ
           ซึ่งคือจังหวะที่คนเพิ่งใช้ระบบครั้งแรกอยากกดมันที่สุด */}
-      <Toaster position="bottom-center" richColors offset={72} />
+      {/* ไม่ใช้ richColors เพราะมันเอาจานสีของ sonner มาใช้แทนสีของระบบ
+          ข้อความ "บันทึกแล้ว" คือสิ่งที่ผู้ใช้เห็นหลังกดบันทึกทุกครั้ง
+          มันควรเป็นสีเขียวของ LEBIS ไม่ใช่สีเขียวของไลบรารี */}
+      <Toaster
+        position="bottom-center"
+        offset={72}
+        toastOptions={{
+          classNames: {
+            toast: "lebis-toast",
+            success: "lebis-toast-success",
+            error: "lebis-toast-error",
+          },
+        }}
+      />
     </LanguageProvider>
   );
 }

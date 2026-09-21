@@ -160,7 +160,15 @@ export default function Account() {
     return (
       <Row label={label} hideLabel={isEditing}>
         {isEditing ? (
-          <form onSubmit={handleSave} className="flex w-full flex-wrap items-end gap-3">
+          <form
+            onSubmit={handleSave}
+            // Esc = ยกเลิก เป็นสิ่งที่คนคาดหวังจากช่องแก้ไขในทุกโปรแกรม
+            // ถ้าไม่มี ทางออกเดียวด้วยคีย์บอร์ดคือไล่ Tab ไปหาปุ่มยกเลิก
+            onKeyDown={(event) => {
+              if (event.key === "Escape") cancelEditing();
+            }}
+            className="flex w-full flex-wrap items-end gap-3"
+          >
             {/* ใช้ FormField เสมอ ไม่ใช้ <Input> เปล่าๆ
                 เพราะ FormField เป็นตัวที่รับประกันว่ามี <label> ผูกกับช่องจริง
                 placeholder ไม่ใช่ป้ายกำกับ และมันหายไปทันทีที่พิมพ์ตัวแรก */}
@@ -170,7 +178,13 @@ export default function Account() {
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               error={fieldError}
-              onClearError={() => setFieldError("")}
+              // ล้างทั้งข้อความระดับช่องและระดับฟอร์ม เหมือนหน้า login กับ register
+              // ถ้าล้างแค่ระดับช่อง กล่องแดง "เชื่อมต่อไม่ได้" จะค้างอยู่ตลอดเวลา
+              // ที่เจ้าของร้านกำลังพิมพ์แก้ ซึ่งอ่านเหมือนระบบยังพังทั้งที่เขาแก้อยู่แล้ว
+              onClearError={() => {
+                setFieldError("");
+                setSaveError("");
+              }}
               maxLength={120}
               className="w-full sm:w-64"
               autoFocus
@@ -189,6 +203,10 @@ export default function Account() {
               ref={(node) => { editButtonRefs.current[field] = node; }}
               size="sm"
               variant="secondary"
+              /* ป้ายที่เห็นคือ "แก้ไข" สั้นๆ เพราะมันอยู่ติดกับค่าอยู่แล้ว
+                 แต่ชื่อที่โปรแกรมอ่านหน้าจออ่าน ต้องบอกว่าแก้ไขอะไร
+                 ไม่งั้นคนที่ไล่ฟังทีละปุ่มจะได้ยินว่า "แก้ไข, แก้ไข" แล้วต้องเดาเอง */
+              aria-label={`${t("account.edit")} ${label}`}
               onClick={() => startEditing(field)}
             >
               {t("account.edit")}

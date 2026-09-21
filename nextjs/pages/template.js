@@ -105,7 +105,9 @@ export default function Template() {
           <EmptyState
             title={t("template.emptyTitle")}
             description={t("template.emptyBody")}
-            action={<Button variant="secondary">{t("template.addItem")}</Button>}
+            /* คนละคำกับปุ่มบนหัวข้อ — ปุ่มสองปุ่มที่เขียนเหมือนกันเป๊ะในจอเดียว
+               ทำให้ผู้ใช้ต้องหยุดคิดว่ามันต่างกันตรงไหน ทั้งที่มันเหมือนกัน */
+            action={<Button variant="secondary">{t("template.addFirst")}</Button>}
           />
         ) : (
           <Card>

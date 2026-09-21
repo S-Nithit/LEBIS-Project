@@ -114,20 +114,55 @@ for (const file of files) {
 }
 
 // ── กฎ 7 · ทุกอย่างที่กดได้ต้องสูงอย่างน้อย 44px (docs/brand.md หัวข้อ 6)
-//    เคยพลาดมาแล้ว 3 จุดในรอบเดียว: ปุ่มลองใหม่ 74x23 และลิงก์สลับหน้า 70x17
-//    ทั้งสามจุดเป็นลิงก์/ปุ่มที่ไม่ได้ใช้คลาส .btn จึงไม่มีความสูงติดมาให้
-const CLICKABLE = /<(button|Link|a)\b([^>]*)>/gs;
+//    🔴 กฎเวอร์ชันแรกเขียนว่า "ไม่มี className ให้ข้าม" ซึ่งทำให้มันเห็นเฉพาะ
+//       ปุ่มที่เคยมีคนชี้ให้ทีละบรรทัด ส่วนที่ไม่มีใครเคยชี้ก็ไม่มีใครเห็นต่อไป
+//       ตอนนี้ "ไม่รู้ = ไม่ผ่าน" ของที่ยกเว้นได้ต้องเขียนคำว่า ok-touch-target
+//       พร้อมเหตุผลกำกับไว้ ไม่ใช่เงียบแล้วผ่าน
+const TOUCH_OK = /\bbtn\b|min-h-\[44px\]|\bh-(1[1-9]|[2-9]\d)\b|ok-touch-target/;
+
+// อ่าน attribute ของแท็กให้ถูก — หยุดที่ ">" ที่อยู่นอกวงเล็บปีกกาเท่านั้น
+// ไม่งั้น onClick={() => ...} จะทำให้ตัดจบกลางทางที่ ">" ของลูกศร
+// แล้วจะพลาดคลาสที่อยู่ข้างหลัง ซึ่งคือ min-h-[44px] พอดี
+function readTag(text, from) {
+  let depth = 0;
+  for (let i = from; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === "{") depth += 1;
+    else if (c === "}") depth -= 1;
+    else if (c === ">" && depth === 0) return text.slice(from, i);
+  }
+  return text.slice(from, from + 600);
+}
+
 for (const file of files) {
-  for (const m of file.text.matchAll(CLICKABLE)) {
-    const attrs = m[2];
-    if (!/className=/.test(attrs)) continue;
-    const cls = (attrs.match(/className="([^"]*)"/) || [])[1];
-    if (!cls) continue; // className แบบ cn(...) ตรวจตรงนี้ไม่ได้ ปล่อยให้เบราว์เซอร์วัดแทน
-    const hasFloor = /\bbtn\b/.test(cls) || /min-h-\[44px\]/.test(cls) || /\bh-(1[1-9]|[2-9]\d)\b/.test(cls);
-    if (!hasFloor) {
-      const n = file.text.slice(0, m.index).split("\n").length;
-      fail("touch-target", file.rel, n, `<${m[1]}> ไม่มีความสูงขั้นต่ำ ใส่ min-h-[44px] หรือใช้ <Button>`);
+  for (const m of file.text.matchAll(/<(button|Link|a|label)\b/g)) {
+    const attrs = readTag(file.text, m.index + m[0].length);
+    const n = file.text.slice(0, m.index).split("\n").length;
+
+    // <label> เป็นเป้าหมายสัมผัสก็ต่อเมื่อมันครอบ input อยู่ (เช่นช่องติ๊ก)
+    // label ที่เป็นแค่ป้ายอยู่เหนือช่องกรอก ไม่ใช่ปุ่ม ไม่ต้องสูง 44px
+    if (m[1] === "label") {
+      const body = file.text.slice(m.index, m.index + 900);
+      const close = body.indexOf("</label>");
+      if (close === -1 || !/<(input|Input)\b/.test(body.slice(0, close))) continue;
     }
+
+    // asChild ส่งคลาสของ <Button> ลงไปให้ลูกผ่าน Slot ลูกจึงได้ความสูงมาแล้ว
+    const before = file.text.slice(Math.max(0, m.index - 300), m.index);
+    if (/asChild/.test(before)) continue;
+
+    if (TOUCH_OK.test(attrs)) continue;
+    fail("touch-target", file.rel, n, `<${m[1]}> ไม่รับประกันความสูง 44px — ใส่ min-h-[44px] ใช้ <Button> หรือเขียน ok-touch-target พร้อมเหตุผล`);
+  }
+}
+
+// ── กฎ 7ข · ห้ามเอา onClick ไปแปะบน <div> หรือ <span> (docs/brand.md หัวข้อ 6)
+//    ของแบบนั้นกดด้วยคีย์บอร์ดไม่ได้ และโปรแกรมอ่านหน้าจอไม่รู้ว่ามันกดได้
+for (const file of files) {
+  for (const m of file.text.matchAll(/<(div|span|p|li)(\s[^>]*?)?>/gs)) {
+    if (!/onClick/.test(m[2] || "")) continue;
+    const n = file.text.slice(0, m.index).split("\n").length;
+    fail("clickable-div", file.rel, n, `<${m[1]}> มี onClick — ใช้ <button> แทน`);
   }
 }
 
@@ -144,7 +179,10 @@ const css = readFileSync(cssPath, "utf8");
     depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
     if (inRoot && depth <= 0) inRoot = false;
     const code = line.split("/*")[0];
-    if (!inRoot && /#[0-9a-fA-F]{3,8}\b/.test(code) && !/@font-face|url\(/.test(code)) {
+    // ห้ามทุก "รูปแบบ" ของค่าสี ไม่ใช่เฉพาะ #hex ซึ่งเป็นรูปแบบที่บังเอิญเจอครั้งก่อน
+    // สีที่เขียนเป็น rgb() hsl() oklch() ก็ไม่พลิกตามโหมดมืดเหมือนกันทุกประการ
+    const COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/;
+    if (!inRoot && COLOUR.test(code) && !/@font-face|url\(|color-mix\(/.test(code)) {
       fail("css-hardcoded-color", "nextjs/styles/globals.css", i + 1, `ค่าสีตายตัวนอกบล็อกตัวแปร: ${code.trim()}`);
     }
     void before;
@@ -182,6 +220,12 @@ const PAIRS = [
   ["--header-line", "--header-bg", 3, "ขอบปุ่มบนแถบหัวเว็บ"],
   ["--focus-on-header", "--header-bg", 3, "วงแหวนโฟกัสบนแถบหัวเว็บ"],
   ["--line-strong", "--paper", 3, "ขอบของสิ่งที่กดได้บนพื้นหน้า"],
+  ["--line-strong", "--surface", 3, "ขอบของสิ่งที่กดได้บนการ์ด"],
+  // ตรวจ "ขอบ" ไม่ใช่ "พื้น" — พื้นของปุ่มหลักในโหมดมืดตั้งใจให้ใกล้กับพื้นการ์ด
+  // สิ่งที่ทำให้เห็นขอบเขตของปุ่มกับช่องติ๊กคือ --primary-border
+  ["--primary-border", "--surface", 3, "ขอบปุ่มหลัก (โหมดมืด)"],
+  ["--checked-border", "--surface", 3, "ขอบช่องติ๊กตอนติ๊กแล้ว"],
+  ["--on-danger", "--danger-solid", 4.5, "ตัวอักษรบนปุ่มอันตราย"],
 ];
 for (const [scope, set] of [["โหมดสว่าง", light], ["โหมดมืด", { ...light, ...dark }]]) {
   for (const [fg, bg, need, what] of PAIRS) {
@@ -199,6 +243,27 @@ for (const rel of ["CLAUDE.md", "docs/ui-guide.md", "docs/brand.md"]) {
       fail("retired-rule", rel, i + 1, 'เขียนว่า "ไม่ใช่ toast อย่างเดียว" ซึ่งยังอนุญาต toast — กฎคือห้าม toast');
     }
   });
+}
+
+// ── กฎ 10 · ค่าสีใน docs/brand.md ต้องตรงกับที่ globals.css ใช้จริง
+//    🔴 นี่คือคลาสที่ทำให้ brand.md ตีพิมพ์ค่า 2.65:1 ต่อไปอีกหนึ่งรอบเต็ม
+//       หลังจากโค้ดเลิกใช้ไปแล้ว ทีมอ่าน brand.md ไม่ได้อ่าน globals.css
+//       ถ้าสองไฟล์นี้ไม่ตรงกัน เอกสารจะกลายเป็นตัวแพร่ค่าที่ผิด
+{
+  const brand = readFileSync(join(ROOT, "docs/brand.md"), "utf8");
+  const all = { ...light, ...dark };
+  // brand.md เขียนแบบ  `--header-line` `#7FA8B0` light / `#6B99A2` dark
+  for (const m of brand.matchAll(/`(--[\w-]+)`\s+`(#[0-9a-fA-F]{3,8})`(?:\s*(?:light|สว่าง))?(?:\s*\/\s*`?(#[0-9a-fA-F]{3,8})`?\s*(?:dark|มืด))?/g)) {
+    const [, name, lightHex, darkHex] = m;
+    const n = brand.slice(0, m.index).split("\n").length;
+    if (light[name] && light[name].toLowerCase() !== lightHex.toLowerCase()) {
+      fail("spec-drift", "docs/brand.md", n, `${name} เอกสารเขียน ${lightHex} แต่ globals.css ใช้ ${light[name]}`);
+    }
+    if (darkHex && dark[name] && dark[name].toLowerCase() !== darkHex.toLowerCase()) {
+      fail("spec-drift", "docs/brand.md", n, `${name} (โหมดมืด) เอกสารเขียน ${darkHex} แต่ globals.css ใช้ ${dark[name]}`);
+    }
+    void all;
+  }
 }
 
 if (failures.length === 0) {

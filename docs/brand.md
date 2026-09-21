@@ -101,9 +101,32 @@ re-draws the logo by hand.
 > `--amber-text` itself is unchanged and stays pinned for text on white.
 > `--primary-border` `#2E8C9C` — dark mode only, the 1px edge on the primary
 > button, which otherwise sits at 1.8:1 against the card.
-> `--header-line` `#4A7D86` light / `#3F6D76` dark — the outline of buttons that
-> sit on the dark app header.
-> None of these is ever used as a text colour or as a fill.
+> `--header-line` `#7FA8B0` light / `#6B99A2` dark — the outline of buttons that
+> sit on the dark app header, measured at 4.71:1 and 4.83:1 on `--header-bg`.
+> *(Corrected 21 Sep 2569. This entry published `#4A7D86` / `#3F6D76`, which measure
+> **2.65:1** and **2.64:1** — below the 3:1 this very block exists to guarantee, and
+> `.btn-on-dark` is transparent, so that line is the sign-out button's entire
+> boundary. The code was fixed a round before this text was, which is the failure
+> worth recording: `globals.css` says the spec changes first and then the
+> stylesheet, and for one round the spec handed the team the failing number as the
+> standard. `scripts/check-conventions.mjs` now reads the values out of both files
+> and fails when they disagree.)*
+> `--focus-on-header` `#E6A65A` — the focus ring **inside the app header only**,
+> 5.77:1 light and 7.18:1 dark. The ordinary ring, `--amber-text`, measures 2.43:1
+> there, so a keyboard user in light mode could not see which header control they
+> were on.
+> `--danger-solid` `#B3453B` light / `#8C2F27` dark and `--on-danger` `#FFFFFF` —
+> the **fill** of a destructive button and the text on it, 5.48:1 and 8.23:1.
+> Separate from `--danger` because `--danger` is brightened in dark mode so that red
+> *text* reads on a dark surface; reused as a button fill it left white text at
+> 2.66:1.
+> `--checked-border` — the outline of a **ticked** checkbox. In light mode it is
+> simply `--primary`; in dark mode `#2E8C9C`, because `--primary` there sits at
+> 1.77:1 against the card and a ticked box would lose its outline entirely,
+> leaving a check mark floating on a field that has merged into the surface.
+> The *unticked* box reads at 4.13:1, so ticking it made it harder to see.
+> Of these, `--line-strong`, `--primary-border`, `--header-line`,
+> `--focus-on-header` and `--checked-border` are never used as a text colour.
 
 Rules
 

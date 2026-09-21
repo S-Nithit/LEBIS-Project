@@ -99,7 +99,7 @@ const TEXT = {
     "error.user_not_found": "ไม่พบบัญชีนี้ในระบบ กรุณาเข้าสู่ระบบอีกครั้ง",
 
     "action.retry": "ลองอีกครั้ง",
-    "login.forgot": "ลืมรหัสผ่าน",
+    "login.forgot": "เข้าสู่ระบบไม่ได้ใช่ไหม",
     "login.remember": "จำฉันไว้ในเครื่องนี้",
     "login.rememberHint": "เหมาะกับเครื่องส่วนตัวหรือเครื่องที่ร้าน จะได้ไม่ต้องกรอกใหม่ทุกวัน",
     "validate.nameRequired": "กรุณากรอกชื่อผู้ใช้งาน ช่องนี้จำเป็นต้องมี",
@@ -108,7 +108,7 @@ const TEXT = {
     // เพราะรหัสที่ยาวเกินขีดนี้สมัครไม่ผ่านตั้งแต่แรกอยู่แล้ว
     "validate.passwordLongLogin": "รหัสผ่านที่พิมพ์ยาวเกินกว่าที่ระบบรับได้ กรุณาตรวจว่าพิมพ์เกินมาหรือไม่",
     "field.limit": "ถึงความยาวสูงสุดแล้ว พิมพ์ต่อจะไม่ถูกบันทึก",
-    "field.tooLongBytes": "รหัสผ่านยาวเกินที่ระบบรับได้แล้ว ลองตัดให้สั้นลง",
+    "field.tooLongBytes": "ยาวเกินที่ระบบรับได้แล้ว ลองตัดให้สั้นลง",
     "field.show": "แสดง",
     "field.hide": "ซ่อน",
     "account.title": "บัญชีของคุณ",
@@ -153,6 +153,7 @@ const TEXT = {
     "template.title": "หน้าแม่แบบ",
     "template.subtitle": "ก็อปไฟล์ pages/template.js ไปเริ่มหน้าใหม่ของคุณได้เลย",
     "template.addItem": "เพิ่มรายการ",
+    "template.addFirst": "เพิ่มรายการแรก",
     "template.listTitle": "รายการทั้งหมด",
     "template.emptyTitle": "ยังไม่มีรายการ",
     "template.emptyBody": "เมื่อมีข้อมูลแล้ว รายการจะแสดงตรงนี้ ระหว่างนี้กล่องนี้คือสิ่งที่ผู้ใช้เห็น",
@@ -237,7 +238,7 @@ const TEXT = {
     "error.user_not_found": "That account no longer exists. Please sign in again.",
 
     "action.retry": "Try again",
-    "login.forgot": "Forgot your password?",
+    "login.forgot": "Trouble signing in?",
     "login.remember": "Keep me signed in on this device",
     "login.rememberHint": "Best for your own phone or the shop's computer, so you do not sign in every day.",
     "validate.nameRequired": "Your name is required — please fill it in.",
@@ -285,6 +286,7 @@ const TEXT = {
     "template.title": "Page template",
     "template.subtitle": "Copy pages/template.js to start a new page",
     "template.addItem": "Add item",
+    "template.addFirst": "Add the first item",
     "template.listTitle": "All items",
     "template.emptyTitle": "Nothing here yet",
     "template.emptyBody": "Once there is data it appears here. Until then this box is what the user sees.",
