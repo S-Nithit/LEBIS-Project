@@ -43,6 +43,7 @@ export default function Account() {
   const [editing, setEditing] = useState(false);
   const [shopName, setShopName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (user) setShopName(user.shop_name || "");
@@ -51,6 +52,7 @@ export default function Account() {
   async function handleSaveShopName(event) {
     event.preventDefault();
     setSaving(true);
+    setSaveError("");
 
     try {
       await apiFetch("/api/auth/me", {
@@ -62,20 +64,28 @@ export default function Account() {
       setEditing(false);
       reload(); // ดึงข้อมูลใหม่ ชื่อร้านบนแถบหัวเว็บจะได้เปลี่ยนตาม
     } catch (error) {
-      toast.error(errorMessage(error, t));
+      // ขึ้นในหน้าเหมือนหน้าอื่นของระบบ ไม่ใช่ toast ที่หายเอง
+      setSaveError(errorMessage(error, t));
     } finally {
       setSaving(false);
     }
   }
 
-  // ระหว่างรอข้อมูล วาดแถบหัวเว็บไว้ก่อนเลย หน้าจะได้ไม่กระโดดตอนข้อมูลมาถึง
-  if (loading) {
+  // ระหว่างรอข้อมูล "ครั้งแรก" เท่านั้นที่วาดโครงรอ
+  // ถ้ามีข้อมูลอยู่แล้ว (เช่นกดบันทึกแล้วโหลดใหม่) ให้คงหน้าเดิมไว้
+  // ไม่งั้นหน้าจะวูบเป็นหน้าว่างทุกครั้งที่บันทึก
+  if (loading && !user) {
     return (
       <AppShell>
         <LoadingState rows={3} />
       </AppShell>
     );
   }
+
+  // ยังไม่ได้เข้าสู่ระบบ — useAuth กำลังพาไปหน้า login อยู่แล้ว
+  // ตรงนี้ไม่ต้องวาดอะไรเลย ไม่งั้นจะขึ้นกล่องแดงว่า "เกิดข้อผิดพลาด"
+  // ให้คนที่แค่ยังไม่ได้ล็อกอิน ซึ่งเขาไม่ได้ทำอะไรผิด
+  if (!user && !loadError) return null;
 
   // 🔴 โหลดข้อมูลไม่สำเร็จเพราะเน็ตหรือเซิร์ฟเวอร์ (token ยังใช้ได้อยู่)
   //    ต้องบอกให้รู้และให้ทางไปต่อ ห้ามปล่อยให้หมุนค้างเป็น "กำลังโหลด..."
@@ -84,10 +94,7 @@ export default function Account() {
     return (
       <AppShell onLogout={logout}>
         <PageHeader title={t("account.title")} />
-        <FormError
-          message={loadError ? errorMessage(loadError, t) : t("error.unknown")}
-          onRetry={reload}
-        />
+        <FormError message={errorMessage(loadError, t)} onRetry={reload} retrying={loading} />
       </AppShell>
     );
   }
@@ -123,7 +130,18 @@ export default function Account() {
                     <Button type="submit" size="sm" disabled={saving}>
                       {saving ? t("account.saving") : t("account.save")}
                     </Button>
-                    <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        // ยกเลิกต้องทิ้งสิ่งที่พิมพ์ค้างไว้จริงๆ
+                        // ไม่งั้นกดแก้ไขอีกครั้งจะเจอของเดิมที่ตั้งใจทิ้งไปแล้ว
+                        setShopName(user.shop_name || "");
+                        setSaveError("");
+                        setEditing(false);
+                      }}
+                    >
                       {t("account.cancel")}
                     </Button>
                   </form>
@@ -132,12 +150,13 @@ export default function Account() {
                     <span className="t-body font-medium">
                       {user.shop_name || t("account.noShop")}
                     </span>
-                    <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
+                    <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
                       {t("account.edit")}
                     </Button>
                   </span>
                 )}
               </Row>
+              {saveError ? <FormError message={saveError} /> : null}
             </CardContent>
           </Card>
 
@@ -161,9 +180,9 @@ export default function Account() {
             title={t("account.emptyTitle")}
             description={t("account.emptyBody")}
             action={
-              user.shop_name ? null : (
-                <Button onClick={() => setEditing(true)}>{t("account.setShopName")}</Button>
-              )
+              <Button variant="secondary" onClick={() => setEditing(true)}>
+                {user.shop_name ? t("account.editShopName") : t("account.setShopName")}
+              </Button>
             }
           />
         </div>

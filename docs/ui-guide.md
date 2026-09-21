@@ -33,11 +33,33 @@ import { useAuth } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
 
 export default function Workspace() {
-  const { user, loading, logout } = useAuth({ redirectTo: "/login" });
+  // loadError = ติดต่อเซิร์ฟเวอร์ไม่ได้ (token ยังใช้ได้) · reload = ลองใหม่
+  const { user, loading, loadError, reload, logout } = useAuth({ redirectTo: "/login" });
   const { t } = useLanguage();
 
-  if (loading) return null;
+  // สถานะที่ 1 — กำลังโหลดครั้งแรก
+  if (loading && !user) {
+    return (
+      <AppShell>
+        <LoadingState />
+      </AppShell>
+    );
+  }
 
+  // สถานะที่ 2 — ยังไม่ได้เข้าสู่ระบบ (useAuth พาไปหน้า login ให้แล้ว)
+  if (!user && !loadError) return null;
+
+  // สถานะที่ 3 — โหลดไม่สำเร็จเพราะเน็ตหรือเซิร์ฟเวอร์ ต้องมีทางให้ลองใหม่
+  if (!user) {
+    return (
+      <AppShell onLogout={logout}>
+        <PageHeader title={t("workspace.title")} />
+        <FormError message={errorMessage(loadError, t)} onRetry={reload} retrying={loading} />
+      </AppShell>
+    );
+  }
+
+  // สถานะที่ 4 — มีข้อมูลแล้ว
   return (
     <AppShell user={user} onLogout={logout}>
       <PageHeader
@@ -82,6 +104,7 @@ export default function Workspace() {
 | `PageHeader` | `components/PageHeader.js` | หัวข้อหน้า + คำอธิบาย + ปุ่มหลักของหน้า |
 | `EmptyState` | `components/EmptyState.js` | ยังไม่มีข้อมูลในหน้านั้น |
 | `LoadingState` | `components/LoadingState.js` | ระหว่างรอข้อมูลจาก API (แถวเปล่ากะพริบ ไม่ใช่วงกลมหมุน) |
+| `useAuth` | `lib/useAuth.js` | `user` `loading` `loadError` `reload` `logout` — ใช้กับทุกหน้าที่ต้องเข้าสู่ระบบ |
 | `StatusBadge` | `components/StatusBadge.js` | ป้ายสถานะเม็ดเล็ก |
 | `Card` | `components/ui/card.js` | กล่องเนื้อหา พื้นขาว ขอบ 1px มุมมน 20px |
 | `Button` | `components/ui/button.js` | ปุ่มทุกชนิด |
@@ -281,8 +304,8 @@ const { t } = useLanguage();
 
 - [ ] ไม่มีค่าสีเขียนเองในไฟล์ของคุณ — `grep -nE "#[0-9a-fA-F]{6}|text-\[|bg-\[" pages/ของคุณ.js`
 - [ ] ข้อความทุกคำผ่าน `t()` และเติมครบทั้ง th และ en
-- [ ] หน้ามีครบ 3 สถานะ: กำลังโหลด / ไม่มีข้อมูล / มีข้อมูล
-- [ ] ทุกการกดที่เปลี่ยนข้อมูลมี toast ทั้งตอนสำเร็จและตอนพลาด
+- [ ] หน้ามีครบ 4 สถานะ: กำลังโหลด / โหลดไม่สำเร็จ (มีปุ่มลองใหม่) / ไม่มีข้อมูล / มีข้อมูล
+- [ ] ทุกการกดที่เปลี่ยนข้อมูลมี toast ตอนสำเร็จ · ตอนพลาดขึ้นในหน้า ไม่ใช่ toast
 - [ ] ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่แค่ toast
 - [ ] ข้อความผิดพลาดจาก backend ผ่าน `errorMessage(error, t)` ไม่ใช่ `error.message`
 - [ ] เปิดที่ 390px แล้วไม่มีอะไรล้นออกนอกจอ

@@ -74,6 +74,10 @@ export default function Login() {
     const found = {};
     if (!email.trim().includes("@")) found.email = t("validate.email");
     if (password.length === 0) found.password = t("validate.passwordRequired");
+    // ตรวจความยาวตั้งแต่ในหน้าเว็บ ไม่งั้นรหัสที่ยาวเกินจะถูกส่งไปถึง backend
+    // แล้วได้ข้อความคนละแบบกับ "อีเมลหรือรหัสผ่านไม่ถูกต้อง" ซึ่งบอกใบ้ว่า
+    // รหัสที่พิมพ์ผิดรูปแบบ ไม่ใช่ผิดรหัส
+    else if (new Blob([password]).size > 72) found.password = t("validate.passwordLong");
     return found;
   }
 
@@ -82,7 +86,6 @@ export default function Login() {
 
     const found = validate();
     setErrors(found);
-    setFormError("");
 
     if (Object.keys(found).length > 0) {
       // ไม่ขึ้น toast ซ้ำ เพราะข้อความอยู่ใต้ช่องที่ผิดแล้ว
@@ -216,7 +219,7 @@ export default function Login() {
             ) : null}
           </div>
 
-          <FormError message={formError} onRetry={handleSubmit} />
+          <FormError message={formError} onRetry={handleSubmit} retrying={loading} />
 
           <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
             {loading ? t("login.submitting") : t("login.submit")}

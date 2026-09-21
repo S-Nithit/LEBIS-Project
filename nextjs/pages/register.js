@@ -68,7 +68,6 @@ export default function Register() {
 
     const found = validate();
     setErrors(found);
-    setFormError("");
 
     if (Object.keys(found).length > 0) {
       // ไม่ขึ้น toast ซ้ำ ข้อความอยู่ใต้ช่องที่ผิดแล้ว
@@ -93,6 +92,15 @@ export default function Register() {
       });
 
       saveToken(data.access_token);
+
+      try {
+        // เหมือนหน้าเข้าสู่ระบบ: จำอีเมลเฉพาะเมื่อผู้ใช้ติ๊กให้จำ
+        if (remember) {
+          localStorage.setItem("lebis_last_email", email.trim().toLowerCase());
+        }
+      } catch (error) {
+        // จำไม่ได้ก็ไม่เป็นไร
+      }
 
       toast.success(t("register.success"));
       router.replace("/account"); // replace ไม่ push เพื่อไม่ให้กด back กลับมาหน้าสมัครได้
@@ -135,6 +143,13 @@ export default function Register() {
               className="font-medium text-ink underline underline-offset-4 hover:no-underline"
             >
               {t("register.goLogin")}
+            </Link>
+            {" · "}
+            <Link
+              href="/forgot-password"
+              className="underline underline-offset-4 hover:no-underline"
+            >
+              {t("nav.help")}
             </Link>
           </p>
         }
@@ -206,14 +221,19 @@ export default function Register() {
             />
           </div>
 
-          <Checkbox
-            id="remember"
-            label={t("login.remember")}
-            checked={remember}
-            onChange={(event) => setRemember(event.target.checked)}
-          />
+          <div>
+            <Checkbox
+              id="remember"
+              label={t("login.remember")}
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
+            {remember ? (
+              <p className="t-caption mt-2">{t("login.rememberHint")}</p>
+            ) : null}
+          </div>
 
-          <FormError message={formError} onRetry={handleSubmit} />
+          <FormError message={formError} onRetry={handleSubmit} retrying={loading} />
 
           <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
             {loading ? t("register.submitting") : t("register.submit")}

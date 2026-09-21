@@ -164,7 +164,15 @@ because three of the four members are writing their first web app.
 
 ## 6. Behaviour
 
-- Every action that changes data shows a toast on success and on failure.
+> **Amended 21 Sep 2569 — failures moved out of toasts.**
+> The original rule ("a toast on success and on failure") was written before the
+> interface had an inline error layer. A toast names no field, disappears after a
+> few seconds, and on a five-field form leaves the reader to map a sentence onto a
+> control from memory. Success still toasts: it needs no action and no location.
+
+- Every action that changes data shows a toast on **success**.
+- Failures are shown **in the page, at the point of failure** — under the field the
+  backend names, or in a form-level alert beside the submit button — not in a toast.
 - Every page works at 390px wide. Tables become stacked cards on phones.
 - Touch targets are at least 44px tall.
 - Use real `<button>`, `<a href>`, `<input>` and `<label>` elements. Never put a

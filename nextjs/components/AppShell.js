@@ -82,6 +82,15 @@ export function AppShell({ user, onLogout, children }) {
       <footer className="border-t border-line py-5">
         <div className="app-container flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span className="t-caption">{t("brand.tagline")}</span>
+
+          {/* ทางเข้าความช่วยเหลือ มีอยู่ในทุกหน้าที่ใช้ AppShell
+              ไม่ใช่มีแค่ในหน้าเข้าสู่ระบบเหมือนเดิม */}
+          <Link
+            href="/forgot-password"
+            className="t-caption underline underline-offset-4 hover:no-underline"
+          >
+            {t("nav.help")}
+          </Link>
           {/* ชื่อผู้ใช้ย้ายมาท้ายหน้าบนจอมือถือ แทนที่จะอัดไว้ในแถบบน */}
           {user ? (
             <span className="t-caption md:hidden">

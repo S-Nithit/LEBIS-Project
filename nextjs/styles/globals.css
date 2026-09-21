@@ -508,8 +508,10 @@
     background: color-mix(in srgb, var(--amber) 12%, var(--surface));
   }
 
+  /* ปุ่มเล็กยังต้องสูง 44px ตาม brand.md หัวข้อ 6 (กดด้วยนิ้วโป้งได้)
+     "เล็ก" ในที่นี้คือตัวอักษรกับระยะด้านข้างที่กระชับขึ้น ไม่ใช่เตี้ยลง */
   .btn-sm {
-    min-height: 36px;
+    min-height: 44px;
     padding: 0 var(--space-3);
     font-size: var(--text-label);
   }

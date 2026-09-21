@@ -94,15 +94,22 @@ class LoginRequest(BaseModel):
         return check_password_bytes(value)
 
 
+# ใช้แยกระหว่าง "ไม่ได้ส่งช่องนี้มา" (ไม่ต้องแตะ) กับ "ส่งมาเป็นค่าว่าง" (ตั้งใจล้าง)
+# ถ้าใช้ None แทนทั้งสองความหมาย การแก้แค่ชื่อจะลบชื่อร้านทิ้งไปด้วย
+UNSET = "__unset__"
+
+
 class UpdateProfileRequest(BaseModel):
     """ข้อมูลที่เจ้าของร้านแก้เองได้จากหน้าบัญชี
 
     มีแค่ชื่อกับชื่อร้านเท่านั้น — อีเมล รหัสผ่าน และ role ไม่อยู่ในนี้
     เพราะสามอย่างนั้นเปลี่ยนตัวตนหรือสิทธิ์ของบัญชี ต้องมีเส้นทางของมันเอง
+
+    ช่องที่ไม่ส่งมาจะไม่ถูกแตะ ส่งมาเป็นค่าว่าง (null หรือ "") ถือว่าตั้งใจล้าง
     """
 
-    name: str | None = Field(default=None, max_length=120)
-    shop_name: str | None = Field(default=None, max_length=120)
+    name: str | None = Field(default=UNSET, max_length=120)
+    shop_name: str | None = Field(default=UNSET, max_length=120)
 
 
 class TokenResponse(BaseModel):
@@ -224,12 +231,19 @@ async def update_me(payload: UpdateProfileRequest, user=Depends(get_current_user
     Depends(get_current_user) ทำให้แก้ได้เฉพาะบัญชีของตัวเองเท่านั้น
     ไม่มีทางส่งอีเมลคนอื่นมาแก้ข้อมูลเขาได้
     """
-    name = payload.name if payload.name is not None else user["name"]
+    def resolve(value, current):
+        # ไม่ได้ส่งช่องนี้มา -> ใช้ค่าเดิม
+        if value == UNSET:
+            return current
+        # ส่งมาเป็นค่าว่าง -> ตั้งใจล้างค่า
+        if value is None or value.strip() == "":
+            return None
+        return value.strip()
 
     updated = await update_user_profile(
         email=user["email"],
-        name=name.strip() if isinstance(name, str) else name,
-        shop_name=payload.shop_name.strip() if payload.shop_name else None,
+        name=resolve(payload.name, user["name"]),
+        shop_name=resolve(payload.shop_name, user["shop_name"]),
     )
 
     return to_user_response(updated)

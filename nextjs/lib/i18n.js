@@ -29,6 +29,7 @@ const TEXT = {
 
     "nav.logout": "ออกจากระบบ",
     "nav.language": "เลือกภาษา",
+    "nav.help": "เข้าสู่ระบบไม่ได้ใช่ไหม",
 
     "role.free": "แพ็กเกจฟรี",
     "role.pro": "แพ็กเกจ Pro",
@@ -56,7 +57,7 @@ const TEXT = {
     "register.shopNameOptional": "ไม่บังคับ",
     "register.shopNamePlaceholder": "เช่น นิธิศ เช่ากล้อง",
     "register.password": "รหัสผ่าน",
-    "register.passwordHint": "ความยาวอย่างน้อย 8 ตัวอักษร (ภาษาไทยใส่ได้ไม่เกิน 24 ตัว)",
+    "register.passwordHint": "ตั้งแต่ 8 ตัวอักษรขึ้นไป ใช้ตัวเลขและอักษรไทยได้",
     "register.confirmPassword": "ยืนยันรหัสผ่าน",
     "register.submit": "สมัครสมาชิก",
     "register.submitting": "กำลังสมัครสมาชิก...",
@@ -67,7 +68,7 @@ const TEXT = {
     "validate.email": "กรุณากรอกอีเมลให้ถูกต้อง เช่น you@example.com",
     "validate.name": "กรุณากรอกชื่อของคุณ",
     "validate.passwordShort": "รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร",
-    "validate.passwordLong": "รหัสผ่านยาวเกินไป กรุณาใช้รหัสที่สั้นลง (ภาษาไทยใส่ได้ไม่เกิน 24 ตัวอักษร)",
+    "validate.passwordLong": "รหัสผ่านยาวเกินไป กรุณาใช้ให้สั้นลง",
     "validate.passwordMismatch": "รหัสผ่านทั้งสองช่องยังไม่ตรงกัน",
 
     "sample.caption": "ตัวอย่างหน้าจอบันทึกการยืม (ข้อมูลสมมติ)",
@@ -88,7 +89,7 @@ const TEXT = {
     "error.forbidden": "บัญชีของคุณยังไม่มีสิทธิ์ใช้ส่วนนี้",
     "error.role_required": "ส่วนนี้เปิดให้เฉพาะผู้ดูแลระบบเท่านั้น",
     "error.tier_required": "ฟีเจอร์นี้อยู่ในแพ็กเกจ Pro หากต้องการใช้งาน กรุณาอัปเกรดแพ็กเกจของร้าน",
-    "error.password_too_long": "รหัสผ่านยาวเกินไป กรุณาใช้รหัสที่สั้นลง (ภาษาไทยใช้ได้ประมาณ 24 ตัวอักษร)",
+    "error.password_too_long": "รหัสผ่านยาวเกินไป กรุณาใช้ให้สั้นลง",
     "error.network": "เชื่อมต่อไม่ได้ กรุณาตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง",
     "error.server": "ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งในอีกสักครู่",
     "error.unknown": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
@@ -96,7 +97,6 @@ const TEXT = {
     "error.token_invalid": "ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง กรุณาเข้าสู่ระบบอีกครั้ง",
     "error.not_signed_in": "กรุณาเข้าสู่ระบบก่อนใช้งานส่วนนี้",
     "error.user_not_found": "ไม่พบบัญชีนี้ในระบบ กรุณาเข้าสู่ระบบอีกครั้ง",
-    "error.summary": "ยังกรอกไม่ครบ กรุณาแก้ตามที่แจ้งไว้ใต้ช่องกรอก",
 
     "action.retry": "ลองอีกครั้ง",
     "login.forgot": "ลืมรหัสผ่าน",
@@ -109,7 +109,6 @@ const TEXT = {
     "account.subtitle": "ข้อมูลบัญชีร้านของคุณในระบบ LEBIS",
     "account.email": "อีเมลที่ใช้เข้าสู่ระบบ",
     "account.shop": "ชื่อร้าน",
-    "account.plan": "แพ็กเกจที่ใช้อยู่",
     "account.emptyTitle": "ยังไม่มีอุปกรณ์ในระบบ",
     "account.emptyBody":
       "ส่วนจัดการอุปกรณ์และใบยืม-คืนกำลังอยู่ระหว่างพัฒนา เมื่อเปิดใช้งานแล้ว รายการอุปกรณ์ของร้านคุณจะแสดงที่นี่",
@@ -120,6 +119,7 @@ const TEXT = {
     "account.cancel": "ยกเลิก",
     "account.saved": "บันทึกชื่อร้านเรียบร้อยแล้ว",
     "account.setShopName": "ตั้งชื่อร้าน",
+    "account.editShopName": "แก้ไขชื่อร้าน",
     "account.planTitle": "แพ็กเกจของคุณให้อะไรบ้าง",
     "account.planFree":
       "แพ็กเกจฟรีบันทึกอุปกรณ์ได้สูงสุด 50 ชิ้น ดูรายงานย้อนหลังได้ 7 วัน และยังไม่รวมการแจ้งเตือนผ่าน LINE กับการส่งออกไฟล์",
@@ -131,7 +131,7 @@ const TEXT = {
     "help.tip2": "กดปุ่ม แสดง ข้างช่องรหัสผ่าน เพื่อดูว่าพิมพ์ตรงกับที่ตั้งไว้จริงไหม",
     "help.title": "ลืมรหัสผ่านใช่ไหม",
     "help.body":
-      "ส่วนใหญ่แล้วเข้าระบบไม่ได้เพราะสองเรื่องข้างล่างนี้ ลองตรวจดูก่อนได้เลย",
+      "ข้อมูลร้านของคุณยังอยู่ครบ ลองสองเรื่องนี้ก่อน ส่วนใหญ่แก้ได้เองภายในไม่กี่วินาที",
     "help.note":
       "ถ้าลองสองข้อข้างบนแล้วยังเข้าไม่ได้ ระบบยังไม่มีการตั้งรหัสผ่านใหม่ด้วยตัวเอง กรุณาติดต่อทีมงาน LEBIS เพื่อขอตั้งรหัสผ่านใหม่ให้",
     "help.noteNoChannel":
@@ -151,6 +151,7 @@ const TEXT = {
 
     "nav.logout": "Sign out",
     "nav.language": "Choose language",
+    "nav.help": "Trouble signing in?",
 
     "role.free": "Free plan",
     "role.pro": "Pro plan",
@@ -178,7 +179,7 @@ const TEXT = {
     "register.shopNameOptional": "optional",
     "register.shopNamePlaceholder": "e.g. Nithit Camera Rental",
     "register.password": "Password",
-    "register.passwordHint": "At least 8 characters (about 24 in Thai).",
+    "register.passwordHint": "8 characters or more. Numbers and Thai letters are fine.",
     "register.confirmPassword": "Confirm password",
     "register.submit": "Create account",
     "register.submitting": "Creating your account...",
@@ -189,7 +190,7 @@ const TEXT = {
     "validate.email": "Please enter a valid email address, for example you@example.com",
     "validate.name": "Please enter your name.",
     "validate.passwordShort": "Use at least 8 characters.",
-    "validate.passwordLong": "That password is too long. Please use a shorter one (about 24 characters in Thai).",
+    "validate.passwordLong": "That password is too long. Please use a shorter one.",
     "validate.passwordMismatch": "The two passwords do not match.",
 
     "sample.caption": "Sample borrow log (illustrative data)",
@@ -210,7 +211,7 @@ const TEXT = {
     "error.forbidden": "Your account does not have access to this part yet.",
     "error.role_required": "This area is for administrators only.",
     "error.tier_required": "This feature is part of the Pro plan. Upgrade your shop's plan to use it.",
-    "error.password_too_long": "That password is too long. Please use a shorter one (about 24 characters in Thai).",
+    "error.password_too_long": "That password is too long. Please use a shorter one.",
     "error.network": "Could not reach the server. Please check your connection and try again.",
     "error.server": "The service is temporarily unavailable. Please try again in a moment.",
     "error.unknown": "Something went wrong. Please try again.",
@@ -218,7 +219,6 @@ const TEXT = {
     "error.token_invalid": "Your session is not valid. Please sign in again.",
     "error.not_signed_in": "Please sign in to use this part of LEBIS.",
     "error.user_not_found": "That account no longer exists. Please sign in again.",
-    "error.summary": "Some fields still need attention. Please fix the notes below.",
 
     "action.retry": "Try again",
     "login.forgot": "Forgot your password?",
@@ -231,7 +231,6 @@ const TEXT = {
     "account.subtitle": "The details LEBIS holds for your shop",
     "account.email": "Sign-in email",
     "account.shop": "Shop name",
-    "account.plan": "Current plan",
     "account.emptyTitle": "No equipment yet",
     "account.emptyBody":
       "Equipment and borrow records are still being built. Once they are ready, your shop's items will appear here.",
@@ -242,6 +241,7 @@ const TEXT = {
     "account.cancel": "Cancel",
     "account.saved": "Shop name saved.",
     "account.setShopName": "Set your shop name",
+    "account.editShopName": "Edit shop name",
     "account.planTitle": "What your plan includes",
     "account.planFree":
       "The free plan covers up to 50 items and 7 days of report history. LINE reminders and CSV export are not included.",
@@ -253,7 +253,7 @@ const TEXT = {
     "help.tip2": "Use the Show button beside the password field to check what you typed.",
     "help.title": "Forgotten password",
     "help.body":
-      "Most sign-in problems come down to the two things below. Try them first.",
+      "Your shop's records are safe. Two quick things solve most sign-in problems — try these first.",
     "help.note":
       "If neither helps, LEBIS cannot reset a password by itself yet — contact the LEBIS team and we will set a new one for you.",
     "help.noteNoChannel":
