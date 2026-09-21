@@ -1,22 +1,20 @@
 // หน้าที่บอกว่าจะทำยังไงเมื่อเข้าสู่ระบบไม่ได้
 //
-// ตอนนี้ระบบยังไม่มีการตั้งรหัสผ่านใหม่ด้วยตัวเอง (ต้องส่งอีเมลยืนยัน
-// ซึ่งยังไม่ได้ทำ) หน้านี้จึงทำสองอย่างที่ช่วยได้จริง
-//   1. บอกสองเรื่องที่คนมักพลาดและแก้เองได้ทันที
-//   2. บอกทางติดต่อเมื่อแก้เองไม่ได้
-// ร้านหนึ่งร้านมีบัญชีเดียว ลืมรหัสแล้วเข้าไม่ได้เลยคือเรื่องใหญ่ที่สุดของเจ้าของร้าน
+// ลำดับสำคัญ: บอกสองเรื่องที่แก้เองได้ทันทีก่อน แล้วค่อยบอกทางติดต่อ
+// ถ้าขึ้นต้นด้วย "ระบบยังทำไม่ได้" คนอ่านจะหมดหวังตั้งแต่บรรทัดแรก
+// ทั้งที่ส่วนใหญ่แก้เองได้
 //
-// เมื่อทำระบบตั้งรหัสผ่านใหม่เสร็จแล้ว ให้แทนที่เนื้อหาด้วยฟอร์มกรอกอีเมล
+// ใช้ AuthLayout แบบ bare (ไม่มีแผงตัวอย่างบันทึกการยืมกับคำโฆษณา Pro)
+// คนที่เข้าระบบไม่ได้ไม่ควรเจอคำเชิญให้ซื้อแพ็กเกจขวางอยู่
 //
-// หน้านี้ไม่ใช้ AuthLayout เพราะคนที่มาถึงหน้านี้กำลังเข้าระบบไม่ได้
-// ไม่ควรเจอตัวอย่างบันทึกการยืมกับคำโฆษณาแพ็กเกจ Pro ขวางอยู่
+// เมื่อทำระบบตั้งรหัสผ่านใหม่เสร็จแล้ว ให้แทนที่รายการนี้ด้วยฟอร์มกรอกอีเมล
 
 import Head from "next/head";
 import Link from "next/link";
 
-import { Logo } from "@/components/Logo";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
+import { SUPPORT_CONTACT } from "@/lib/config";
 import { useLanguage } from "@/lib/useLanguage";
 
 export default function ForgotPassword() {
@@ -28,40 +26,38 @@ export default function ForgotPassword() {
         <title>{t("page.help")}</title>
       </Head>
 
-      <main className="flex min-h-screen flex-col bg-paper py-5 md:justify-center md:py-7">
-        <div className="app-container max-w-2xl">
-          <div className="flex items-center justify-between gap-4">
-            <Logo size={30} />
-            <LanguageToggle />
-          </div>
+      <AuthLayout bare title={t("help.title")} description={t("help.body")}>
+        {/* สองเรื่องที่คนมักพลาดและแก้เองได้ทันที ไม่ต้องรอใคร */}
+        <ol className="flex flex-col gap-4">
+          {["help.tip1", "help.tip2"].map((key, index) => (
+            <li key={key} className="flex gap-3 border-b border-line pb-4 last:border-b-0 last:pb-0">
+              <span
+                aria-hidden="true"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-badge border border-line text-label font-medium text-muted"
+              >
+                {index + 1}
+              </span>
+              <p className="t-body">{t(key)}</p>
+            </li>
+          ))}
+        </ol>
 
-          <div className="mt-5 rounded-card border border-line bg-surface p-5 md:mt-6 md:p-6">
-            <h1 className="t-page-title">{t("help.title")}</h1>
-            <p className="t-caption mt-2">{t("help.body")}</p>
+        <p className="t-caption mt-5 border-t border-line pt-4">{t("help.note")}</p>
 
-            {/* สองเรื่องที่คนมักพลาดและแก้เองได้ทันที ไม่ต้องรอใคร */}
-            <h2 className="t-section mt-5">{t("help.tipsTitle")}</h2>
-            <ul className="mt-3 flex flex-col gap-3">
-              {["help.tip1", "help.tip2"].map((key) => (
-                <li
-                  key={key}
-                  className="t-body border-b border-line pb-3 last:border-b-0 last:pb-0"
-                >
-                  {t(key)}
-                </li>
-              ))}
-            </ul>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          {/* ปุ่มติดต่อจะขึ้นก็ต่อเมื่อมีช่องทางจริงใน lib/config.js
+              ไม่ตั้งค่าไว้ก็ไม่โชว์ปุ่มที่กดแล้วไม่ไปไหน */}
+          {SUPPORT_CONTACT ? (
+            <Button asChild className="w-full sm:w-auto">
+              <a href={SUPPORT_CONTACT}>{t("help.contactLabel")}</a>
+            </Button>
+          ) : null}
 
-            <p className="t-caption mt-5 border-t border-line pt-4">{t("help.note")}</p>
-
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="w-full sm:w-auto">
-                <Link href="/login">{t("help.back")}</Link>
-              </Button>
-            </div>
-          </div>
+          <Button asChild variant="secondary" className="w-full sm:w-auto">
+            <Link href="/login">{t("help.back")}</Link>
+          </Button>
         </div>
-      </main>
+      </AuthLayout>
     </>
   );
 }

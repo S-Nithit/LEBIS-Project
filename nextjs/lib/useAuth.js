@@ -21,6 +21,7 @@ export function useAuth(options = {}) {
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     let cancelled = false; // กันกรณีผู้ใช้เปลี่ยนหน้าไปก่อนที่ข้อมูลจะมาถึง
@@ -36,9 +37,23 @@ export function useAuth(options = {}) {
         const me = await apiFetch("/api/auth/me");
         if (!cancelled) setUser(me);
       } catch (error) {
-        // token ใช้ไม่ได้แล้ว (หมดอายุ / ถูกแก้) — ลบทิ้งแล้วส่งไปหน้า login
-        clearToken();
-        if (redirectTo) router.replace(redirectTo);
+        // 🔴 แยกให้ออกว่า "token ใช้ไม่ได้" กับ "ติดต่อเซิร์ฟเวอร์ไม่ได้" ไม่เหมือนกัน
+        //
+        // token หมดอายุหรือถูกแก้ -> ลบทิ้งแล้วส่งไปหน้าเข้าสู่ระบบ ถูกต้องแล้ว
+        // แต่ถ้าแค่เน็ตหลุดหรือเซิร์ฟเวอร์ไม่ตอบ token ยังใช้ได้อยู่
+        // ถ้าลบทิ้งด้วย เจ้าของร้านจะถูกเตะออกจากระบบกลางคันทั้งที่ลูกค้ายืนรออยู่
+        // เพราะสัญญาณหลุดไปไม่กี่วินาที
+        const tokenIsDead = ["token_expired", "token_invalid", "user_not_found", "not_signed_in"].includes(
+          error?.code
+        );
+
+        if (tokenIsDead) {
+          clearToken();
+          if (redirectTo) router.replace(redirectTo);
+        } else if (!cancelled) {
+          // เก็บ token ไว้ แล้วบอกหน้าเว็บว่าตอนนี้ติดต่อเซิร์ฟเวอร์ไม่ได้
+          setLoadError(error);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -60,6 +75,7 @@ export function useAuth(options = {}) {
   return {
     user, // ข้อมูล user จาก /api/auth/me (null ถ้ายังไม่ login)
     loading, // true ระหว่างที่ยังถาม backend ไม่เสร็จ
+    loadError, // มีค่าเมื่อโหลดข้อมูลไม่สำเร็จเพราะเน็ต/เซิร์ฟเวอร์ (token ยังอยู่)
     isLoggedIn: user !== null,
     logout,
   };

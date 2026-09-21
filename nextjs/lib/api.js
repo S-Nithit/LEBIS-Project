@@ -120,7 +120,17 @@ export async function apiFetch(path, options = {}) {
   }
 
   // อ่าน body เป็น JSON — บาง response ไม่มี body (เช่น 204) เลยต้องกัน error ไว้
-  const data = await response.json().catch(() => null);
+  // ถ้าอ่าน body ค้าง (หัวข้อความมาแล้วแต่เนื้อไม่มา) ให้ถือว่าเป็นปัญหาเครือข่าย
+  // ไม่งั้นปุ่มจะค้างเป็น "กำลังโหลด..." ไปตลอดโดยไม่มีอะไรบอกผู้ใช้
+  let data;
+  try {
+    data = await response.json();
+  } catch (bodyError) {
+    if (bodyError?.name === "TimeoutError" || bodyError?.name === "AbortError") {
+      throw new ApiError("network", { fallback: "body timeout" });
+    }
+    data = null;
+  }
 
   if (!response.ok) {
     throw new ApiError(readErrorCode(data, response), {

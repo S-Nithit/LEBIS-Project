@@ -32,7 +32,7 @@ function dueLabel(offsetDays, language) {
   });
 }
 
-export function AuthLayout({ title, description, children, footer, formError }) {
+export function AuthLayout({ title, description, children, footer, bare = false }) {
   const { t, language } = useLanguage();
 
   return (
@@ -44,23 +44,15 @@ export function AuthLayout({ title, description, children, footer, formError }) 
           <LanguageToggle />
         </div>
 
-        <div className="mt-5 grid items-start gap-5 md:mt-6 md:grid-cols-[1.15fr_0.85fr] md:gap-6">
+        <div
+          className={`mt-5 grid items-start gap-5 md:mt-6 md:gap-6 ${
+            bare ? "max-w-2xl" : "md:grid-cols-[1.15fr_0.85fr]"
+          }`}
+        >
           {/* การ์ดฟอร์ม — บนมือถือมาก่อนเสมอ */}
           <section className="rounded-card border border-line bg-surface p-5 md:p-6">
             <h1 className="t-page-title">{title}</h1>
             {description ? <p className="t-caption mt-2">{description}</p> : null}
-
-            {/* ข้อผิดพลาดระดับฟอร์ม — ใช้กับเรื่องที่ไม่ได้ผิดที่ช่องใดช่องหนึ่ง
-                เช่นเน็ตหลุด เซิร์ฟเวอร์ล่ม หรือรหัสผ่านไม่ตรงกับอีเมล
-                อยู่เหนือปุ่มเสมอ ผู้ใช้จะได้เห็นก่อนกดส่งซ้ำ */}
-            {formError ? (
-              <p
-                role="alert"
-                className="form-error mt-5"
-              >
-                {formError}
-              </p>
-            ) : null}
 
             <div className="mt-5">{children}</div>
 
@@ -69,7 +61,10 @@ export function AuthLayout({ title, description, children, footer, formError }) 
             ) : null}
           </section>
 
-          {/* ตัวอย่างบันทึกการยืม — ให้คนที่เพิ่งเข้ามาเห็นว่าระบบเก็บอะไรให้ */}
+          {/* ตัวอย่างบันทึกการยืม — ให้คนที่เพิ่งเข้ามาเห็นว่าระบบเก็บอะไรให้
+              หน้าที่ส่ง bare เข้ามาจะไม่แสดงแผงนี้ เช่นหน้าลืมรหัสผ่าน
+              คนที่เข้าระบบไม่ได้ไม่ควรเจอคำโฆษณาแพ็กเกจขวางอยู่ */}
+          {bare ? null : (
           <aside className="rounded-card border border-line bg-paper p-5 md:p-6">
             <p className="t-eyebrow">{t("sample.caption")}</p>
 
@@ -98,6 +93,7 @@ export function AuthLayout({ title, description, children, footer, formError }) 
               {t("sample.footnote")}
             </p>
           </aside>
+          )}
         </div>
       </div>
     </main>

@@ -31,8 +31,24 @@ router = APIRouter()
 #    โดยที่โค้ดใน route ไม่ต้องเช็กซ้ำ
 # ---------------------------------------------------------------------------
 
+# bcrypt รับรหัสผ่านได้ไม่เกิน 72 "ไบต์" ไม่ใช่ 72 "ตัวอักษร"
+# ภาษาไทยหนึ่งตัวอักษรกิน 3 ไบต์ รหัสไทย 25 ตัวจึงเกินขีดจำกัดแล้ว
+# ถ้าไม่ดักตรงนี้ bcrypt จะโยน error ออกมาเป็น HTTP 500 ซึ่งหน้าเว็บจะแปลว่า
+# "ระบบขัดข้อง" ทั้งที่ความจริงคือรหัสที่ผู้ใช้ตั้งยาวเกิน ลองใหม่กี่ครั้งก็ไม่ผ่าน
+MAX_PASSWORD_BYTES = 72
+
+
+def check_password_bytes(value: str) -> str:
+    if len(value.encode("utf-8")) > MAX_PASSWORD_BYTES:
+        raise ValueError("password_too_long")
+    return value
+
+
 class RegisterRequest(BaseModel):
     email: EmailStr
+    password: str = Field(min_length=8)
+    name: str = Field(min_length=1, max_length=120)
+    shop_name: str | None = Field(default=None, max_length=120)
 
     # 🔴 อีเมลถูกใช้เป็น primary key ของตาราง users และ Postgres แยกตัวพิมพ์เล็กใหญ่
     #    ถ้าไม่แปลงเป็นตัวพิมพ์เล็กก่อน คนที่สมัครด้วย Ann@shop.com
@@ -42,10 +58,11 @@ class RegisterRequest(BaseModel):
     @classmethod
     def normalize_email(cls, value: str) -> str:
         return value.strip().lower()
-    # bcrypt รับรหัสได้ไม่เกิน 72 ไบต์ เลยกั้นที่ตรงนี้ ไม่ให้หลุดไปพังข้างใน
-    password: str = Field(min_length=8, max_length=72)
-    name: str = Field(min_length=1, max_length=120)
-    shop_name: str | None = Field(default=None, max_length=120)
+
+    @field_validator("password")
+    @classmethod
+    def password_fits_bcrypt(cls, value: str) -> str:
+        return check_password_bytes(value)
 
 
 class LoginRequest(BaseModel):
@@ -54,13 +71,20 @@ class LoginRequest(BaseModel):
     # เพราะฉะนั้นบัญชีที่ seed ไว้เองก็ต้องใช้โดเมนปกติด้วย (ดู DEMO_ACCOUNTS
     # ใน database.py) ไม่งั้นจะสมัครไม่ได้ login ไม่ได้ ทั้งที่มีแถวอยู่ใน DB
     email: EmailStr
-    password: str = Field(min_length=1, max_length=72)
+    password: str = Field(min_length=1)
+    # ติ๊ก "จำฉันไว้ในเครื่องนี้" แล้ว token จะอยู่ได้ 30 วันแทน 24 ชั่วโมง
+    remember: bool = False
 
-    # เหตุผลเดียวกับตอนสมัคร — ดูคอมเมนต์ใน RegisterRequest
     @field_validator("email")
     @classmethod
     def normalize_email(cls, value: str) -> str:
         return value.strip().lower()
+
+    # ตอนเข้าสู่ระบบก็ต้องดักเหมือนกัน เพราะ bcrypt.checkpw พังที่ขีดเดียวกัน
+    @field_validator("password")
+    @classmethod
+    def password_fits_bcrypt(cls, value: str) -> str:
+        return check_password_bytes(value)
 
 
 class TokenResponse(BaseModel):
@@ -155,7 +179,7 @@ async def login(payload: LoginRequest):
             },
         )
 
-    token = create_access_token(user["email"])
+    token = create_access_token(user["email"], remember=payload.remember)
 
     # เก็บ token ใบล่าสุดไว้ในคอลัมน์ users.token ด้วย — คอลัมน์นี้ติดมากับ
     # boilerplate เก็บไว้เพื่อความเข้ากันได้ แต่ตัวที่ระบบเชื่อจริงคือ JWT

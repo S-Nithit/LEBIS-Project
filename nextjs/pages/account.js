@@ -32,12 +32,12 @@ export default function Account() {
   const { user, loading, logout } = useAuth({ redirectTo: "/login" });
   const { t } = useLanguage();
 
-  // ระหว่างรอข้อมูลผู้ใช้ ยังไม่รู้ว่าจะแสดงชื่อใคร จึงยังไม่วาดแถบหัวเว็บ
+  // ระหว่างรอข้อมูล วาดแถบหัวเว็บไว้ก่อนเลย หน้าจะได้ไม่กระโดดตอนข้อมูลมาถึง
   if (loading || !user) {
     return (
-      <main className="app-container py-6">
+      <AppShell>
         <LoadingState rows={3} />
-      </main>
+      </AppShell>
     );
   }
 
@@ -48,7 +48,7 @@ export default function Account() {
   return (
     <>
       <Head>
-        <title>{t("account.title")} · LEBIS</title>
+        <title>{t("page.account")}</title>
       </Head>
 
       <AppShell user={user} onLogout={logout}>
@@ -62,6 +62,17 @@ export default function Account() {
               <Row label={t("account.plan")}>
                 <StatusBadge tone={planTone}>{planLabel}</StatusBadge>
               </Row>
+            </CardContent>
+          </Card>
+
+          {/* อธิบายว่าแพ็กเกจที่ใช้อยู่ให้อะไรบ้าง — หน้าที่บอกชื่อแพ็กเกจ
+              แต่ไม่บอกว่ามันคืออะไร ทำให้ผู้ใช้ต้องไปหาเอง */}
+          <Card>
+            <CardContent className="p-5">
+              <h2 className="t-section">{t("account.planTitle")}</h2>
+              <p className="t-caption mt-2">
+                {user.role === "free" ? t("account.planFree") : t("account.planPro")}
+              </p>
             </CardContent>
           </Card>
 

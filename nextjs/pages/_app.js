@@ -30,16 +30,17 @@ export default function App({ Component, pageProps }) {
         />
 
         {/* สีแถบบนของเบราว์เซอร์บนมือถือ ให้กลืนกับพื้นหลังของเว็บ */}
-        <meta name="theme-color" content="#F7F9F9" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0B2126" media="(prefers-color-scheme: dark)" />
+        <meta key="theme-light" name="theme-color" content="#F7F9F9" media="(prefers-color-scheme: light)" />
+        <meta key="theme-dark" name="theme-color" content="#0B2126" media="(prefers-color-scheme: dark)" />
       </Head>
 
       <Component {...pageProps} />
 
       {/* ที่อยู่ของข้อความแจ้งเตือน (toast) ทุกใบในเว็บ ต้องวางไว้ที่นี่ครั้งเดียว
           หน้าไหนอยากแจ้งเตือนก็  import { toast } from "sonner"
-          แล้วเรียก toast.success("...") หรือ toast.error("...") ได้เลย */}
-      <Toaster position="top-center" richColors />
+          แล้วเรียก toast.success("...") หรือ toast.error("...") ได้เลย
+          วางไว้ล่างจอเพราะบนจอมีแถบหัวเว็บอยู่ และล่างจออยู่ใกล้นิ้วโป้งกว่า */}
+      <Toaster position="bottom-center" richColors />
     </LanguageProvider>
   );
 }

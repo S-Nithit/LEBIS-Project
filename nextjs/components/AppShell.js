@@ -43,7 +43,9 @@ export function AppShell({ user, onLogout, children }) {
       {/* แถบหัวเว็บ — พื้นสีหมึก โลโก้ใช้ variant dark */}
       <header className="sticky top-0 z-20 bg-header-bg text-header-fg">
         <div className="app-container flex h-16 items-center justify-between gap-4">
-          <Link href="/" aria-label="LEBIS" className="rounded-control">
+          {/* โลโก้พากลับหน้าบัญชี ไม่ใช่ "/" เพราะหน้าแรกยังเป็นหน้าตัวอย่างของ boilerplate
+              เมื่อหน้า workspace ของ Neo เสร็จแล้วให้เปลี่ยนปลายทางตรงนี้ */}
+          <Link href="/account" aria-label="LEBIS" className="rounded-control">
             <Logo variant="dark" size={26} />
           </Link>
 
@@ -63,13 +65,13 @@ export function AppShell({ user, onLogout, children }) {
             <LanguageToggle onDark />
 
             {onLogout ? (
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={onLogout}
-                className="btn btn-sm min-h-[44px] rounded-control border border-header-line bg-transparent px-4 text-header-fg hover:border-header-fg"
+                className="border-header-line bg-transparent text-header-fg hover:border-header-fg"
               >
                 {t("nav.logout")}
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>

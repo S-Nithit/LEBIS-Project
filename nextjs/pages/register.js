@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { apiFetch, errorMessage, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
 import { AuthLayout } from "@/components/AuthLayout";
+import { FormError } from "@/components/FormError";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 
@@ -65,7 +66,7 @@ export default function Register() {
     setFormError("");
 
     if (Object.keys(found).length > 0) {
-      toast.error(t("error.summary"));
+      // ไม่ขึ้น toast ซ้ำ ข้อความอยู่ใต้ช่องที่ผิดแล้ว
       // พาโฟกัสไปที่ช่องแรกที่ผิด ผู้ใช้จะได้ไม่ต้องไล่หาเองว่าผิดตรงไหน
       document.getElementById(Object.keys(found)[0])?.focus();
       return;
@@ -116,7 +117,6 @@ export default function Register() {
       <AuthLayout
         title={t("register.title")}
         description={t("register.subtitle")}
-        formError={formError}
         footer={
           <p className="t-caption">
             {t("register.hasAccount")}{" "}
@@ -165,6 +165,7 @@ export default function Register() {
             value={shopName}
             onChange={(event) => setShopName(event.target.value)}
             placeholder={t("register.shopNamePlaceholder")}
+            autoComplete="organization"
           />
 
           {/* รหัสผ่านสองช่องอยู่คนละบรรทัดบนมือถือ และเรียงคู่กันบนจอใหญ่ */}
@@ -194,6 +195,8 @@ export default function Register() {
               required
             />
           </div>
+
+          <FormError message={formError} onRetry={handleSubmit} />
 
           <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
             {loading ? t("register.submitting") : t("register.submit")}

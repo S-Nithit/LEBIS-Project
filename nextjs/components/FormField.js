@@ -68,7 +68,7 @@ export const FormField = forwardRef(function FormField(
           ref={ref}
           aria-invalid={error ? "true" : undefined}
           aria-describedby={describedBy}
-          className={cn(error && "field-input-error", isPassword && "pr-8")}
+          className={cn(error && "field-input-error", isPassword && "pr-[84px]")}
           {...inputProps}
           onChange={handleChange}
           type={inputType}
@@ -80,7 +80,7 @@ export const FormField = forwardRef(function FormField(
             onClick={() => setRevealed((current) => !current)}
             aria-pressed={revealed}
             aria-label={`${revealed ? t("field.hide") : t("field.show")} ${label}`}
-            className="absolute inset-y-1 right-1 inline-flex min-h-[36px] items-center whitespace-nowrap rounded-control border border-line bg-surface px-3 text-label font-medium text-muted hover:border-ink hover:text-ink"
+            className="absolute right-1 top-1/2 inline-flex min-h-[44px] w-[76px] -translate-y-1/2 items-center justify-center whitespace-nowrap rounded-control border border-line bg-surface text-label font-medium text-muted hover:border-ink hover:text-ink"
           >
             {revealed ? t("field.hide") : t("field.show")}
           </button>

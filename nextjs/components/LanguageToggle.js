@@ -12,13 +12,15 @@ import { LANGUAGES } from "@/lib/i18n";
 import { useLanguage } from "@/lib/useLanguage";
 
 export function LanguageToggle({ onDark = false, className }) {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <div
+      role="group"
+      aria-label={t("nav.language")}
       className={cn(
         "inline-flex items-center rounded-control border p-1",
-        onDark ? "border-white/25" : "border-line bg-surface",
+        onDark ? "border-header-line" : "border-line bg-surface",
         className
       )}
     >
@@ -38,7 +40,7 @@ export function LanguageToggle({ onDark = false, className }) {
                   ? "bg-white text-ink"
                   : "bg-ink text-on-ink"
                 : onDark
-                  ? "text-white/70 hover:text-white"
+                  ? "text-header-fg hover:text-header-fg"
                   : "text-muted hover:text-ink"
             )}
           >

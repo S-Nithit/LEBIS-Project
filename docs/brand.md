@@ -83,6 +83,15 @@ re-draws the logo by hand.
 > Both tokens are used for 13px labels and badges, so the original value contradicted
 > the 4.5:1 rule three lines below this table. `#99641A` is the same hue at 5.01:1.
 > The dark theme keeps its lighter amber, which already passed.
+>
+> **Also added for contrast reasons, all derived from the palette above:**
+> `--line-strong` `#7D9094` light / `#729298` dark — input borders only, because
+> `--line` measures 1.27:1 and WCAG 1.4.11 wants 3:1 for a control boundary.
+> `--primary-border` `#2E8C9C` — dark mode only, the 1px edge on the primary
+> button, which otherwise sits at 1.8:1 against the card.
+> `--header-line` `#4A7D86` light / `#3F6D76` dark — the outline of buttons that
+> sit on the dark app header.
+> None of these is ever used as a text colour or as a fill.
 
 Rules
 

@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { apiFetch, errorMessage, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
 import { AuthLayout } from "@/components/AuthLayout";
+import { FormError } from "@/components/FormError";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 
@@ -31,6 +32,7 @@ export default function Login() {
   // เพราะหน้านี้คือหน้าที่ลูกค้าและอาจารย์เปิดจากลิงก์จริง
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // เก็บข้อความผิดพลาดแยกเป็นรายช่อง ผู้ใช้จะได้รู้ว่าต้องแก้ช่องไหน
@@ -38,6 +40,18 @@ export default function Login() {
   const [formError, setFormError] = useState("");
 
   const emailRef = useRef(null);
+
+  // เติมอีเมลที่เคยเข้าสู่ระบบสำเร็จครั้งล่าสุดให้เลย
+  // เจ้าของร้านเข้าระบบจากเครื่องเดิมทุกวัน ไม่ควรต้องพิมพ์อีเมลใหม่ทุกครั้ง
+  // (เก็บแค่อีเมล ไม่เก็บรหัสผ่าน)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("lebis_last_email");
+      if (saved) setEmail(saved);
+    } catch (error) {
+      // เบราว์เซอร์ปิด localStorage ไว้ ก็แค่ไม่เติมให้
+    }
+  }, []);
 
   // โฟกัสช่องแรกให้เฉพาะเครื่องที่มีเมาส์ (คอมพิวเตอร์)
   // บนมือถือไม่โฟกัส เพราะคีย์บอร์ดจะเด้งขึ้นมาบังครึ่งจอทันทีที่เปิดหน้า
@@ -67,7 +81,8 @@ export default function Login() {
     setFormError("");
 
     if (Object.keys(found).length > 0) {
-      toast.error(t("error.summary"));
+      // ไม่ขึ้น toast ซ้ำ เพราะข้อความอยู่ใต้ช่องที่ผิดแล้ว
+      // บอกซ้ำสองที่ทำให้โปรแกรมอ่านหน้าจออ่านซ้ำ และรกโดยไม่ได้ข้อมูลเพิ่ม
       // พาโฟกัสไปที่ช่องแรกที่ผิด ไม่ต้องให้ผู้ใช้ไล่หาเอง
       document.getElementById(Object.keys(found)[0])?.focus();
       return;
@@ -78,10 +93,16 @@ export default function Login() {
     try {
       const data = await apiFetch("/api/auth/login", {
         method: "POST",
-        body: { email: email.trim(), password },
+        body: { email: email.trim(), password, remember },
       });
 
       saveToken(data.access_token);
+
+      try {
+        localStorage.setItem("lebis_last_email", email.trim().toLowerCase());
+      } catch (error) {
+        // จำไม่ได้ก็ไม่เป็นไร ไม่ใช่เรื่องคอขาดบาดตาย
+      }
 
       toast.success(t("login.success"));
       router.replace("/account");
@@ -89,14 +110,12 @@ export default function Login() {
       // errorMessage() แปลรหัสจาก backend เป็นภาษาที่ผู้ใช้เลือกอยู่
       const message = errorMessage(error, t);
 
-      // เน็ตหลุดหรือเซิร์ฟเวอร์ล่ม ไม่ใช่ความผิดของช่องใดช่องหนึ่ง
-      // ต้องขึ้นเป็นข้อความระดับฟอร์ม ไม่ใช่ไปทำกรอบแดงให้รหัสผ่านที่ถูกอยู่แล้ว
-      if (error?.code === "invalid_credentials") {
-        setErrors({ password: message });
-      } else {
-        setFormError(message);
-      }
-
+      // ทุกข้อผิดพลาดจาก backend ขึ้นเป็นข้อความระดับฟอร์ม ไม่แปะช่องใดช่องหนึ่ง
+      // แม้แต่ "อีเมลหรือรหัสผ่านไม่ถูกต้อง" ก็ด้วย เพราะ backend ตั้งใจไม่บอก
+      // ว่าผิดที่อีเมลหรือรหัส (กันคนไล่เดาว่าอีเมลไหนมีบัญชีอยู่จริง)
+      // ถ้าหน้าเว็บไปทำกรอบแดงที่ช่องรหัสผ่าน เท่ากับบอกว่าอีเมลถูกแล้ว
+      // ซึ่งขัดกับสิ่งที่ backend ตั้งใจ และอาจทำให้คนที่พิมพ์อีเมลผิดไปแก้รหัสที่ถูกอยู่แล้ว
+      setFormError(message);
       toast.error(message);
     } finally {
       setLoading(false);
@@ -112,7 +131,6 @@ export default function Login() {
       <AuthLayout
         title={t("login.title")}
         description={t("login.subtitle")}
-        formError={formError}
         footer={
           <p className="t-caption">
             {t("login.noAccount")}{" "}
@@ -157,15 +175,31 @@ export default function Login() {
               required
             />
 
-            <p className="mt-2">
+            {/* จำฉันไว้ + ลืมรหัสผ่าน อยู่บรรทัดเดียวกันใต้ช่องรหัสผ่าน */}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              {/* พื้นที่กดคือทั้งป้าย ไม่ใช่แค่กล่องติ๊ก จะได้กดด้วยนิ้วโป้งง่าย */}
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(event) => setRemember(event.target.checked)}
+                  className="h-5 w-5 rounded-control border border-line accent-ink"
+                />
+                <span className="t-label">{t("login.remember")}</span>
+              </label>
+
               <Link
                 href="/forgot-password"
                 className="t-caption underline underline-offset-4 hover:no-underline"
               >
                 {t("login.forgot")}
               </Link>
-            </p>
+            </div>
+
+            <p className="lebis-hint t-caption mt-2">{t("login.rememberHint")}</p>
           </div>
+
+          <FormError message={formError} onRetry={handleSubmit} />
 
           <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
             {loading ? t("login.submitting") : t("login.submit")}
