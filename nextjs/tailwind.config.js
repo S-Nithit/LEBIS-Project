@@ -15,6 +15,7 @@ module.exports = {
         paper: "var(--paper)",
         surface: "var(--surface)",
         line: "var(--line)",
+        "line-strong": "var(--line-strong)",
         muted: "var(--muted)",
         success: "var(--success)",
         warning: "var(--warning)",

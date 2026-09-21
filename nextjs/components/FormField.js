@@ -80,7 +80,7 @@ export const FormField = forwardRef(function FormField(
             onClick={() => setRevealed((current) => !current)}
             aria-pressed={revealed}
             aria-label={`${revealed ? t("field.hide") : t("field.show")} ${label}`}
-            className="absolute right-1 top-1/2 inline-flex min-h-[44px] w-[76px] -translate-y-1/2 items-center justify-center whitespace-nowrap rounded-control border border-line bg-surface text-label font-medium text-muted hover:border-ink hover:text-ink"
+            className="absolute right-1 top-1/2 inline-flex min-h-[44px] w-[76px] -translate-y-1/2 items-center justify-center whitespace-nowrap rounded-control border border-line-strong bg-surface text-label font-medium text-muted hover:border-ink hover:text-ink"
           >
             {revealed ? t("field.hide") : t("field.show")}
           </button>

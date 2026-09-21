@@ -85,6 +85,13 @@ export function errorMessage(error, t) {
   return text === key ? t("error.unknown") : text;
 }
 
+// backend เรียกชื่อช่องแบบ shop_name แต่ id ของ <input> ในหน้าเว็บเป็น shopName
+// ถ้าไม่แปลง ข้อความผิดพลาดจะไปแปะช่องที่ไม่มีอยู่จริง = ผู้ใช้กดส่งแล้วเหมือนหน้าเว็บค้าง
+export function fieldToInputId(field) {
+  if (!field) return field;
+  return field.replace(/_([a-z])/g, (_match, letter) => letter.toUpperCase());
+}
+
 // ---------------------------------------------------------------------------
 // ตัวหลัก: apiFetch
 //

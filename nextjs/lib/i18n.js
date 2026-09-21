@@ -30,6 +30,7 @@ const TEXT = {
     "nav.logout": "ออกจากระบบ",
     "nav.language": "เลือกภาษา",
     "nav.help": "เข้าสู่ระบบไม่ได้ใช่ไหม",
+    "nav.helpSignedIn": "ต้องการความช่วยเหลือ",
 
     "role.free": "แพ็กเกจฟรี",
     "role.pro": "แพ็กเกจ Pro",
@@ -68,7 +69,7 @@ const TEXT = {
     "validate.email": "กรุณากรอกอีเมลให้ถูกต้อง เช่น you@example.com",
     "validate.name": "กรุณากรอกชื่อของคุณ",
     "validate.passwordShort": "รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร",
-    "validate.passwordLong": "รหัสผ่านยาวเกินไป กรุณาใช้ให้สั้นลง",
+    "validate.passwordLong": "รหัสผ่านยาวเกินไป กรุณาใช้ไม่เกิน 24 ตัวอักษรไทย หรือ 72 ตัวอักษรอังกฤษ",
     "validate.passwordMismatch": "รหัสผ่านทั้งสองช่องยังไม่ตรงกัน",
 
     "sample.caption": "ตัวอย่างหน้าจอบันทึกการยืม (ข้อมูลสมมติ)",
@@ -89,7 +90,7 @@ const TEXT = {
     "error.forbidden": "บัญชีของคุณยังไม่มีสิทธิ์ใช้ส่วนนี้",
     "error.role_required": "ส่วนนี้เปิดให้เฉพาะผู้ดูแลระบบเท่านั้น",
     "error.tier_required": "ฟีเจอร์นี้อยู่ในแพ็กเกจ Pro หากต้องการใช้งาน กรุณาอัปเกรดแพ็กเกจของร้าน",
-    "error.password_too_long": "รหัสผ่านยาวเกินไป กรุณาใช้ให้สั้นลง",
+    "error.password_too_long": "รหัสผ่านยาวเกินไป กรุณาใช้ไม่เกิน 24 ตัวอักษรไทย หรือ 72 ตัวอักษรอังกฤษ",
     "error.network": "เชื่อมต่อไม่ได้ กรุณาตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง",
     "error.server": "ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งในอีกสักครู่",
     "error.unknown": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
@@ -126,12 +127,12 @@ const TEXT = {
     "account.planPro":
       "แพ็กเกจ Pro บันทึกอุปกรณ์ได้ไม่จำกัด ดูรายงานย้อนหลังได้ทั้งหมด แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน และส่งออกไฟล์ได้",
 
-    "help.tipsTitle": "ก่อนอื่น ลองตรวจสองเรื่องนี้ดูก่อน",
+    "help.tipsTitle": "ลองสองเรื่องนี้ก่อน ส่วนใหญ่แก้ได้เองในไม่กี่วินาที",
     "help.tip1": "อีเมลพิมพ์ครบถ้วนหรือไม่ ระบบไม่แยกตัวพิมพ์เล็กใหญ่ พิมพ์แบบไหนก็เข้าได้",
     "help.tip2": "กดปุ่ม แสดง ข้างช่องรหัสผ่าน เพื่อดูว่าพิมพ์ตรงกับที่ตั้งไว้จริงไหม",
     "help.title": "ลืมรหัสผ่านใช่ไหม",
     "help.body":
-      "ข้อมูลร้านของคุณยังอยู่ครบ ลองสองเรื่องนี้ก่อน ส่วนใหญ่แก้ได้เองภายในไม่กี่วินาที",
+      "ข้อมูลร้านของคุณยังอยู่ครบ ไม่ได้หายไปไหน",
     "help.note":
       "ถ้าลองสองข้อข้างบนแล้วยังเข้าไม่ได้ ระบบยังไม่มีการตั้งรหัสผ่านใหม่ด้วยตัวเอง กรุณาติดต่อทีมงาน LEBIS เพื่อขอตั้งรหัสผ่านใหม่ให้",
     "help.noteNoChannel":
@@ -152,6 +153,7 @@ const TEXT = {
     "nav.logout": "Sign out",
     "nav.language": "Choose language",
     "nav.help": "Trouble signing in?",
+    "nav.helpSignedIn": "Need help?",
 
     "role.free": "Free plan",
     "role.pro": "Pro plan",
@@ -190,7 +192,7 @@ const TEXT = {
     "validate.email": "Please enter a valid email address, for example you@example.com",
     "validate.name": "Please enter your name.",
     "validate.passwordShort": "Use at least 8 characters.",
-    "validate.passwordLong": "That password is too long. Please use a shorter one.",
+    "validate.passwordLong": "That password is too long. Use up to 72 characters (24 in Thai).",
     "validate.passwordMismatch": "The two passwords do not match.",
 
     "sample.caption": "Sample borrow log (illustrative data)",
@@ -211,7 +213,7 @@ const TEXT = {
     "error.forbidden": "Your account does not have access to this part yet.",
     "error.role_required": "This area is for administrators only.",
     "error.tier_required": "This feature is part of the Pro plan. Upgrade your shop's plan to use it.",
-    "error.password_too_long": "That password is too long. Please use a shorter one.",
+    "error.password_too_long": "That password is too long. Use up to 72 characters (24 in Thai).",
     "error.network": "Could not reach the server. Please check your connection and try again.",
     "error.server": "The service is temporarily unavailable. Please try again in a moment.",
     "error.unknown": "Something went wrong. Please try again.",
@@ -248,12 +250,12 @@ const TEXT = {
     "account.planPro":
       "Pro covers unlimited items, full report history, LINE reminders before each due date, and CSV export.",
 
-    "help.tipsTitle": "First, two things worth checking",
+    "help.tipsTitle": "Two quick things solve most sign-in problems",
     "help.tip1": "Is the email typed in full? Capital letters do not matter — either way signs you in.",
     "help.tip2": "Use the Show button beside the password field to check what you typed.",
     "help.title": "Forgotten password",
     "help.body":
-      "Your shop's records are safe. Two quick things solve most sign-in problems — try these first.",
+      "Your shop's records are safe — nothing has been lost.",
     "help.note":
       "If neither helps, LEBIS cannot reset a password by itself yet — contact the LEBIS team and we will set a new one for you.",
     "help.noteNoChannel":

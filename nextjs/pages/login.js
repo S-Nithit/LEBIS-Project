@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 
-import { apiFetch, errorMessage, saveToken } from "@/lib/api";
+import { apiFetch, errorMessage, fieldToInputId, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
 import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
@@ -86,6 +86,9 @@ export default function Login() {
 
     const found = validate();
     setErrors(found);
+    // ล้างข้อความระดับฟอร์มของรอบก่อนทิ้ง ไม่งั้นข้อความเก่าที่ไม่จริงแล้ว
+    // (เช่น "เชื่อมต่อไม่ได้") จะค้างอยู่คู่กับข้อความใหม่ที่คนละเรื่องกัน
+    setFormError("");
 
     if (Object.keys(found).length > 0) {
       // ไม่ขึ้น toast ซ้ำ เพราะข้อความอยู่ใต้ช่องที่ผิดแล้ว
@@ -130,8 +133,9 @@ export default function Login() {
       // ซึ่งขัดกับสิ่งที่ backend ตั้งใจ และอาจทำให้คนที่พิมพ์อีเมลผิดไปแก้รหัสที่ถูกอยู่แล้ว
       // backend บอกมาว่าผิดที่ช่องไหนก็แปะที่ช่องนั้น ไม่งั้นขึ้นระดับฟอร์ม
       if (error?.field) {
-        setErrors({ [error.field]: message });
-        document.getElementById(error.field)?.focus();
+        setFormError("");
+        setErrors({ [fieldToInputId(error.field)]: message });
+        document.getElementById(fieldToInputId(error.field))?.focus();
       } else {
         setFormError(message);
       }

@@ -20,15 +20,6 @@ export default function App({ Component, pageProps }) {
         <link rel="alternate icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/app-icon.svg" />
 
-        {/* ฟอนต์ 2 ตัวตาม brand.md หัวข้อ 3
-            Space Grotesk = โลโก้ หัวข้อ ตัวเลข · DM Sans = เนื้อความ ปุ่ม ป้ายกำกับ */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap"
-          rel="stylesheet"
-        />
-
         {/* สีแถบบนของเบราว์เซอร์บนมือถือ ให้กลืนกับพื้นหลังของเว็บ */}
         <meta key="theme-light" name="theme-color" content="#F7F9F9" media="(prefers-color-scheme: light)" />
         <meta key="theme-dark" name="theme-color" content="#0B2126" media="(prefers-color-scheme: dark)" />

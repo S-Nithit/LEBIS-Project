@@ -5,7 +5,7 @@
 //
 //   <Button>บันทึก</Button>                          ปุ่มหลัก — มีได้หน้าละ 1 ปุ่ม
 //   <Button variant="secondary">ยกเลิก</Button>       ปุ่มรอง
-//   <Button variant="ghost" size="sm">แก้ไข</Button>   ปุ่มเล็กในแถวตาราง
+//   <Button variant="secondary" size="sm">แก้ไข</Button>  ปุ่มเล็กในแถวตาราง
 //   <Button variant="danger">ลบอุปกรณ์</Button>        ปุ่มที่ทำแล้วย้อนยาก
 //   <Button asChild><Link href="/x">ไปหน้า x</Link></Button>
 //

@@ -386,10 +386,12 @@
     background: var(--primary-hover);
   }
 
+  /* ขอบของปุ่มรองต้องเข้มพอให้เห็นว่าเป็นปุ่ม เหมือนขอบช่องกรอก (WCAG 1.4.11)
+     --line มีไว้สำหรับเส้นคั่นและขอบการ์ด ซึ่งไม่มีเกณฑ์นี้ */
   .btn-secondary {
     background: var(--surface);
     color: var(--ink);
-    border-color: var(--line);
+    border-color: var(--line-strong);
   }
 
   .btn-secondary:hover:not(:disabled) {

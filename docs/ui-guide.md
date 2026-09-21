@@ -27,8 +27,10 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingState } from "@/components/LoadingState";
+import { FormError } from "@/components/FormError";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
 
@@ -68,7 +70,7 @@ export default function Workspace() {
         action={<Button>{t("workspace.addItem")}</Button>}
       />
 
-      {/* 3 สถานะที่ทุกหน้าต้องมี: กำลังโหลด / ยังไม่มีข้อมูล / มีข้อมูล */}
+      {/* ในหน้ายังมีอีก 2 สถานะของข้อมูล: ยังไม่มีข้อมูล / มีข้อมูล */}
       {itemsLoading ? (
         <LoadingState />
       ) : items.length === 0 ? (
@@ -103,7 +105,7 @@ export default function Workspace() {
 | `AppShell` | `components/AppShell.js` | ครอบทุกหน้าที่ต้องเข้าสู่ระบบก่อน |
 | `PageHeader` | `components/PageHeader.js` | หัวข้อหน้า + คำอธิบาย + ปุ่มหลักของหน้า |
 | `EmptyState` | `components/EmptyState.js` | ยังไม่มีข้อมูลในหน้านั้น |
-| `LoadingState` | `components/LoadingState.js` | ระหว่างรอข้อมูลจาก API (แถวเปล่ากะพริบ ไม่ใช่วงกลมหมุน) |
+| `LoadingState` | `components/LoadingState.js` | ระหว่างรอข้อมูลจาก API · `rows` กำหนดจำนวนแถว · `label` เปลี่ยนข้อความได้ |
 | `useAuth` | `lib/useAuth.js` | `user` `loading` `loadError` `reload` `logout` — ใช้กับทุกหน้าที่ต้องเข้าสู่ระบบ |
 | `StatusBadge` | `components/StatusBadge.js` | ป้ายสถานะเม็ดเล็ก |
 | `Card` | `components/ui/card.js` | กล่องเนื้อหา พื้นขาว ขอบ 1px มุมมน 20px |
@@ -124,7 +126,7 @@ export default function Workspace() {
 
 <Button>บันทึก</Button>                     {/* ปุ่มหลัก — หน้าละ 1 ปุ่มพอ */}
 <Button variant="secondary">ยกเลิก</Button>
-<Button variant="ghost" size="sm">แก้ไข</Button>
+<Button variant="secondary" size="sm">แก้ไข</Button>
 <Button variant="danger">ลบอุปกรณ์</Button>
 
 <StatusBadge tone="success">ว่าง</StatusBadge>
@@ -205,7 +207,7 @@ async function handleSubmit(event) {
 ```jsx
 import { FormError } from "@/components/FormError";
 
-<FormError message={formError} onRetry={handleSubmit} />
+<FormError message={formError} onRetry={handleSubmit} retrying={loading} />
 <Button type="submit">...</Button>
 ```
 

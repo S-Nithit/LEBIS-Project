@@ -19,7 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 
-import { apiFetch, errorMessage, saveToken } from "@/lib/api";
+import { apiFetch, errorMessage, fieldToInputId, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
 import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
@@ -68,6 +68,9 @@ export default function Register() {
 
     const found = validate();
     setErrors(found);
+    // ล้างข้อความระดับฟอร์มของรอบก่อนทิ้ง ไม่งั้นข้อความเก่าที่ไม่จริงแล้ว
+    // (เช่น "เชื่อมต่อไม่ได้") จะค้างอยู่คู่กับข้อความใหม่ที่คนละเรื่องกัน
+    setFormError("");
 
     if (Object.keys(found).length > 0) {
       // ไม่ขึ้น toast ซ้ำ ข้อความอยู่ใต้ช่องที่ผิดแล้ว
@@ -97,6 +100,9 @@ export default function Register() {
         // เหมือนหน้าเข้าสู่ระบบ: จำอีเมลเฉพาะเมื่อผู้ใช้ติ๊กให้จำ
         if (remember) {
           localStorage.setItem("lebis_last_email", email.trim().toLowerCase());
+        } else {
+          // เหมือนหน้าเข้าสู่ระบบ: ไม่ติ๊ก = ไม่อยากให้เหลือร่องรอยบนเครื่องนี้
+          localStorage.removeItem("lebis_last_email");
         }
       } catch (error) {
         // จำไม่ได้ก็ไม่เป็นไร
@@ -113,8 +119,9 @@ export default function Register() {
       const field = error?.field || (error?.code === "email_taken" ? "email" : null);
 
       if (field) {
-        setErrors({ [field]: message });
-        document.getElementById(field)?.focus();
+        setFormError("");
+        setErrors({ [fieldToInputId(field)]: message });
+        document.getElementById(fieldToInputId(field))?.focus();
       } else {
         setFormError(message);
       }
@@ -144,13 +151,6 @@ export default function Register() {
             >
               {t("register.goLogin")}
             </Link>
-            {" · "}
-            <Link
-              href="/forgot-password"
-              className="underline underline-offset-4 hover:no-underline"
-            >
-              {t("nav.help")}
-            </Link>
           </p>
         }
       >
@@ -179,6 +179,7 @@ export default function Register() {
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder={t("register.namePlaceholder")}
+            maxLength={120}
             autoComplete="name"
             required
           />
@@ -190,6 +191,7 @@ export default function Register() {
             value={shopName}
             onChange={(event) => setShopName(event.target.value)}
             placeholder={t("register.shopNamePlaceholder")}
+            maxLength={120}
             autoComplete="organization"
           />
 

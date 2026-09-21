@@ -8,7 +8,7 @@
 // เมื่อหน้า workspace ของ Neo เสร็จแล้ว ให้เปลี่ยนปลายทางหลัง login
 // ใน pages/login.js กับ pages/register.js ไปที่หน้านั้นแทน
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import { toast } from "sonner";
 
@@ -20,7 +20,7 @@ import { FormError } from "@/components/FormError";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/FormField";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
@@ -44,6 +44,7 @@ export default function Account() {
   const [shopName, setShopName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const editButtonRef = useRef(null);
 
   useEffect(() => {
     if (user) setShopName(user.shop_name || "");
@@ -118,12 +119,18 @@ export default function Account() {
               <Row label={t("account.email")} value={user.email} />
               <Row label={t("account.shop")}>
                 {editing ? (
-                  <form onSubmit={handleSaveShopName} className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-                    <Input
+                  <form onSubmit={handleSaveShopName} className="flex w-full flex-wrap items-end gap-3 sm:w-auto">
+                    {/* ใช้ FormField เสมอ ไม่ใช้ <Input> เปล่าๆ
+                        เพราะ FormField เป็นตัวที่รับประกันว่ามี <label> ผูกกับช่องจริง
+                        placeholder ไม่ใช่ป้ายกำกับ และมันหายไปทันทีที่พิมพ์ตัวแรก
+                        คนที่ใช้โปรแกรมอ่านหน้าจอจะไม่รู้เลยว่าช่องนี้คือช่องอะไร */}
+                    <FormField
                       id="shopName"
+                      label={t("account.shop")}
                       value={shopName}
                       onChange={(event) => setShopName(event.target.value)}
                       placeholder={t("register.shopNamePlaceholder")}
+                      maxLength={120}
                       className="w-full sm:w-64"
                       autoFocus
                     />
@@ -140,6 +147,9 @@ export default function Account() {
                         setShopName(user.shop_name || "");
                         setSaveError("");
                         setEditing(false);
+                        // คืนโฟกัสให้ปุ่มแก้ไข ไม่งั้นโฟกัสจะตกไปที่ body
+                        // คนที่ใช้คีย์บอร์ดจะต้องไล่ Tab ใหม่ตั้งแต่ต้นหน้า
+                        requestAnimationFrame(() => editButtonRef.current?.focus());
                       }}
                     >
                       {t("account.cancel")}
@@ -150,7 +160,12 @@ export default function Account() {
                     <span className="t-body font-medium">
                       {user.shop_name || t("account.noShop")}
                     </span>
-                    <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+                    <Button
+                      ref={editButtonRef}
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setEditing(true)}
+                    >
                       {t("account.edit")}
                     </Button>
                   </span>
@@ -180,7 +195,17 @@ export default function Account() {
             title={t("account.emptyTitle")}
             description={t("account.emptyBody")}
             action={
-              <Button variant="secondary" onClick={() => setEditing(true)}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setEditing(true);
+                  // ช่องแก้ชื่อร้านอยู่บนสุดของหน้า ต้องพาสายตาขึ้นไปด้วย
+                  // ไม่งั้นกดแล้วเหมือนไม่มีอะไรเกิดขึ้น
+                  requestAnimationFrame(() =>
+                    document.getElementById("shopName")?.scrollIntoView({ block: "center" })
+                  );
+                }}
+              >
                 {user.shop_name ? t("account.editShopName") : t("account.setShopName")}
               </Button>
             }

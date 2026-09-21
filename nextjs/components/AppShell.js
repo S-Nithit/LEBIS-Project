@@ -89,7 +89,7 @@ export function AppShell({ user, onLogout, children }) {
             href="/forgot-password"
             className="t-caption underline underline-offset-4 hover:no-underline"
           >
-            {t("nav.help")}
+            {t("nav.helpSignedIn")}
           </Link>
           {/* ชื่อผู้ใช้ย้ายมาท้ายหน้าบนจอมือถือ แทนที่จะอัดไว้ในแถบบน */}
           {user ? (

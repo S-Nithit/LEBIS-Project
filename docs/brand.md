@@ -85,8 +85,12 @@ re-draws the logo by hand.
 > The dark theme keeps its lighter amber, which already passed.
 >
 > **Also added for contrast reasons, all derived from the palette above:**
-> `--line-strong` `#7D9094` light / `#729298` dark — input borders only, because
-> `--line` measures 1.27:1 and WCAG 1.4.11 wants 3:1 for a control boundary.
+> `--line-strong` `#7D9094` light / `#729298` dark — **the boundary of any control a
+> user can operate** (inputs, secondary buttons, the reveal pill), because `--line`
+> measures 1.27:1 and WCAG 1.4.11 wants 3:1. `--line` stays for dividers and card
+> edges, which carry no such requirement.
+> *(Widened 21 Sep 2569 from "input borders only" — the narrower wording left
+> secondary buttons failing the same criterion the token was introduced to satisfy.)*
 > `--primary-border` `#2E8C9C` — dark mode only, the 1px edge on the primary
 > button, which otherwise sits at 1.8:1 against the card.
 > `--header-line` `#4A7D86` light / `#3F6D76` dark — the outline of buttons that

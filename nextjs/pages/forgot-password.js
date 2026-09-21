@@ -31,7 +31,7 @@ export default function ForgotPassword() {
         {/* สองเรื่องที่คนมักพลาดและแก้เองได้ทันที ไม่ต้องรอใคร */}
         <ol className="flex flex-col gap-4">
           {["help.tip1", "help.tip2"].map((key, index) => (
-            <li key={key} className="flex gap-3 border-b border-line pb-4 last:border-b-0 last:pb-0">
+            <li key={key} className="flex gap-3 border-b border-line py-4 first:pt-0 last:border-b-0 last:pb-0">
               <span
                 aria-hidden="true"
                 className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-badge border border-line text-label font-medium text-muted"
