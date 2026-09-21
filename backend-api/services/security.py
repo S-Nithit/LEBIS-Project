@@ -154,7 +154,11 @@ def require_role(*roles: str):
         if user["role"] not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"ต้องเป็น {' หรือ '.join(roles)} จึงเข้าถึงส่วนนี้ได้",
+                detail={
+                    "code": "role_required",
+                    "message": f"ต้องเป็น {' หรือ '.join(roles)} จึงเข้าถึงส่วนนี้ได้",
+                    "required": list(roles),
+                },
             )
         return user
 
@@ -174,7 +178,11 @@ def require_tier(tier: str):
         if TIER_ORDER.get(user["role"], -1) < TIER_ORDER[tier]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"ฟีเจอร์นี้ใช้ได้เฉพาะแพ็กเกจ {tier}",
+                detail={
+                    "code": "tier_required",
+                    "message": f"ฟีเจอร์นี้ใช้ได้เฉพาะแพ็กเกจ {tier}",
+                    "required": tier,
+                },
             )
         return user
 

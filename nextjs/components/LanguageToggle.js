@@ -32,7 +32,7 @@ export function LanguageToggle({ onDark = false, className }) {
             aria-pressed={active}
             className={cn(
               // สูงพอให้กดด้วยนิ้วโป้งบนมือถือ (brand.md หัวข้อ 6)
-              "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-inner px-3 text-label font-medium transition-colors",
+              "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-control px-3 text-label font-medium transition-colors",
               active
                 ? onDark
                   ? "bg-white text-ink"

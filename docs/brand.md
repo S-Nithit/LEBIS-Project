@@ -69,14 +69,20 @@ re-draws the logo by hand.
 | `--ink` | `#0F3B43` | Primary text, the app header, primary buttons, the logo outline |
 | `--ink-2` | `#1A5A66` | Raised surfaces on dark, avatar placeholders, hover on `--ink` |
 | `--amber` | `#E09540` | The accent. The logo hole, one highlight per screen, Pro badges |
-| `--amber-text` | `#B4761F` | Amber used as **text** or as a small label. The raw amber fails contrast on white |
+| `--amber-text` | `#99641A` | Amber used as **text** or as a small label. The raw amber fails contrast on white |
 | `--paper` | `#F7F9F9` | Page background |
 | `--surface` | `#FFFFFF` | Cards, tables, inputs |
 | `--line` | `#DCE6E7` | Borders and dividers |
 | `--muted` | `#4A6268` | Secondary text, captions, table headers |
 | `--success` | `#2F7D5D` | Available, returned |
-| `--warning` | `#B4761F` | Due soon, running low |
+| `--warning` | `#99641A` | Due soon, running low |
 | `--danger` | `#B3453B` | Overdue, broken, destructive actions |
+
+> **Amended 21 Sep 2569 — `--amber-text` and `--warning` moved from `#B4761F` to `#99641A`.**
+> `#B4761F` measures 3.78:1 on white, which passes only for text at 24px and above.
+> Both tokens are used for 13px labels and badges, so the original value contradicted
+> the 4.5:1 rule three lines below this table. `#99641A` is the same hue at 5.01:1.
+> The dark theme keeps its lighter amber, which already passed.
 
 Rules
 

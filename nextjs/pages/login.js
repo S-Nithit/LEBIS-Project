@@ -35,13 +35,22 @@ export default function Login() {
 
   // เก็บข้อความผิดพลาดแยกเป็นรายช่อง ผู้ใช้จะได้รู้ว่าต้องแก้ช่องไหน
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
 
   const emailRef = useRef(null);
 
-  // โฟกัสช่องแรกให้เลย คนที่ใช้คีย์บอร์ดจะได้พิมพ์ต่อได้ทันที
+  // โฟกัสช่องแรกให้เฉพาะเครื่องที่มีเมาส์ (คอมพิวเตอร์)
+  // บนมือถือไม่โฟกัส เพราะคีย์บอร์ดจะเด้งขึ้นมาบังครึ่งจอทันทีที่เปิดหน้า
   useEffect(() => {
-    emailRef.current?.focus();
+    if (window.matchMedia("(pointer: fine)").matches) {
+      emailRef.current?.focus();
+    }
   }, []);
+
+  // ล้างข้อความผิดพลาดของช่องที่ผู้ใช้เริ่มแก้ (FormField เรียกให้เอง)
+  function clearError(field) {
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  }
 
   function validate() {
     const found = {};
@@ -55,7 +64,10 @@ export default function Login() {
 
     const found = validate();
     setErrors(found);
+    setFormError("");
+
     if (Object.keys(found).length > 0) {
+      toast.error(t("error.summary"));
       // พาโฟกัสไปที่ช่องแรกที่ผิด ไม่ต้องให้ผู้ใช้ไล่หาเอง
       document.getElementById(Object.keys(found)[0])?.focus();
       return;
@@ -72,12 +84,19 @@ export default function Login() {
       saveToken(data.access_token);
 
       toast.success(t("login.success"));
-      router.replace("/");
+      router.replace("/account");
     } catch (error) {
       // errorMessage() แปลรหัสจาก backend เป็นภาษาที่ผู้ใช้เลือกอยู่
       const message = errorMessage(error, t);
-      // ขึ้นทั้งใต้ช่องรหัสผ่าน (อยู่ต่อจนกว่าจะแก้) และ toast (เห็นทันที)
-      setErrors({ password: message });
+
+      // เน็ตหลุดหรือเซิร์ฟเวอร์ล่ม ไม่ใช่ความผิดของช่องใดช่องหนึ่ง
+      // ต้องขึ้นเป็นข้อความระดับฟอร์ม ไม่ใช่ไปทำกรอบแดงให้รหัสผ่านที่ถูกอยู่แล้ว
+      if (error?.code === "invalid_credentials") {
+        setErrors({ password: message });
+      } else {
+        setFormError(message);
+      }
+
       toast.error(message);
     } finally {
       setLoading(false);
@@ -93,6 +112,7 @@ export default function Login() {
       <AuthLayout
         title={t("login.title")}
         description={t("login.subtitle")}
+        formError={formError}
         footer={
           <p className="t-caption">
             {t("login.noAccount")}{" "}
@@ -116,8 +136,11 @@ export default function Login() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             error={errors.email}
+            onClearError={clearError}
             placeholder="you@example.com"
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
           />
 
@@ -129,6 +152,7 @@ export default function Login() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               error={errors.password}
+              onClearError={clearError}
               autoComplete="current-password"
               required
             />

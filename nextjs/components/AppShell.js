@@ -50,7 +50,7 @@ export function AppShell({ user, onLogout, children }) {
           <div className="flex items-center gap-3">
             {user ? (
               <div className="hidden items-center gap-3 md:flex">
-                <span className="text-label text-header-fg/85">
+                <span className="text-label text-header-fg">
                   {user.shop_name || user.name || user.email}
                 </span>
                 {/* ป้ายแพ็กเกจ — Pro ได้สีอำพัน ซึ่งเป็นไฮไลต์จุดเดียวของแถบนี้ */}
@@ -66,7 +66,7 @@ export function AppShell({ user, onLogout, children }) {
               <button
                 type="button"
                 onClick={onLogout}
-                className="btn btn-sm min-h-[44px] rounded-control border border-header-fg/30 bg-transparent px-4 text-header-fg hover:border-header-fg/70"
+                className="btn btn-sm min-h-[44px] rounded-control border border-header-line bg-transparent px-4 text-header-fg hover:border-header-fg"
               >
                 {t("nav.logout")}
               </button>

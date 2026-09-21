@@ -12,7 +12,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from database import create_user, get_user_by_email, update_user_token
 from services.security import (
@@ -33,6 +33,15 @@ router = APIRouter()
 
 class RegisterRequest(BaseModel):
     email: EmailStr
+
+    # 🔴 อีเมลถูกใช้เป็น primary key ของตาราง users และ Postgres แยกตัวพิมพ์เล็กใหญ่
+    #    ถ้าไม่แปลงเป็นตัวพิมพ์เล็กก่อน คนที่สมัครด้วย Ann@shop.com
+    #    แล้ววันหลังพิมพ์ ann@shop.com จะถูกระบบบอกว่ารหัสผ่านผิดไปตลอด
+    #    ต้องแปลงทั้งตอนสมัครและตอนเข้าสู่ระบบ ไม่งั้นก็ยังหากันไม่เจอ
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.strip().lower()
     # bcrypt รับรหัสได้ไม่เกิน 72 ไบต์ เลยกั้นที่ตรงนี้ ไม่ให้หลุดไปพังข้างใน
     password: str = Field(min_length=8, max_length=72)
     name: str = Field(min_length=1, max_length=120)
@@ -46,6 +55,12 @@ class LoginRequest(BaseModel):
     # ใน database.py) ไม่งั้นจะสมัครไม่ได้ login ไม่ได้ ทั้งที่มีแถวอยู่ใน DB
     email: EmailStr
     password: str = Field(min_length=1, max_length=72)
+
+    # เหตุผลเดียวกับตอนสมัคร — ดูคอมเมนต์ใน RegisterRequest
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.strip().lower()
 
 
 class TokenResponse(BaseModel):

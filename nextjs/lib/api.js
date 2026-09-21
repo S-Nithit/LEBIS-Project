@@ -110,6 +110,9 @@ export async function apiFetch(path, options = {}) {
       method,
       headers: finalHeaders,
       body: body === undefined ? undefined : JSON.stringify(body),
+      // ตัดการรอที่ 15 วินาที ไม่งั้นสัญญาณอ่อนๆ หน้าร้านจะทำให้ปุ่มค้าง
+      // เป็น "กำลังเข้าสู่ระบบ..." ไปเรื่อยๆ โดยไม่มีอะไรเกิดขึ้น
+      signal: AbortSignal.timeout(15000),
     });
   } catch (networkError) {
     // เน็ตหลุด หรือเซิร์ฟเวอร์ไม่ตอบ — เกิดบ่อยมากเวลาใช้มือถือหน้าร้าน

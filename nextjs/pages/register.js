@@ -37,7 +37,13 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // ล้างข้อความผิดพลาดของช่องที่ผู้ใช้เริ่มแก้ (FormField เรียกให้เอง)
+  function clearError(field) {
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  }
 
   // ตรวจทุกช่องพร้อมกัน คืน object ที่ key คือ id ของช่องที่ผิด
   function validate() {
@@ -56,6 +62,7 @@ export default function Register() {
 
     const found = validate();
     setErrors(found);
+    setFormError("");
 
     if (Object.keys(found).length > 0) {
       toast.error(t("error.summary"));
@@ -81,11 +88,19 @@ export default function Register() {
       saveToken(data.access_token);
 
       toast.success(t("register.success"));
-      router.replace("/"); // replace ไม่ push เพื่อไม่ให้กด back กลับมาหน้าสมัครได้
+      router.replace("/account"); // replace ไม่ push เพื่อไม่ให้กด back กลับมาหน้าสมัครได้
     } catch (error) {
       const message = errorMessage(error, t);
+
       // อีเมลซ้ำเป็นความผิดของช่องอีเมล จึงแปะไว้ที่ช่องนั้นโดยตรง
-      setErrors(error?.code === "email_taken" ? { email: message } : {});
+      // เรื่องอื่น (เน็ตหลุด เซิร์ฟเวอร์ล่ม) ขึ้นเป็นข้อความระดับฟอร์ม
+      // ห้ามปล่อยให้เหลือแค่ toast เพราะ toast หายไปเองภายในไม่กี่วินาที
+      if (error?.code === "email_taken") {
+        setErrors({ email: message });
+      } else {
+        setFormError(message);
+      }
+
       toast.error(message);
     } finally {
       setLoading(false); // ปลดล็อกปุ่มทั้งกรณีสำเร็จและกรณีพลาด
@@ -101,6 +116,7 @@ export default function Register() {
       <AuthLayout
         title={t("register.title")}
         description={t("register.subtitle")}
+        formError={formError}
         footer={
           <p className="t-caption">
             {t("register.hasAccount")}{" "}
@@ -119,11 +135,14 @@ export default function Register() {
             label={t("register.email")}
             hint={t("register.emailHint")}
             error={errors.email}
+            onClearError={clearError}
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="you@example.com"
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
           />
 
@@ -131,6 +150,7 @@ export default function Register() {
             id="name"
             label={t("register.name")}
             error={errors.name}
+            onClearError={clearError}
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder={t("register.namePlaceholder")}
@@ -154,6 +174,7 @@ export default function Register() {
               label={t("register.password")}
               hint={t("register.passwordHint")}
               error={errors.password}
+              onClearError={clearError}
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -165,6 +186,7 @@ export default function Register() {
               id="confirmPassword"
               label={t("register.confirmPassword")}
               error={errors.confirmPassword}
+              onClearError={clearError}
               type="password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}

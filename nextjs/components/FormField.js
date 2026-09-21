@@ -28,7 +28,7 @@ import { useLanguage } from "@/lib/useLanguage";
 import { cn } from "@/lib/utils";
 
 export const FormField = forwardRef(function FormField(
-  { id, label, hint, badge, error, className, ...inputProps },
+  { id, label, hint, badge, error, onClearError, className, ...inputProps },
   ref
 ) {
   const { t } = useLanguage();
@@ -36,6 +36,14 @@ export const FormField = forwardRef(function FormField(
   // ช่องรหัสผ่านจะมีปุ่ม "ดู/ซ่อน" ให้อัตโนมัติ
   // คนที่ยืนกรอกด้วยมือเดียวหน้าร้านพิมพ์ผิดง่าย ต้องมีทางตรวจว่าพิมพ์ถูกมั้ย
   const isPassword = inputProps.type === "password";
+
+  // พอผู้ใช้เริ่มแก้ ข้อความผิดพลาดต้องหายไปทันที
+  // ไม่งั้นหน้าจอจะยืนยันว่าผิดอยู่ทั้งที่แก้ถูกแล้ว (และโปรแกรมอ่านหน้าจอ
+  // ก็จะยังประกาศว่าช่องนี้ผิดอยู่ เพราะ aria-invalid ค้าง)
+  function handleChange(event) {
+    if (error && onClearError) onClearError(id);
+    inputProps.onChange?.(event);
+  }
   const [revealed, setRevealed] = useState(false);
   const inputType = isPassword && revealed ? "text" : inputProps.type;
   const hintId = hint ? `${id}-hint` : undefined;
@@ -46,13 +54,13 @@ export const FormField = forwardRef(function FormField(
 
   return (
     <div className={className}>
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="t-label">
-          {label}
-        </label>
-        {/* badge ไว้เขียนคำว่า "ไม่บังคับ" กำกับช่องที่ไม่ต้องกรอกก็ได้ */}
+      {/* badge ("ไม่บังคับ") อยู่ใน <label> เดียวกัน ไม่ใช่ span ลอยข้างนอก
+          โปรแกรมอ่านหน้าจอจะได้อ่านว่า "ชื่อร้าน ไม่บังคับ" ต่อกันไปเลย
+          ถ้าวางไว้นอก label คนที่ใช้โปรแกรมอ่านหน้าจอจะไม่รู้ว่าช่องไหนไม่บังคับ */}
+      <label htmlFor={id} className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="t-label">{label}</span>
         {badge ? <span className="t-caption">{badge}</span> : null}
-      </div>
+      </label>
 
       <div className={cn(isPassword && "relative")}>
         <Input
@@ -62,6 +70,7 @@ export const FormField = forwardRef(function FormField(
           aria-describedby={describedBy}
           className={cn(error && "field-input-error", isPassword && "pr-8")}
           {...inputProps}
+          onChange={handleChange}
           type={inputType}
         />
 
@@ -69,8 +78,9 @@ export const FormField = forwardRef(function FormField(
           <button
             type="button"
             onClick={() => setRevealed((current) => !current)}
-            aria-controls={id}
-            className="absolute inset-y-0 right-0 inline-flex min-h-[44px] items-center whitespace-nowrap rounded-control px-3 text-label font-medium text-muted underline underline-offset-4 hover:text-ink"
+            aria-pressed={revealed}
+            aria-label={`${revealed ? t("field.hide") : t("field.show")} ${label}`}
+            className="absolute inset-y-1 right-1 inline-flex min-h-[36px] items-center whitespace-nowrap rounded-control border border-line bg-surface px-3 text-label font-medium text-muted hover:border-ink hover:text-ink"
           >
             {revealed ? t("field.hide") : t("field.show")}
           </button>

@@ -22,6 +22,7 @@ module.exports = {
         "on-ink": "var(--on-ink)",
         "header-bg": "var(--header-bg)",
         "header-fg": "var(--header-fg)",
+        "header-line": "var(--header-line)",
       },
       fontSize: {
         // ขนาดตัวอักษรตามหัวข้อ 3 ของ brand.md — ใช้ชื่อพวกนี้แทนการใส่ px เอง
@@ -32,7 +33,6 @@ module.exports = {
         title: ["var(--text-page-title)", { lineHeight: "1.2" }],
       },
       borderRadius: {
-        inner: "var(--radius-inner)", // ปุ่มที่ซ้อนอยู่ในกรอบอีกที — 6px
         control: "var(--radius-control)", // ปุ่ม ช่องกรอก — 8px
         badge: "var(--radius-badge)", // ป้ายสถานะ การ์ดเล็ก — 12px
         card: "var(--radius-card)", // การ์ดใหญ่ แผงเนื้อหา — 20px

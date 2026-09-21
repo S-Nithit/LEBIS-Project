@@ -21,15 +21,12 @@ export const DEFAULT_LANGUAGE = "th";
 
 const TEXT = {
   th: {
-    "brand.name": "LEBIS",
     "brand.tagline": "ระบบยืม-คืนอุปกรณ์ของร้านให้เช่า",
     "page.login": "เข้าสู่ระบบ · LEBIS",
     "page.register": "สมัครสมาชิก · LEBIS",
     "page.help": "ลืมรหัสผ่าน · LEBIS",
 
     "nav.logout": "ออกจากระบบ",
-    "nav.language": "ภาษา",
-    "nav.account": "บัญชีของคุณ",
 
     "role.free": "แพ็กเกจฟรี",
     "role.pro": "แพ็กเกจ Pro",
@@ -71,8 +68,6 @@ const TEXT = {
     "validate.passwordMismatch": "รหัสผ่านทั้งสองช่องยังไม่ตรงกัน",
 
     "sample.caption": "ตัวอย่างหน้าจอบันทึกการยืม (ข้อมูลสมมติ)",
-    "sample.colItem": "อุปกรณ์",
-    "sample.colCustomer": "ผู้ยืม",
     "sample.colDue": "กำหนดคืน",
     "sample.status.ok": "อยู่ในกำหนด",
     "sample.status.due": "ใกล้ครบกำหนด",
@@ -80,11 +75,8 @@ const TEXT = {
     "sample.footnote":
       "ระบบจะเตือนผ่าน LINE ก่อนถึงกำหนดคืน สำหรับผู้ใช้แพ็กเกจ Pro",
     "sample.row1.customer": "คุณพิมพ์ชนก",
-    "sample.row1.due": "24 ก.ย.",
     "sample.row2.customer": "คุณธนกฤต",
-    "sample.row2.due": "22 ก.ย.",
     "sample.row3.customer": "คุณวรรณา",
-    "sample.row3.due": "18 ก.ย.",
 
     // ---- ข้อผิดพลาด: รหัสจาก backend ถูกแปลเป็นประโยคตรงนี้ ----
     "error.invalid_credentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบแล้วลองอีกครั้ง",
@@ -104,6 +96,19 @@ const TEXT = {
     "validate.passwordRequired": "กรุณากรอกรหัสผ่าน",
     "field.show": "แสดง",
     "field.hide": "ซ่อน",
+    "account.title": "บัญชีของคุณ",
+    "account.subtitle": "ข้อมูลบัญชีร้านของคุณในระบบ LEBIS",
+    "account.email": "อีเมลที่ใช้เข้าสู่ระบบ",
+    "account.shop": "ชื่อร้าน",
+    "account.plan": "แพ็กเกจที่ใช้อยู่",
+    "account.emptyTitle": "ยังไม่มีอุปกรณ์ในระบบ",
+    "account.emptyBody":
+      "ส่วนจัดการอุปกรณ์และใบยืม-คืนกำลังอยู่ระหว่างพัฒนา เมื่อเปิดใช้งานแล้ว รายการอุปกรณ์ของร้านคุณจะแสดงที่นี่",
+    "account.noShop": "ยังไม่ได้ตั้งชื่อร้าน",
+
+    "help.tipsTitle": "ก่อนอื่น ลองตรวจสองเรื่องนี้ดูก่อน",
+    "help.tip1": "อีเมลพิมพ์ครบถ้วนหรือไม่ ระบบไม่แยกตัวพิมพ์เล็กใหญ่ พิมพ์แบบไหนก็เข้าได้",
+    "help.tip2": "กดปุ่ม แสดง ข้างช่องรหัสผ่าน เพื่อดูว่าพิมพ์ตรงกับที่ตั้งไว้จริงไหม",
     "help.title": "ลืมรหัสผ่านใช่ไหม",
     "help.body":
       "ขณะนี้ระบบยังไม่มีการตั้งรหัสผ่านใหม่ด้วยตัวเอง หากเข้าสู่ระบบไม่ได้ กรุณาติดต่อผู้ที่เปิดบัญชีร้านให้คุณ เพื่อขอให้ตั้งรหัสผ่านใหม่ให้",
@@ -112,20 +117,15 @@ const TEXT = {
     "help.back": "กลับไปหน้าเข้าสู่ระบบ",
 
     "state.loading": "กำลังโหลดข้อมูล...",
-    "state.emptyTitle": "ยังไม่มีข้อมูลในหน้านี้",
-    "state.emptyBody": "เมื่อเริ่มบันทึกข้อมูลแล้ว รายการจะแสดงขึ้นที่นี่",
   },
 
   en: {
-    "brand.name": "LEBIS",
     "brand.tagline": "Borrow and return log for equipment rental shops",
     "page.login": "Sign in · LEBIS",
     "page.register": "Create account · LEBIS",
     "page.help": "Forgotten password · LEBIS",
 
     "nav.logout": "Sign out",
-    "nav.language": "Language",
-    "nav.account": "Your account",
 
     "role.free": "Free plan",
     "role.pro": "Pro plan",
@@ -167,8 +167,6 @@ const TEXT = {
     "validate.passwordMismatch": "The two passwords do not match.",
 
     "sample.caption": "Sample borrow log (illustrative data)",
-    "sample.colItem": "Item",
-    "sample.colCustomer": "Borrower",
     "sample.colDue": "Due",
     "sample.status.ok": "On time",
     "sample.status.due": "Due soon",
@@ -176,11 +174,8 @@ const TEXT = {
     "sample.footnote":
       "LEBIS sends a LINE reminder before the due date on the Pro plan.",
     "sample.row1.customer": "Pimchanok",
-    "sample.row1.due": "24 Sep",
     "sample.row2.customer": "Thanakrit",
-    "sample.row2.due": "22 Sep",
     "sample.row3.customer": "Wanna",
-    "sample.row3.due": "18 Sep",
 
     // ---- Errors: backend sends a code, it is turned into a sentence here ----
     "error.invalid_credentials": "That email or password is not correct. Please check and try again.",
@@ -200,6 +195,19 @@ const TEXT = {
     "validate.passwordRequired": "Please enter your password.",
     "field.show": "Show",
     "field.hide": "Hide",
+    "account.title": "Your account",
+    "account.subtitle": "The details LEBIS holds for your shop",
+    "account.email": "Sign-in email",
+    "account.shop": "Shop name",
+    "account.plan": "Current plan",
+    "account.emptyTitle": "No equipment yet",
+    "account.emptyBody":
+      "Equipment and borrow records are still being built. Once they are ready, your shop's items will appear here.",
+    "account.noShop": "No shop name set",
+
+    "help.tipsTitle": "First, two things worth checking",
+    "help.tip1": "Is the email typed in full? Capital letters do not matter — either way signs you in.",
+    "help.tip2": "Use the Show button beside the password field to check what you typed.",
     "help.title": "Forgotten password",
     "help.body":
       "LEBIS cannot reset a password by itself yet. If you cannot sign in, please ask whoever opened the shop account for you to set a new password.",
@@ -208,8 +216,6 @@ const TEXT = {
     "help.back": "Back to sign in",
 
     "state.loading": "Loading...",
-    "state.emptyTitle": "Nothing here yet",
-    "state.emptyBody": "Records will appear here once you start adding them.",
   },
 };
 

@@ -32,7 +32,7 @@ function dueLabel(offsetDays, language) {
   });
 }
 
-export function AuthLayout({ title, description, children, footer }) {
+export function AuthLayout({ title, description, children, footer, formError }) {
   const { t, language } = useLanguage();
 
   return (
@@ -49,6 +49,18 @@ export function AuthLayout({ title, description, children, footer }) {
           <section className="rounded-card border border-line bg-surface p-5 md:p-6">
             <h1 className="t-page-title">{title}</h1>
             {description ? <p className="t-caption mt-2">{description}</p> : null}
+
+            {/* ข้อผิดพลาดระดับฟอร์ม — ใช้กับเรื่องที่ไม่ได้ผิดที่ช่องใดช่องหนึ่ง
+                เช่นเน็ตหลุด เซิร์ฟเวอร์ล่ม หรือรหัสผ่านไม่ตรงกับอีเมล
+                อยู่เหนือปุ่มเสมอ ผู้ใช้จะได้เห็นก่อนกดส่งซ้ำ */}
+            {formError ? (
+              <p
+                role="alert"
+                className="form-error mt-5"
+              >
+                {formError}
+              </p>
+            ) : null}
 
             <div className="mt-5">{children}</div>
 

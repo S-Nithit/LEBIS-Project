@@ -152,12 +152,23 @@ async function handleSubmit(event) {
 }
 ```
 
-แล้วส่งข้อความเข้า `FormField` ผ่าน prop `error` — ตัว component จัดการให้หมด
+แล้วส่งข้อความเข้า `FormField` ผ่าน prop `error` และส่ง `onClearError` ไปด้วย
+เพื่อให้ข้อความหายทันทีที่ผู้ใช้เริ่มแก้ — ตัว component จัดการที่เหลือให้หมด
 ทั้งกรอบแดง ข้อความใต้ช่อง และการบอกโปรแกรมอ่านหน้าจอ
 
 ```jsx
-<FormField id="email" label={t("items.email")} error={errors.email} ... />
+<FormField
+  id="email"
+  label={t("items.email")}
+  error={errors.email}
+  onClearError={clearError}   // function (field) => ล้าง errors[field]
+  ...
+/>
 ```
+
+**ข้อผิดพลาดที่ไม่ได้ผิดที่ช่องใดช่องหนึ่ง** (เน็ตหลุด เซิร์ฟเวอร์ล่ม) ห้ามไปทำ
+กรอบแดงให้ช่องที่กรอกถูกอยู่แล้ว ให้ส่งเข้า `formError` ของ `AuthLayout`
+หรือวาง `<p role="alert" className="form-error">` ไว้เหนือปุ่มส่งในหน้าของคุณ
 
 ฟอร์มทุกอันใส่ `noValidate` ด้วย เพื่อปิดกล่องเตือนของเบราว์เซอร์
 ซึ่งขึ้นเป็นภาษาของเบราว์เซอร์ ไม่ใช่ภาษาที่ผู้ใช้เลือกในเว็บเรา
@@ -175,7 +186,8 @@ async function handleSubmit(event) {
 | ใช้กับอะไร | เขียนว่า |
 |---|---|
 | พื้นหลังของหน้า | `bg-paper` |
-| พื้นการ์ด ตาราง ช่องกรอก | `bg-surface` |
+| พื้นการ์ดและตาราง | `bg-surface` |
+| พื้นช่องกรอก (จมลงจากการ์ดหนึ่งระดับ) | `bg-paper` |
 | ตัวอักษรหลัก แถบหัวเว็บ ปุ่มหลัก | `text-ink` · `bg-ink` |
 | ตัวอักษรรอง คำบรรยาย หัวคอลัมน์ | `text-muted` |
 | เส้นขอบ เส้นคั่น | `border-line` |
@@ -193,7 +205,7 @@ async function handleSubmit(event) {
 ### ความมนของมุม
 
 `rounded-control` 8px สำหรับปุ่มและช่องกรอก · `rounded-badge` 12px สำหรับป้ายและการ์ดเล็ก ·
-`rounded-card` 20px สำหรับการ์ดใหญ่และแผงเนื้อหา — มีแค่ 3 ค่านี้
+`rounded-card` 20px สำหรับการ์ดใหญ่และแผงเนื้อหา — มีแค่ 3 ค่านี้ ห้ามเพิ่มค่าที่ 4
 
 ### ระยะห่าง
 
