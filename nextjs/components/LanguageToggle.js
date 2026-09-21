@@ -43,7 +43,7 @@ export function LanguageToggle({ onDark = false, className }) {
                   ? "bg-header-fg text-header-bg"
                   : "bg-ink text-on-ink"
                 : onDark
-                  ? "text-header-fg hover:text-header-fg"
+                  ? "text-header-fg/70 hover:text-header-fg"
                   : "text-muted hover:text-ink"
             )}
           >

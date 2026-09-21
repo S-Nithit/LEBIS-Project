@@ -52,7 +52,10 @@ export function FormError({ message, onRetry, retrying = false }) {
           type="button"
           onClick={onRetry}
           disabled={retrying}
-          className="mt-2 font-medium underline underline-offset-4 disabled:opacity-60"
+          /* ปุ่มเดียวในระบบที่ใช้กู้สถานการณ์ตอนพัง ต้องกดง่ายที่สุด ไม่ใช่ยากที่สุด
+             วัดได้ 74x23 ตอนยังไม่มี min-h ซึ่งเล็กกว่าเกณฑ์ 44px ของ brand.md
+             และเล็กกว่า 24px ขั้นต่ำของ WCAG 2.5.8 ด้วยซ้ำ */
+          className="mt-2 inline-flex min-h-[44px] items-center font-medium underline underline-offset-4 disabled:opacity-60"
         >
           {t("action.retry")}
         </button>

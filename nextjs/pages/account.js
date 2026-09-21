@@ -57,7 +57,8 @@ export default function Account() {
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const editButtonRef = useRef(null);
+  const [fieldError, setFieldError] = useState(""); // ผิดที่ช่อง ไม่ใช่ผิดทั้งฟอร์ม
+  const editButtonRefs = useRef({});
 
   const FIELDS = {
     name: { label: t("account.name"), empty: t("account.noName"), value: user?.name },
@@ -68,23 +69,37 @@ export default function Account() {
     setEditing(field);
     setDraft(FIELDS[field].value || "");
     setSaveError("");
+    setFieldError("");
   }
 
   function cancelEditing() {
+    const field = editing;
     // ยกเลิกต้องทิ้งสิ่งที่พิมพ์ค้างไว้จริงๆ ไม่งั้นกดแก้ไขอีกครั้งจะเจอของเดิม
     setEditing(null);
     setDraft("");
     setSaveError("");
+    setFieldError("");
     // คืนโฟกัสให้ปุ่มที่กดเข้ามา ไม่งั้นโฟกัสจะตกไปที่ body
     // คนที่ใช้คีย์บอร์ดจะต้องไล่ Tab ใหม่ตั้งแต่ต้นหน้า
-    requestAnimationFrame(() => editButtonRef.current?.focus());
+    requestAnimationFrame(() => editButtonRefs.current[field]?.focus());
   }
 
   async function handleSave(event) {
     event?.preventDefault();
     if (!editing) return;
+
+    // ตรวจก่อนส่งเหมือนหน้า login กับ register
+    // ชื่อผู้ใช้งานเป็นช่องบังคับตอนสมัคร (register.js) ถ้าหน้านี้ปล่อยให้ลบทิ้งได้
+    // ระบบจะมีบัญชีที่ไม่มีชื่อ ทั้งที่กฎบอกว่าต้องมี — กฎเดียวกันต้องบังคับทุกทาง
+    if (editing === "name" && draft.trim() === "") {
+      setFieldError(t("validate.nameRequired"));
+      document.getElementById(fieldToInputId(editing))?.focus();
+      return;
+    }
+
     setSaving(true);
     setSaveError("");
+    setFieldError("");
 
     const value = draft.trim() === "" ? null : draft.trim();
 
@@ -92,7 +107,10 @@ export default function Account() {
       await apiFetch("/api/auth/me", { method: "PATCH", body: { [editing]: value } });
 
       toast.success(t("account.saved"));
+      const saved = editing;
       setEditing(null);
+      // คืนโฟกัสให้ปุ่มแก้ไขของแถวที่เพิ่งบันทึก เหมือนตอนกดยกเลิก
+      requestAnimationFrame(() => editButtonRefs.current[saved]?.focus());
       reload(); // ดึงข้อมูลใหม่ ชื่อบนแถบหัวเว็บจะได้เปลี่ยนตาม
     } catch (error) {
       // ขึ้นในหน้าเหมือนหน้าอื่นของระบบ ไม่ใช่ toast ที่หายเอง
@@ -151,6 +169,8 @@ export default function Account() {
               label={label}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
+              error={fieldError}
+              onClearError={() => setFieldError("")}
               maxLength={120}
               className="w-full sm:w-64"
               autoFocus
@@ -166,7 +186,7 @@ export default function Account() {
           <span className="flex flex-wrap items-center gap-3">
             <span className="t-body break-words font-medium">{value || empty}</span>
             <Button
-              ref={editing === null ? editButtonRef : null}
+              ref={(node) => { editButtonRefs.current[field] = node; }}
               size="sm"
               variant="secondary"
               onClick={() => startEditing(field)}
@@ -186,22 +206,17 @@ export default function Account() {
       </Head>
 
       <AppShell user={user} onLogout={logout}>
-        {/* ปุ่มหลักของหน้าอยู่ที่หัวข้อ — หน้าหนึ่งหน้าต้องมีปุ่มหลักเสมอ
-            ไม่งั้นผู้ใช้ที่เพิ่งสมัครเสร็จจะไม่รู้ว่าควรทำอะไรต่อ
-            สิ่งเดียวที่ทำได้จริงตอนนี้คือตั้งชื่อร้าน ปุ่มหลักจึงเป็นอันนั้น */}
-        <PageHeader
-          title={t("account.title")}
-          description={t("account.subtitle")}
-          action={
-            editing === null ? (
-              <Button onClick={() => startEditing("shop_name")}>
-                {user.shop_name ? t("account.editShopName") : t("account.setShopName")}
-              </Button>
-            ) : null
-          }
-        />
+        {/* หน้านี้เป็นรายการข้อมูลบัญชี ไม่ใช่หน้าที่มีงานหลักหนึ่งงาน
+            การกระทำของมันคือ "แก้ไขแถวนี้" ซึ่งอยู่ในแถวนั้นๆ อยู่แล้ว
+            🔴 เคยใส่ปุ่มหลักไว้ที่หัวข้อด้วย แล้วกลายเป็นปุ่มสองปุ่มคนละน้ำหนัก
+               คนละคำ ที่ทำสิ่งเดียวกัน ห่างกัน 220px ผู้ใช้ต้องมานั่งเดาว่าต่างกันยังไง
+               (ดู docs/brand.md หัวข้อ 5 ฉบับแก้ไข 21 ก.ย. 2569) */}
+        <PageHeader title={t("account.title")} description={t("account.subtitle")} />
 
-        <div className="flex flex-col gap-5">
+        {/* หน้านี้มีเนื้อหาไม่กี่บรรทัด ถ้าปล่อยให้การ์ดกว้างเต็ม 1100px
+            บนจอคอม จะเหลือพื้นที่ว่างเป็นบริเวณกว้างจนดูเหมือนหน้ายังโหลดไม่เสร็จ
+            จำกัดความกว้างให้พอดีกับเนื้อหาจริง */}
+        <div className="flex max-w-3xl flex-col gap-5">
           <Card>
             <CardContent className="p-5">
               <Row label={t("account.email")} value={user.email} />
@@ -212,6 +227,14 @@ export default function Account() {
               ) : null}
             </CardContent>
           </Card>
+
+          {/* ส่วนอุปกรณ์ยังไม่เปิด — บอกเป็นบรรทัดเดียว ไม่ใช่กล่องใหญ่ที่สุดในหน้า
+              กล่องว่างมีไว้สำหรับ "รายการที่ยังไม่มีข้อมูล" (brand.md หัวข้อ 5)
+              ไม่ใช่สำหรับขอโทษที่ฟีเจอร์ยังไม่เสร็จ
+              🔴 ต้องอยู่ "ก่อน" การ์ดแพ็กเกจ ไม่ใช่หลัง เพราะการ์ดแพ็กเกจสัญญาว่า
+                 บันทึกอุปกรณ์ได้ไม่จำกัด การอ่านคำสัญญานั้นก่อนแล้วค่อยมาเจอว่า
+                 ส่วนอุปกรณ์ยังไม่เสร็จ ทำให้คำสัญญาอ่านเหมือนคำโกหก */}
+          <p className="t-caption">{t("account.buildNote")}</p>
 
           {/* อธิบายว่าแพ็กเกจที่ใช้อยู่ให้อะไรบ้าง — ป้ายชื่อแพ็กเกจอยู่บนแถบหัวเว็บ
               อยู่แล้ว ตรงนี้จึงไม่ซ้ำป้ายอีก แต่บอกว่ามันแปลว่าอะไร */}
@@ -224,11 +247,6 @@ export default function Account() {
             </CardContent>
           </Card>
 
-          {/* ส่วนอุปกรณ์ยังไม่เปิด — บอกเป็นบรรทัดเดียว ไม่ใช่กล่องใหญ่ที่สุดในหน้า
-              กล่องว่างมีไว้สำหรับ "รายการที่ยังไม่มีข้อมูล" (brand.md หัวข้อ 5)
-              ไม่ใช่สำหรับขอโทษที่ฟีเจอร์ยังไม่เสร็จ ถ้าใช้ผิดที่ สิ่งที่ใหญ่ที่สุด
-              ในหน้าแรกหลังสมัครจะกลายเป็นคำขอโทษ */}
-          <p className="t-caption">{t("account.buildNote")}</p>
         </div>
       </AppShell>
     </>

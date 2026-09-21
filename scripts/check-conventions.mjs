@@ -113,6 +113,84 @@ for (const file of files) {
   }
 }
 
+// ── กฎ 7 · ทุกอย่างที่กดได้ต้องสูงอย่างน้อย 44px (docs/brand.md หัวข้อ 6)
+//    เคยพลาดมาแล้ว 3 จุดในรอบเดียว: ปุ่มลองใหม่ 74x23 และลิงก์สลับหน้า 70x17
+//    ทั้งสามจุดเป็นลิงก์/ปุ่มที่ไม่ได้ใช้คลาส .btn จึงไม่มีความสูงติดมาให้
+const CLICKABLE = /<(button|Link|a)\b([^>]*)>/gs;
+for (const file of files) {
+  for (const m of file.text.matchAll(CLICKABLE)) {
+    const attrs = m[2];
+    if (!/className=/.test(attrs)) continue;
+    const cls = (attrs.match(/className="([^"]*)"/) || [])[1];
+    if (!cls) continue; // className แบบ cn(...) ตรวจตรงนี้ไม่ได้ ปล่อยให้เบราว์เซอร์วัดแทน
+    const hasFloor = /\bbtn\b/.test(cls) || /min-h-\[44px\]/.test(cls) || /\bh-(1[1-9]|[2-9]\d)\b/.test(cls);
+    if (!hasFloor) {
+      const n = file.text.slice(0, m.index).split("\n").length;
+      fail("touch-target", file.rel, n, `<${m[1]}> ไม่มีความสูงขั้นต่ำ ใส่ min-h-[44px] หรือใช้ <Button>`);
+    }
+  }
+}
+
+// ── กฎ 8 · ระบบดีไซน์อยู่ใน globals.css ซึ่งกฎ 4 มองไม่เห็นเพราะไล่แค่ไฟล์ .js
+//    ค่าสีตายตัวนอกบล็อกประกาศตัวแปร คือสีที่ไม่พลิกตามโหมดมืด
+const cssPath = join(WEB, "styles/globals.css");
+const css = readFileSync(cssPath, "utf8");
+{
+  let depth = 0;
+  let inRoot = false;
+  css.split("\n").forEach((line, i) => {
+    if (/:root|prefers-color-scheme/.test(line)) inRoot = true;
+    const before = depth;
+    depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+    if (inRoot && depth <= 0) inRoot = false;
+    const code = line.split("/*")[0];
+    if (!inRoot && /#[0-9a-fA-F]{3,8}\b/.test(code) && !/@font-face|url\(/.test(code)) {
+      fail("css-hardcoded-color", "nextjs/styles/globals.css", i + 1, `ค่าสีตายตัวนอกบล็อกตัวแปร: ${code.trim()}`);
+    }
+    void before;
+  });
+}
+
+// ── กฎ 9 · ความต่างของสีที่ "ไม่ใช่ตัวอักษร" (WCAG 1.4.11 / 2.4.11 ต้องการ 3:1)
+//    รอบก่อนวัดเฉพาะตัวอักษร จึงมองไม่เห็นขอบปุ่มบนแถบหัวเว็บที่ได้ 2.65:1
+//    และวงแหวนโฟกัสบนแถบหัวเว็บที่ได้ 2.43:1 — ทั้งคู่อยู่ใน CSS ล้วนๆ
+function hexToRgb(hex) {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
+}
+function relLum([r, g, b]) {
+  const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function contrast(a, b) {
+  const [hi, lo] = [relLum(hexToRgb(a)), relLum(hexToRgb(b))].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+// อ่านค่าตัวแปรจากไฟล์จริง ไม่ใช่เขียนค่าซ้ำไว้ในสคริปต์
+// ถ้าเขียนซ้ำ วันที่มีคนแก้สี สคริปต์จะยังตรวจค่าเก่าและบอกว่าผ่าน
+function tokens(scopeMarker) {
+  const start = css.indexOf(scopeMarker);
+  const slice = css.slice(start, start + 4000);
+  const map = {};
+  for (const m of slice.matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{3,8})\s*;/g)) map[m[1]] = m[2];
+  return map;
+}
+const light = tokens(":root {");
+const dark = tokens("prefers-color-scheme: dark");
+const PAIRS = [
+  ["--header-line", "--header-bg", 3, "ขอบปุ่มบนแถบหัวเว็บ"],
+  ["--focus-on-header", "--header-bg", 3, "วงแหวนโฟกัสบนแถบหัวเว็บ"],
+  ["--line-strong", "--paper", 3, "ขอบของสิ่งที่กดได้บนพื้นหน้า"],
+];
+for (const [scope, set] of [["โหมดสว่าง", light], ["โหมดมืด", { ...light, ...dark }]]) {
+  for (const [fg, bg, need, what] of PAIRS) {
+    if (!set[fg] || !set[bg]) continue;
+    const r = contrast(set[fg], set[bg]);
+    if (r < need) fail("nontext-contrast", "nextjs/styles/globals.css", 1, `${what} (${scope}) ${r.toFixed(2)}:1 < ${need}:1`);
+  }
+}
+
 // ── กฎ 6 · เอกสารต้องไม่สอนกฎที่ยกเลิกไปแล้ว
 for (const rel of ["CLAUDE.md", "docs/ui-guide.md", "docs/brand.md"]) {
   const text = readFileSync(join(ROOT, rel), "utf8");

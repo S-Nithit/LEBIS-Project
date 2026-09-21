@@ -37,7 +37,10 @@ export function AuthLayout({ title, description, children, footer, bare = false 
 
   return (
     <main className="flex min-h-screen flex-col bg-paper py-5 md:justify-center md:py-7">
-      <div className="app-container max-w-5xl">
+      {/* โหมด bare แคบกว่า กรอบนอกจึงต้องแคบตาม ไม่งั้นโลโก้กับปุ่มสลับภาษา
+          จะกางออกไปสุดขอบจอ ห่างจากการ์ดที่อยู่ข้างล่างเป็นร้อยพิกเซล
+          ดูเหมือนปุ่มที่ไม่ได้เป็นของหน้านี้ */}
+      <div className={`app-container ${bare ? "max-w-2xl" : "max-w-5xl"}`}>
         {/* แถบบนสุด: โลโก้ กับปุ่มสลับภาษา */}
         <div className="flex items-center justify-between gap-4">
           <Logo size={30} />
@@ -46,7 +49,7 @@ export function AuthLayout({ title, description, children, footer, bare = false 
 
         <div
           className={`mt-5 grid items-start gap-5 md:mt-6 md:gap-6 ${
-            bare ? "max-w-2xl" : "md:grid-cols-[1.15fr_0.85fr]"
+            bare ? "" : "md:grid-cols-[1.15fr_0.85fr]"
           }`}
         >
           {/* การ์ดฟอร์ม — บนมือถือมาก่อนเสมอ */}

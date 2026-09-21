@@ -187,6 +187,17 @@ Build these once and let all four members use them.
   right for the main action button.
 - `EmptyState` — an outlined icon, one line of explanation, and one button.
   Every list must have one; a blank table is a bug.
+
+> **Amendment — 21 Sep 2569 · where a primary button belongs.** The rule is one
+> primary per **region**, not per page, and a page that is a list of records — an
+> account page, a settings page — has no page-level primary at all: its actions
+> live in its rows. `/account` carried both a header primary and a row button for
+> the same edit, 220px apart, at two weights, with two labels, and a reader had to
+> work out they were the same thing. A `PageHeader` action and an `EmptyState`
+> action on a page that lists things are two regions and both are correct.
+> `EmptyState` is bound to lists: it is not the place to apologise for a feature
+> that has not been built, because that makes the apology the largest object on
+> the page.
 - `LoadingState` — skeleton rows, not a spinner.
 - `StatusBadge` — a small pill using the status colours above.
 - `Card` — white surface, 1px border, 20px radius.

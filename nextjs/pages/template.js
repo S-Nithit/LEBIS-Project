@@ -105,7 +105,7 @@ export default function Template() {
           <EmptyState
             title={t("template.emptyTitle")}
             description={t("template.emptyBody")}
-            action={<Button>{t("template.addItem")}</Button>}
+            action={<Button variant="secondary">{t("template.addItem")}</Button>}
           />
         ) : (
           <Card>

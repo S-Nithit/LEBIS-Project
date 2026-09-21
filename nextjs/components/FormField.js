@@ -28,7 +28,7 @@ import { useLanguage } from "@/lib/useLanguage";
 import { cn } from "@/lib/utils";
 
 export const FormField = forwardRef(function FormField(
-  { id, label, hint, badge, error, onClearError, className, ...inputProps },
+  { id, label, hint, badge, error, onClearError, className, maxBytes, ...inputProps },
   ref
 ) {
   const { t } = useLanguage();
@@ -41,7 +41,10 @@ export const FormField = forwardRef(function FormField(
   // ไม่งั้นหน้าจอจะยืนยันว่าผิดอยู่ทั้งที่แก้ถูกแล้ว (และโปรแกรมอ่านหน้าจอ
   // ก็จะยังประกาศว่าช่องนี้ผิดอยู่ เพราะ aria-invalid ค้าง)
   function handleChange(event) {
-    if (error && onClearError) onClearError(id);
+    // เรียกทุกครั้งที่พิมพ์ ไม่ใช่เฉพาะตอนช่องนี้มีข้อความผิดพลาด
+    // กล่องผิดพลาดระดับฟอร์ม (เช่น "เชื่อมต่อไม่ได้") ไม่ได้ผูกกับช่องไหน
+    // ถ้ารอให้ช่องมี error ก่อน กล่องแดงจะค้างอยู่ขณะที่ผู้ใช้กำลังแก้อยู่แล้ว
+    onClearError?.(id);
     inputProps.onChange?.(event);
   }
   const [revealed, setRevealed] = useState(false);
@@ -51,7 +54,21 @@ export const FormField = forwardRef(function FormField(
   const atLimit =
     typeof inputProps.maxLength === "number" &&
     String(inputProps.value ?? "").length >= inputProps.maxLength;
-  const shownHint = atLimit ? t("field.limit") : hint;
+
+  // bcrypt นับรหัสผ่านเป็น "ไบต์" ไม่ใช่ "ตัวอักษร" ภาษาไทยตัวละ 3 ไบต์
+  // ถ้าบอกผู้ใช้เป็นจำนวนตัวอักษร คนที่พิมพ์ไทยปนอังกฤษจะอยู่ในกฎตามที่เขียน
+  // แต่ถูกปฏิเสธจริง เพราะไม่มีใครนั่งคิดว่าของตัวเองกินกี่ไบต์
+  // ทางที่ถูกคือให้ช่องกรอกบอกเองตอนเกิน ไม่ใช่ให้ผู้ใช้คำนวณ
+  const usedBytes =
+    typeof maxBytes === "number"
+      ? new Blob([String(inputProps.value ?? "")]).size
+      : 0;
+  const overBytes = typeof maxBytes === "number" && usedBytes > maxBytes;
+
+  // ข้อความเตือนไม่กลืนคำอธิบายเดิมทิ้ง ต่อท้ายแทน ไม่งั้นช่องที่มีทั้งสองอย่าง
+  // จะเสียคำอธิบายไปตอนที่ผู้ใช้ต้องการมันที่สุด
+  const notice = overBytes ? t("field.tooLongBytes") : atLimit ? t("field.limit") : "";
+  const shownHint = [notice, hint].filter(Boolean).join(" · ");
   const hintId = shownHint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
 

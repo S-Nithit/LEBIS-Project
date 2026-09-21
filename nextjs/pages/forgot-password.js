@@ -43,9 +43,12 @@ export default function ForgotPassword() {
           ))}
         </ol>
 
-        {/* ถ้ายังไม่ได้ตั้งช่องทางติดต่อไว้ ห้ามเขียนว่า "กรุณาติดต่อทีมงาน"
-            เพราะหน้าจอไม่มีอะไรให้กด ให้บอกสิ่งที่เป็นจริงและช่วยให้ใจชื้นแทน */}
-        <p className="t-caption mt-5 border-t border-line pt-4">
+        {/* 🔴 ข้อความนี้คือคำตอบของทั้งหน้า ต้องเป็นขนาดตัวอักษรของเนื้อความ
+               ไม่ใช่ t-caption 13px สีจาง ซึ่งเป็นขนาดที่เล็กที่สุดในหน้า
+               คนที่เข้าระบบไม่ได้มาอ่านหน้านี้เพื่อหาประโยคนี้ประโยคเดียว
+               ถ้ายังไม่ได้ตั้งช่องทางติดต่อไว้ ห้ามเขียนว่า "กรุณาติดต่อทีมงาน"
+               เพราะหน้าจอไม่มีอะไรให้กด ให้บอกสิ่งที่เป็นจริงแทน */}
+        <p className="t-body mt-5 border-t border-line pt-4">
           {SUPPORT_CONTACT ? t("help.note") : t("help.noteNoChannel")}
         </p>
 
@@ -67,6 +70,15 @@ export default function ForgotPassword() {
           >
             <Link href="/login">{t("help.back")}</Link>
           </Button>
+
+          {/* ข้อความข้างบนบอกให้สมัครบัญชีใหม่ไปก่อน ถ้าไม่มีปุ่มไปหน้าสมัคร
+              ก็เท่ากับบอกให้ทำสิ่งที่หน้านี้ไม่มีทางให้ทำ ซึ่งเป็นความผิดเดียวกับ
+              การเขียนว่า "กรุณาติดต่อทีมงาน" ทั้งที่ไม่มีช่องทางติดต่อ */}
+          {SUPPORT_CONTACT ? null : (
+            <Button asChild variant="secondary" className="w-full sm:w-auto">
+              <Link href="/register">{t("help.register")}</Link>
+            </Button>
+          )}
         </div>
       </AuthLayout>
     </>

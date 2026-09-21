@@ -3,8 +3,12 @@
 อ่านก่อนเริ่มเขียนหน้าของตัวเอง ใช้เวลาประมาณ 5 นาที
 มาตรฐานทั้งหมดมาจาก [docs/brand.md](brand.md) — ไฟล์นี้คือวิธีเอาไปใช้จริงในโค้ด
 
-หน้าตัวอย่างที่ทำเสร็จแล้วคือ `nextjs/pages/login.js` กับ `nextjs/pages/register.js`
-เปิดคู่กับคู่มือนี้แล้วก็อปโครงไปใช้ได้เลย
+**ต้นฉบับที่ให้ก็อปมีไฟล์เดียวคือ `nextjs/pages/template.js`** เปิดดูของจริงได้ที่
+`/template` ตอนรัน dev
+
+`pages/login.js` กับ `pages/register.js` เป็นหน้าที่ทำเสร็จแล้ว เปิดดูเป็นตัวอย่าง
+ได้ แต่อย่าก็อปโครงจากมัน — สองหน้านั้นเป็นฟอร์มที่ไม่ต้องเข้าสู่ระบบก่อน
+จึงไม่มีสถานะ "โหลดข้อมูลไม่สำเร็จ" ซึ่งหน้าที่คุณกำลังจะเขียนต้องมี
 
 ---
 
@@ -74,6 +78,7 @@
 ### ตัวอย่างที่ใช้บ่อย
 
 ```jsx
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: import ของ Logo กับ Button
 <Logo />                                   {/* โลโก้บนพื้นอ่อน */}
 <Logo variant="dark" size={26} />          {/* โลโก้บนแถบหัวเว็บสีเข้ม */}
 
@@ -95,9 +100,16 @@
 ทุกหน้าที่มีฟอร์มทำเหมือนกันหมด 3 ขั้น
 
 ```jsx
-import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
+// ชิ้นส่วน — วางในหน้าที่มี state ของช่องกรอก (email, password) อยู่แล้ว
+import { useState } from "react";
+import { toast } from "sonner";
 
+import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
+import { useLanguage } from "@/lib/useLanguage";
+
+const { t } = useLanguage();
 const [errors, setErrors] = useState({});
+const [formError, setFormError] = useState("");
 
 // 1) ตรวจ "ทุกช่องพร้อมกัน" คืน object ที่ key คือ id ของช่องที่ผิด
 //    อย่าหยุดที่ช่องแรกที่ผิด ไม่งั้นผู้ใช้ต้องกดส่งหลายรอบกว่าจะรู้ครบ
@@ -151,6 +163,7 @@ async function handleSubmit(event) {
 ทั้งกรอบแดง ข้อความใต้ช่อง และการบอกโปรแกรมอ่านหน้าจอ
 
 ```jsx
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: errors, clearError, t และ import ของ FormField
 <FormField
   id="email"
   label={t("items.email")}
@@ -164,6 +177,7 @@ async function handleSubmit(event) {
 รหัสผ่านไม่ถูกต้อง) ห้ามไปทำกรอบแดงให้ช่องที่กรอกถูกอยู่แล้ว ให้ใช้ `<FormError>`
 
 ```jsx
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: formError, handleSubmit, loading
 import { FormError } from "@/components/FormError";
 
 <FormError message={formError} onRetry={handleSubmit} retrying={loading} />
@@ -227,6 +241,7 @@ import { FormError } from "@/components/FormError";
 ข้อความทุกคำอยู่ใน `nextjs/lib/i18n.js` ที่เดียว ทั้งไทยและอังกฤษ
 
 ```jsx
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: อยู่ข้างในฟังก์ชันของ component
 import { useLanguage } from "@/lib/useLanguage";
 
 const { t } = useLanguage();

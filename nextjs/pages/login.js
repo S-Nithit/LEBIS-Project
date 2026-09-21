@@ -68,6 +68,10 @@ export default function Login() {
   // ล้างข้อความผิดพลาดของช่องที่ผู้ใช้เริ่มแก้ (FormField เรียกให้เอง)
   function clearError(field) {
     setErrors((current) => ({ ...current, [field]: undefined }));
+    // กล่องข้อผิดพลาดระดับฟอร์มก็ต้องหายไปด้วย พอผู้ใช้เริ่มแก้
+    // ไม่งั้นจะมีกล่องแดง "เชื่อมต่อไม่ได้" ค้างอยู่ขณะที่เขากำลังพิมพ์อีเมลใหม่
+    // ซึ่งอ่านเหมือนระบบยังพังอยู่ทั้งที่เขากำลังแก้ให้แล้ว
+    setFormError("");
   }
 
   function validate() {
@@ -163,7 +167,7 @@ export default function Login() {
             {t("login.noAccount")}{" "}
             <Link
               href="/register"
-              className="font-medium text-ink underline underline-offset-4 hover:no-underline"
+              className="inline-flex min-h-[44px] items-center font-medium text-ink underline underline-offset-4 hover:no-underline"
             >
               {t("login.goRegister")}
             </Link>
@@ -194,6 +198,7 @@ export default function Login() {
               id="password"
               label={t("login.password")}
               type="password"
+              maxBytes={72}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               error={errors.password}
