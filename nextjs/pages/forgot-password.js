@@ -26,9 +26,13 @@ export default function ForgotPassword() {
         <title>{t("page.help")}</title>
       </Head>
 
-      <AuthLayout bare title={t("help.title")} description={t("help.body")}>
-        <h2 className="t-section mb-4">{t("help.tipsTitle")}</h2>
-        {/* สองเรื่องที่คนมักพลาดและแก้เองได้ทันที ไม่ต้องรอใคร */}
+      <AuthLayout bare title={t("help.title")} description={t("help.tipsLead")}>
+        {/* 🔴 ไม่มีหัวข้อย่อยเหนือรายการ
+               เดิมมี <h2> ขนาด 20px ตัวหนาเขียนว่า "ลองสองเรื่องนี้ก่อน..." ซึ่งเป็น
+               ป้ายบอกว่าข้างล่างมีลิสต์ ไม่ใช่เนื้อหา ผลคือของที่ดังเป็นอันดับสอง
+               ในหน้าคือป้าย ส่วนคำตอบจริงอยู่ล่างสุดด้วยขนาดเล็กกว่า
+               รายการเลขใต้หัวข้อ "ช่วยเหลือเรื่องการเข้าสู่ระบบ" บอกตัวเองอยู่แล้วว่าคืออะไร
+               ประโยคที่หัวข้อย่อยเคยแบกไว้ ย้ายขึ้นไปเป็นคำอธิบายใต้หัวข้อหน้า */}
         <ol className="flex flex-col gap-4">
           {["help.tip1", "help.tip2"].map((key, index) => (
             <li key={key} className="flex gap-3 border-b border-line py-4 first:pt-0 last:border-b-0 last:pb-0">
@@ -51,6 +55,9 @@ export default function ForgotPassword() {
         <p className="t-body mt-5 border-t border-line pt-4">
           {SUPPORT_CONTACT ? t("help.note") : t("help.noteNoChannel")}
         </p>
+
+        {/* คำปลอบใจอยู่ติดกับปุ่ม ไม่ใช่เป็นบรรทัดจางๆ ใต้หัวข้อหน้าที่สายตาข้ามไป */}
+        <p className="t-caption mt-3">{t("help.body")}</p>
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           {/* ปุ่มติดต่อจะขึ้นก็ต่อเมื่อมีช่องทางจริงใน lib/config.js

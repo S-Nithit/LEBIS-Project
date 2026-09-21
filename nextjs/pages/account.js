@@ -187,10 +187,11 @@ export default function Account() {
                 setSaveError("");
               }}
               maxLength={120}
+              autoComplete={field === "name" ? "name" : "organization"}
               className="w-full sm:w-64"
               autoFocus
             />
-            <Button type="submit" size="sm" disabled={saving}>
+            <Button type="submit" size="sm" disabled={saving} aria-busy={saving}>
               {saving ? t("account.saving") : t("account.save")}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={cancelEditing}>

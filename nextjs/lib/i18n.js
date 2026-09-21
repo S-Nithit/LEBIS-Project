@@ -73,6 +73,11 @@ const TEXT = {
 
     "sample.caption": "ตัวอย่างหน้าจอบันทึกการยืม (ข้อมูลสมมติ)",
     "sample.colDue": "กำหนดคืน",
+    // ใช้ "อีกกี่วัน" ไม่ใช่วันที่ เพราะวันที่ต้องคำนวณจากนาฬิกา
+    // ซึ่งเซิร์ฟเวอร์กับเบราว์เซอร์คนละเขตเวลากัน (ดูคอมเมนต์ใน AuthLayout.js)
+    "sample.dueIn": "อีก {n} วัน",
+    "sample.dueToday": "วันนี้",
+    "sample.lateBy": "เกินมา {n} วัน",
     "sample.status.ok": "อยู่ในกำหนด",
     "sample.status.due": "ใกล้ครบกำหนด",
     "sample.status.late": "เกินกำหนด",
@@ -130,7 +135,7 @@ const TEXT = {
     "account.planPro":
       "บันทึกอุปกรณ์ได้ไม่จำกัด ดูรายงานย้อนหลังได้ทั้งหมด แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน และส่งออกไฟล์ได้",
 
-    "help.tipsTitle": "ลองสองเรื่องนี้ก่อน ส่วนใหญ่แก้ได้เองในไม่กี่วินาที",
+    "help.tipsLead": "ส่วนใหญ่แก้ได้เองในไม่กี่วินาที ลองสองเรื่องนี้ก่อน",
     "help.tip1": "อีเมลพิมพ์ครบถ้วนหรือไม่ ระบบไม่แยกตัวพิมพ์เล็กใหญ่ พิมพ์แบบไหนก็เข้าได้",
     "help.tip2": "กดปุ่ม แสดง ข้างช่องรหัสผ่าน เพื่อดูว่าพิมพ์ตรงกับที่ตั้งไว้จริงไหม",
     "help.title": "ช่วยเหลือเรื่องการเข้าสู่ระบบ",
@@ -212,6 +217,9 @@ const TEXT = {
 
     "sample.caption": "Sample borrow log (illustrative data)",
     "sample.colDue": "Due",
+    "sample.dueIn": "in {n} days",
+    "sample.dueToday": "today",
+    "sample.lateBy": "{n} days late",
     "sample.status.ok": "On time",
     "sample.status.due": "Due soon",
     "sample.status.late": "Overdue",
@@ -267,7 +275,7 @@ const TEXT = {
     "account.planPro":
       "Unlimited items, full report history, LINE reminders before each due date, and CSV export.",
 
-    "help.tipsTitle": "Two quick things solve most sign-in problems",
+    "help.tipsLead": "Most sign-in problems clear up in seconds — try these two first.",
     "help.tip1": "Is the email typed in full? Capital letters do not matter — either way signs you in.",
     "help.tip2": "Use the Show button beside the password field to check what you typed.",
     "help.title": "Help with signing in",

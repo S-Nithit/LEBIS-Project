@@ -21,19 +21,30 @@ const SAMPLE_ROWS = [
   { code: "TRI-0009", key: "row3", tone: "danger", statusKey: "sample.status.late", offsetDays: -3 },
 ];
 
-// วันที่ในตัวอย่างนับจากวันนี้เสมอ ไม่ได้เขียนตายตัว
-// ไม่งั้นอีกสองเดือนจะกลายเป็นวันที่ผ่านมาแล้วแต่ป้ายยังเขียนว่า "อยู่ในกำหนด"
-function dueLabel(offsetDays, language) {
-  const date = new Date();
-  date.setDate(date.getDate() + offsetDays);
-  return date.toLocaleDateString(language === "en" ? "en-GB" : "th-TH", {
-    day: "numeric",
-    month: "short",
-  });
+// 🔴 เคยเขียนเป็น "วันที่" โดยคำนวณจาก new Date() ตอนวาด แล้วพังสองชั้น
+//
+//    ชั้นแรก: หน้านี้ถูกสร้างเป็น HTML ไว้ตอน build เซิร์ฟเวอร์จึงคำนวณวันที่
+//    ณ ตอน build ส่วนเบราว์เซอร์คำนวณ ณ ตอนเปิดหน้า สองค่านี้ไม่ตรงกัน
+//    React จึงทิ้ง HTML ที่ส่งมาทั้งก้อนแล้ววาดใหม่ทั้งหน้า (hydration failed)
+//    และผู้ใช้เห็นวันที่ "เปลี่ยนเอง" ต่อหน้าต่อตา
+//
+//    ชั้นที่สอง: เครื่องที่ deploy อยู่เป็นเวลา UTC ส่วนคนใช้อยู่ไทย +07
+//    ต่างกัน 7 ชั่วโมงทุกวัน วันที่จึงไม่ตรงกันเป็นเรื่องปกติ ไม่ใช่เรื่องบังเอิญ
+//
+//    เรื่องนี้ไม่มีทางเห็นจากการอ่านไฟล์ ดูภาพหน้าจอ หรือวัดสีเลย
+//    มันอยู่ใน console ตอนโหลดหน้า ซึ่งไม่มีใครเปิดดูมาสิบรอบ
+//
+// ทางที่ถูกคือเลิกใช้ "วันที่" ไปเลย แล้วบอกเป็น "อีกกี่วัน" ซึ่งเป็นค่าคงที่
+// ไม่ขึ้นกับนาฬิกา ไม่ขึ้นกับเขตเวลา ไม่ขึ้นกับว่า build เมื่อไหร่
+// และสำหรับเจ้าของร้านที่ยืนอยู่หน้าเคาน์เตอร์ "อีก 3 วัน" อ่านง่ายกว่า "25 ก.ย." ด้วย
+function dueLabel(offsetDays, t) {
+  if (offsetDays > 0) return t("sample.dueIn").replace("{n}", String(offsetDays));
+  if (offsetDays === 0) return t("sample.dueToday");
+  return t("sample.lateBy").replace("{n}", String(-offsetDays));
 }
 
 export function AuthLayout({ title, description, children, footer, bare = false }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   return (
     <main className="flex min-h-screen flex-col bg-paper py-5 md:justify-center md:py-7">
@@ -83,7 +94,7 @@ export function AuthLayout({ title, description, children, footer, bare = false 
                     </p>
                     <p className="t-caption">
                       {t(`sample.${row.key}.customer`)} · {t("sample.colDue")}{" "}
-                      {dueLabel(row.offsetDays, language)}
+                      {dueLabel(row.offsetDays, t)}
                     </p>
                   </div>
 

@@ -3,7 +3,9 @@
 // อยากเปลี่ยนสีหรือความมนของมุม ให้แก้ที่ globals.css ที่เดียว
 module.exports = {
   darkMode: "media", // โหมดมืดตามการตั้งค่าเครื่องของผู้ใช้ (brand.md หัวข้อ 2)
-  content: ["./pages/**/*.{js,jsx}", "./components/**/*.{js,jsx}"],
+  // ต้องมี lib/ ด้วย ไม่งั้นวันที่มีคลาสไปอยู่ในนั้น Tailwind จะไม่สร้าง CSS ให้
+  // แล้วหน้าจะหน้าตาผิดโดยไม่มี error อะไรเลย ซึ่งเป็นอาการที่หาต้นตอยากที่สุด
+  content: ["./pages/**/*.{js,jsx}", "./components/**/*.{js,jsx}", "./lib/**/*.{js,jsx}"],
   theme: {
     container: { center: true, padding: "1rem" },
     extend: {

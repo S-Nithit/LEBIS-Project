@@ -37,7 +37,13 @@ export function LanguageToggle({ className }) {
             className={cn(
               // สูงพอให้กดด้วยนิ้วโป้งบนมือถือ (brand.md หัวข้อ 6)
               "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-control px-3 text-label font-medium transition-colors",
-              active ? "bg-ink text-on-ink" : "text-muted hover:text-ink"
+              // ตัวที่เลือกอยู่ใช้ "ขอบ" ไม่ใช่ "พื้นทึบ"
+              // พื้นทึบทำให้ปุ่มที่คนกดปีละครั้งดังกว่าปุ่มที่เป็นงานจริงของหน้า
+              // และในโหมดมืด --ink เป็นสีอ่อน กลายเป็นบล็อกเกือบขาวกลางการ์ด
+              // สถานะที่เลือกไว้มี aria-pressed บอกโปรแกรมอ่านหน้าจออยู่แล้ว
+              active
+                ? "border border-line-strong bg-surface text-ink"
+                : "border border-transparent text-muted hover:text-ink"
             )}
           >
             {item.label}

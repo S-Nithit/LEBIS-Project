@@ -52,10 +52,14 @@ export function FormError({ message, onRetry, retrying = false }) {
           type="button"
           onClick={onRetry}
           disabled={retrying}
+          aria-busy={retrying}
           /* ปุ่มเดียวในระบบที่ใช้กู้สถานการณ์ตอนพัง ต้องกดง่ายที่สุด ไม่ใช่ยากที่สุด
              วัดได้ 74x23 ตอนยังไม่มี min-h ซึ่งเล็กกว่าเกณฑ์ 44px ของ brand.md
              และเล็กกว่า 24px ขั้นต่ำของ WCAG 2.5.8 ด้วยซ้ำ */
-          className="mt-2 inline-flex min-h-[44px] items-center font-medium underline underline-offset-4 disabled:opacity-60"
+          /* ไม่ทำให้จางตอนกำลังลองใหม่ — ป้ายมันเปลี่ยนเป็น "กำลังลอง..." อยู่แล้ว
+             ซึ่งบอกสถานะได้โดยไม่ต้องลดความคมชัด วัดแล้วของเดิมเหลือ 2.49:1
+             ซึ่งเป็นตัวเลขที่แย่ที่สุดในระบบ บนปุ่มที่สำคัญที่สุดตอนระบบพัง */
+          className="mt-2 inline-flex min-h-[44px] items-center font-medium underline underline-offset-4"
         >
           {t("action.retry")}
         </button>

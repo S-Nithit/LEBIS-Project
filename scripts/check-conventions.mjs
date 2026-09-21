@@ -28,6 +28,12 @@ function walk(dir, out = []) {
 
 const files = walk(WEB).map((f) => ({ path: f, rel: relative(ROOT, f), text: readFileSync(f, "utf8") }));
 
+// นิยามเดียวของคำว่า "ค่าสีตายตัว" ใช้ร่วมกันทุกกฎ
+// 🔴 เคยมีสองนิยาม: กฎ 4 รู้จักแค่ #hex 6 หลัก ส่วนกฎ 8 รู้จัก rgb() hsl() ด้วย
+//    ผลคือ style={{ color: "#fff" }} กับ style={{ color: "rgb(255,0,0)" }} ผ่านฉลุย
+//    ทั้งที่เป็นค่าสีที่ไม่พลิกตามโหมดมืดเหมือนกันทุกประการ
+const COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(|\b(white|black|red|blue|green|rebeccapurple|transparent)\b\s*[;"']/;
+
 function fail(rule, rel, line, detail) {
   failures.push(`${rel}:${line}  [${rule}] ${detail}`);
 }
@@ -102,7 +108,7 @@ for (const file of files) {
   eachLine(file, (line, n) => {
     // <meta name="theme-color"> รับค่า CSS variable ไม่ได้ ต้องเป็นค่าสีตรงๆ เท่านั้น
     if (line.includes("theme-color")) return;
-    if (/#[0-9a-fA-F]{6}\b/.test(line)) fail("no-hardcoded-color", file.rel, n, "เขียนค่าสีลงไฟล์โดยตรง ให้ใช้ token ใน globals.css");
+    if (COLOUR.test(line)) fail("no-hardcoded-color", file.rel, n, "เขียนค่าสีลงไฟล์โดยตรง ให้ใช้ token ใน globals.css");
   });
 }
 
@@ -146,7 +152,9 @@ for (const file of files) {
 // 🔴 "sm:min-h-[44px]" ไม่นับ — มันสูง 44px เฉพาะจอ 640px ขึ้นไป
 //    ส่วนบนมือถือที่หน้าร้านซึ่งเป็นที่ที่นิ้วโป้งใช้งานจริง ยังเตี้ยอยู่
 //    จึงต้องไม่มีอะไรนำหน้า (\b กันไม่ได้เพราะ ":" ไม่ใช่ขอบคำ)
-const TOUCH_OK = /(^|[\s"'`])(btn|min-h-\[44px\]|h-(1[1-9]|[2-9]\d)|min-w-\[44px\])([\s"'`]|$)/;
+// 🔴 min-w-[44px] เคยอยู่ในรายการนี้ ซึ่งแปลว่า "กว้างพอ" ถูกนับเป็น "สูงพอ"
+//    เป็นรูที่เกิดจากการแก้รอบก่อนเอง
+const TOUCH_OK = /(^|[\s"'`])(btn|min-h-\[44px\]|h-(1[1-9]|[2-9]\d))([\s"'`]|$)/;
 // ยกเว้นได้ แต่ต้องเขียนเหตุผลต่อท้ายจริงๆ ไม่ใช่แปะคำวิเศษแล้วผ่าน
 const TOUCH_EXEMPT = /ok-touch-target:\s*\S+/;
 
@@ -178,7 +186,12 @@ for (const file of files) {
     // (stripComments แทนคอมเมนต์ด้วยช่องว่างความยาวเท่าเดิม ตำแหน่งจึงตรงกันพอดี)
     if (TOUCH_EXEMPT.test(file.text.slice(Math.max(0, m.index - 400), m.index))) continue;
     if (TOUCH_EXEMPT.test(attrs)) continue;
-    if (TOUCH_OK.test(attrs)) continue;
+    // 🔴 ต้องดูเฉพาะค่าใน className ไม่ใช่ทั้งก้อน attribute
+    //    ไม่งั้น aria-label="btn" หรือ href="/btn" จะถูกนับว่าเป็นคลาส btn
+    const classes = [...attrs.matchAll(/className=(?:"([^"]*)"|\{([^}]*)\})/g)]
+      .map((c) => c[1] || c[2] || "")
+      .join(" ");
+    if (TOUCH_OK.test(classes)) continue;
     fail("touch-target", file.rel, n, `<${m[1]}> ไม่รับประกันความสูง 44px — ใส่ min-h-[44px] ใช้ <Button> หรือเขียน ok-touch-target พร้อมเหตุผล`);
   }
 }
@@ -192,11 +205,23 @@ for (const file of files) {
   for (const m of file.code.matchAll(/<([A-Za-z][\w.]*)\b/g)) {
     if (INTERACTIVE.has(m[1])) continue;
     const attrs = readTag(file.code, m.index + m[0].length);
-    if (!/\bon(Click|MouseDown|MouseUp|PointerDown)\b/.test(attrs)) continue;
+    if (!/\bon(Click|MouseDown|MouseUp|PointerDown|PointerUp|TouchStart|TouchEnd)\b/.test(attrs)) continue;  // onKeyDown ไม่ใช่การกดด้วยเมาส์ เช่น Esc บนฟอร์ม
     if (/\brole="button"/.test(attrs) && /\bonKeyDown\b/.test(attrs) && /\btabIndex\b/.test(attrs)) continue;
     const n = file.code.slice(0, m.index).split("\n").length;
     fail("clickable-nonbutton", file.rel, n, `<${m[1]}> รับการกด แต่ไม่ใช่ปุ่ม — ใช้ <button> แทน`);
   }
+}
+
+// ── กฎ 7ค · ห้ามสื่อสาร "กำลังทำงาน" ด้วยการทำให้จาง
+//    ปุ่มที่กำลังทำงานยังพูดอยู่ — ป้ายมันเปลี่ยนเป็น "กำลังบันทึก..." ซึ่งเป็นข้อมูล
+//    ชิ้นเดียวที่บอกว่าระบบยังไม่ตาย ทำให้จางคือทำให้ข้อความที่สำคัญที่สุดในจังหวะนั้น
+//    อ่านยากที่สุด (วัดแล้วเคยเหลือ 2.49:1 บนปุ่มลองใหม่)
+for (const file of files) {
+  file.code.split("\n").forEach((line, i) => {
+    if (/disabled:opacity|aria-busy[^}]*opacity/.test(line)) {
+      fail("busy-not-faded", file.rel, i + 1, "ทำให้ปุ่มจางตอนกำลังทำงาน — ใช้ป้ายที่เปลี่ยนข้อความแทน");
+    }
+  });
 }
 
 // ── กฎ 8 · ระบบดีไซน์อยู่ใน globals.css ซึ่งกฎ 4 มองไม่เห็นเพราะไล่แค่ไฟล์ .js
@@ -207,15 +232,20 @@ const css = readFileSync(cssPath, "utf8");
   let depth = 0;
   let inRoot = false;
   css.split("\n").forEach((line, i) => {
-    if (/:root|prefers-color-scheme/.test(line)) inRoot = true;
+    // 🔴 ต้องดูจาก "โค้ด" ไม่ใช่ทั้งบรรทัด — คอมเมนต์ภาษาไทยที่มีคำว่า :root
+    //    เคยเปิดโหมดยกเว้นค้างไว้ทั้งไฟล์ที่เหลือ (ถูกพิสูจน์มาแล้วสองรอบ)
+    const codeOnly = line.split("/*")[0].split("*/").pop();
+    if (/(^|[\s,}])(:root|@media[^{]*prefers-color-scheme)/.test(codeOnly)) inRoot = true;
     const before = depth;
     depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
     if (inRoot && depth <= 0) inRoot = false;
+    // ไม่ต้องยกเว้น color-mix() เลย — การใช้งานที่ถูกต้องรับแต่ var(--token)
+    // ซึ่งไม่เข้าเงื่อนไข COLOUR อยู่แล้ว ถ้ามีค่าสีดิบอยู่ข้างในก็ควรถูกจับ
     const code = line.split("/*")[0];
     // ห้ามทุก "รูปแบบ" ของค่าสี ไม่ใช่เฉพาะ #hex ซึ่งเป็นรูปแบบที่บังเอิญเจอครั้งก่อน
     // สีที่เขียนเป็น rgb() hsl() oklch() ก็ไม่พลิกตามโหมดมืดเหมือนกันทุกประการ
     const COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/;
-    if (!inRoot && COLOUR.test(code) && !/@font-face|url\(|color-mix\(/.test(code)) {
+    if (!inRoot && COLOUR.test(code) && !/@font-face|url\(/.test(code)) {
       fail("css-hardcoded-color", "nextjs/styles/globals.css", i + 1, `ค่าสีตายตัวนอกบล็อกตัวแปร: ${code.trim()}`);
     }
     void before;
@@ -288,6 +318,7 @@ const PAIRS = [
   ["--primary-border", "--surface", 3, "ขอบปุ่มหลัก", "dark"],
   ["--checked-border", "--surface", 3, "ขอบช่องติ๊กตอนติ๊กแล้ว"],
   ["--on-danger", "--danger-solid", 4.5, "ตัวอักษรบนปุ่มอันตราย"],
+  ["--amber", "--header-bg", 3, "ขอบป้ายแพ็กเกจบนแถบหัวเว็บ"],
 ];
 for (const [scope, set, key] of [["โหมดสว่าง", light, "light"], ["โหมดมืด", { ...light, ...dark }, "dark"]]) {
   for (const [fg, bg, need, what, only] of PAIRS) {
@@ -327,7 +358,10 @@ for (const rel of ["CLAUDE.md", "docs/ui-guide.md", "docs/brand.md"]) {
   // brand.md เขียนค่าสีไว้ 2 แบบ: ในย่อหน้าอธิบาย และในตารางที่คั่นด้วย |
   // 🔴 เวอร์ชันแรกอ่านได้แบบเดียว คือแบบที่ token ตัวที่เป็นต้นเหตุบังเอิญใช้
   //    ตารางสีหลัก 11 แถวซึ่งไฟล์เรียกว่า "ต้นฉบับเดียว" จึงไม่เคยถูกตรวจเลย
-  const DECL = /`(--[\w-]+)`\s*(?:\||\s)\s*`(#[0-9a-fA-F]{3,8})`(?:\s*(?:light|สว่าง))?(?:\s*(?:\/|\|)\s*`?(#[0-9a-fA-F]{3,8})`?\s*(?:dark|มืด))?/g;
+  // 🔴 เวอร์ชันก่อนบังคับให้มีคำว่า dark ต่อท้ายค่าที่สอง ซึ่งมีเฉพาะในย่อหน้า
+  //    แถวในตารางเขียนว่า | `--muted` | `#4A6268` | `#9DB6BB` | ไม่มีคำว่า dark
+  //    ผลคือค่าโหมดมืด 21 จาก 24 ตัวไม่เคยถูกตรวจเลย ทั้งที่เพิ่งเพิ่มตารางมาเพื่อการนี้
+  const DECL = /`(--[\w-]+)`\s*(?:\||\s)\s*`(#[0-9a-fA-F]{3,8})`(?:\s*(?:light|สว่าง))?(?:\s*(?:\/|\|)\s*(?:`(#[0-9a-fA-F]{3,8})`|—)\s*(?:dark|มืด)?)?/g;
   for (const m of brand.matchAll(DECL)) {
     const [, name, lightHex, darkHex] = m;
     const n = brand.slice(0, m.index).split("\n").length;
