@@ -30,7 +30,14 @@
 
 1. **+ New → GitHub Repo** → เลือก `S-Nithit/LEBIS-Project`
 2. ตั้ง **Root Directory** เป็น `backend-api`
+   ที่ **Settings → Source → Root Directory**
    Railway จะเจอ `Dockerfile` ในนั้นแล้ว build ให้เอง ไม่ต้องตั้ง build command
+
+   🔴 **ต้องกดในหน้าเว็บเท่านั้น** Railway CLI ไม่มีคำสั่งตั้งค่านี้
+   (ตรวจครบทุกคำสั่งของ CLI 4.44 แล้ว) และถ้าไม่ตั้ง build จะล้มทุกครั้ง
+   — ดูหัวข้อแก้ปัญหาท้ายไฟล์
+
+   ตรวจด้วยว่า **Branch** เป็น `dev` ไม่ใช่ `main`
 3. แท็บ **Variables** ใส่ตัวแปรตามตารางนี้
 
    | ตัวแปร | ค่าที่ใส่ | หมายเหตุ |
@@ -57,7 +64,7 @@
    ไม่ต้องตั้ง `PORT` — Railway กำหนดมาให้เอง และ `Dockerfile` อ่านค่านั้นแล้ว
 
 4. แท็บ **Settings → Networking → Generate Domain** เพื่อขอ URL สาธารณะ
-   จะได้หน้าตาประมาณ `https://lebis-api-production.up.railway.app`
+   ของโปรเจกต์นี้ได้มาเป็น `https://lebis-project-production.up.railway.app`
 5. ตรวจว่าขึ้นจริง — เปิด `<URL>/api/health` ต้องได้
 
    ```json
@@ -94,16 +101,25 @@
 1. [vercel.com](https://vercel.com) → **Add New → Project** → เลือก repo เดียวกัน
 2. ตั้ง **Root Directory** เป็น `nextjs`
    Framework Preset จะขึ้นเป็น Next.js เอง ไม่ต้องแก้ build command
-3. **Environment Variables** ใส่ตัวเดียว
+   ค่านี้ก็ต้องกดในหน้าเว็บเหมือนกัน
+
+3. 🔴 **เปลี่ยน Production Branch เป็น `dev`**
+   ที่ **Settings → Environments → Production**
+
+   Vercel ตั้ง Production Branch เป็น `main` มาให้เองตอนสร้างโปรเจกต์
+   ถ้าไม่เปลี่ยน การ push เข้า `dev` จะถูก deploy เป็น Preview เท่านั้น
+   เว็บจริงจะค้างอยู่ที่โค้ดของ `main` ซึ่งเก่ากว่า และจะดูเหมือนว่า
+   "แก้โค้ดแล้วเว็บไม่อัปเดต" โดยไม่มี error ให้เห็นเลย
+4. **Environment Variables** ใส่ตัวเดียว
 
    | ตัวแปร | ค่าที่ใส่ |
    |---|---|
-   | `BACKEND_URL` | URL ของ backend จากขั้นที่ 2 เช่น `https://lebis-api-production.up.railway.app` |
+   | `BACKEND_URL` | URL ของ backend จากขั้นที่ 2 — ของโปรเจกต์นี้คือ `https://lebis-project-production.up.railway.app` |
 
    ใส่ **ไม่ต้องมี** `/api` ต่อท้าย และไม่ต้องมี `/` ปิดท้าย
    เพราะ `next.config.mjs` ต่อ `/api/:path*` ให้เองอยู่แล้ว
 
-4. กด **Deploy**
+5. กด **Deploy**
 
 > ⚠️ `BACKEND_URL` ถูกอ่านตอน build ไม่ใช่ตอนรัน ถ้าแก้ค่านี้ทีหลัง
 > ต้องสั่ง **Redeploy** ค่าใหม่ถึงจะมีผล การกด Save เฉยๆ ไม่พอ
@@ -127,6 +143,7 @@ URL ของ backend ไม่โผล่ในโค้ดฝั่งเบ�
 | ล็อกของ backend ตอนสตาร์ท | ต้องมีบรรทัด `ข้ามการใส่บัญชีทดลอง (SEED_DEMO_ACCOUNTS=false)` และบรรทัด `บัญชีผู้ดูแลระบบพร้อมใช้งาน: <อีเมลที่ตั้งไว้>` |
 | ลอง login ด้วย `demo@example.com` / `password` | **ต้องไม่ผ่าน** ถ้าผ่านแปลว่าลืมตั้ง `SEED_DEMO_ACCOUNTS=false` |
 | login ด้วย `ADMIN_EMAIL` แล้วเปิดหน้าผู้ดูแลระบบ | ต้องเข้าได้ — หน้านี้เป็นหนึ่งในหน้าที่โจทย์บังคับ ต้องเข้าได้บนลิงก์จริง |
+| สมัครสมาชิกผ่าน **โดเมนของ Vercel** แล้วไปดูว่ามีแถวเพิ่มในฐานข้อมูลของ Railway | ต้องเจอแถวนั้น — ข้อนี้คือข้อเดียวที่พิสูจน์ว่า rewrite ของ Vercel ชี้มาที่ Railway ถูกจริง ไม่ใช่แค่ทั้งสองฝั่งขึ้นได้แยกกัน · อย่าลืมลบบัญชีที่ใช้ทดสอบออก |
 
 บรรทัดสุดท้ายสำคัญที่สุดในตาราง — เป็นการตรวจว่าไม่มีบัญชีที่ทุกคนรู้รหัสผ่าน
 ค้างอยู่บนระบบจริง
@@ -172,6 +189,19 @@ EXISTS` ต่อท้ายใน `setup_db()` แทนการแก้ `CR
 กับฐานข้อมูลที่สร้างตารางไปแล้ว (คอลัมน์ที่เพิ่มทีหลังในตาราง `users` ก็ทำด้วย
 วิธีนี้ ดู `ALTER_USERS` ใน `database.py`)
 
+**วิธีเข้าไปดูฐานข้อมูลจริง** Postgres ของ Railway เปิดเฉพาะเครือข่ายภายใน
+(`postgres.railway.internal`) ต่อจากเครื่องตัวเองตรงๆ ไม่ได้ และโปรเจกต์นี้
+ไม่ได้เปิด TCP proxy ไว้ วิธีที่ใช้อยู่คือ ssh เข้าไปที่ backend แล้วสั่งจากข้างใน
+
+```bash
+railway ssh --service LEBIS-Project -- python -c "import database; print(1)"
+```
+
+ครั้งแรกต้องมี SSH key ในเครื่องก่อน (`ssh-keygen -t ed25519`) แล้วลงทะเบียน
+ด้วย `railway ssh keys add` · สคริปต์ที่มีวงเล็บหรือเครื่องหมายคำพูดจะโดน
+shell ฝั่งโน้นตีความผิด ให้ส่งแบบ base64 แทน
+`railway ssh --service <ชื่อ> -- echo <base64> \| base64 -d \| python -`
+
 **รันหลายอินสแตนซ์พร้อมกันยังไม่รองรับ** ถ้าขยายเป็นหลายอินสแตนซ์ในอนาคต
 สองตัวที่สตาร์ทพร้อมกันอาจสร้างตารางชนกัน ตอนนี้ใช้อินสแตนซ์เดียวจึงไม่มีปัญหา
 
@@ -182,7 +212,45 @@ EXISTS` ต่อท้ายใน `setup_db()` แทนการแก้ `CR
 
 ---
 
-## เมื่อ deploy เสร็จแล้ว
+## แก้ปัญหาที่เจอจริงตอน deploy ครั้งแรก
 
-ใส่ URL ที่ใช้งานได้จริงลงใน `README.md` แทนคำว่า TBD — โจทย์ระบุว่า
-URL ที่เป็น localhost ไม่นับว่าส่งงาน
+### Railway build ล้มโดยไม่มี log อะไรเลย
+
+อาการ: deployment ขึ้น FAILED ภายในไม่กี่วินาที และ build log มีบรรทัดเดียวคือ
+`scheduling build on Metal builder "builder-xxxxx"` แล้วจบ ไม่มี error ให้อ่าน
+
+สาเหตุ: **ยังไม่ได้ตั้ง Root Directory** Railway จึงดึงทั้ง repo มา build
+แล้วที่รากไม่มีทั้ง `requirements.txt` และ `package.json` (สองไฟล์นั้นอยู่ใน
+`backend-api/` กับ `nextjs/`) มันเลยล้มตั้งแต่ขั้นตัดสินใจว่าจะ build อะไร
+ซึ่งเป็นขั้นก่อนที่ log ของ build จะเริ่มบันทึก
+
+วิธีแก้: ตั้ง Root Directory เป็น `backend-api` ตามขั้นที่ 2 แล้ว deploy ใหม่
+
+### push เข้า dev แล้วเว็บจริงไม่อัปเดต
+
+สาเหตุ: Production Branch ของ Vercel ยังเป็น `main`
+วิธีแก้: Settings → Environments → Production → เปลี่ยนเป็น `dev`
+
+### ค่าไหนตั้งด้วย CLI ได้บ้าง
+
+| งาน | Railway CLI | ต้องกดในหน้าเว็บ |
+|---|---|---|
+| ผูกโปรเจกต์ · เพิ่ม Postgres · ตั้ง env · ขอ domain · อ่าน log · ssh | ✅ | — |
+| Root Directory | ❌ | ✅ |
+| Production Branch (Vercel) | ❌ | ✅ |
+
+---
+
+## สถานะปัจจุบัน
+
+ระบบขึ้นใช้งานจริงแล้ว
+
+| ส่วน | URL |
+|---|---|
+| หน้าเว็บ | https://lebis-project.vercel.app |
+| เอกสาร API | https://lebis-project-production.up.railway.app/docs |
+
+ตรวจทั้งสายแล้วว่าสมัครสมาชิกผ่านโดเมนของ Vercel แล้วข้อมูลลงถึงฐานข้อมูล
+ของ Railway จริง (บัญชีที่ใช้ทดสอบถูกลบออกแล้ว) และใน `README.md`
+ใส่ URL จริงแทนคำว่า TBD เรียบร้อย — โจทย์ระบุว่า URL ที่เป็น localhost
+ไม่นับว่าส่งงาน

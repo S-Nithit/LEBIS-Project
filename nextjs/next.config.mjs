@@ -6,7 +6,8 @@
 //
 // ตอนรันในเครื่อง: ไม่ต้องตั้งอะไร ใช้ค่า fallback ซึ่งเป็นชื่อ service ใน compose
 // ตอน deploy:     ตั้ง BACKEND_URL ที่ Vercel ให้ชี้ไป URL ของ backend บน Railway
-//                 เช่น https://lebis-api.up.railway.app (ไม่ต้องมี /api ต่อท้าย)
+//                 ของโปรเจกต์นี้คือ https://lebis-project-production.up.railway.app
+//                 (ไม่ต้องมี /api ต่อท้าย และไม่ต้องมี / ปิดท้าย)
 //
 // ⚠️ ค่านี้ถูกอ่านตอน build ไม่ใช่ตอนรัน ถ้าแก้ BACKEND_URL ที่ Vercel
 //    ต้อง redeploy ใหม่ ค่าถึงจะมีผล

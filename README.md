@@ -5,7 +5,8 @@
 ระบบจัดการสต็อกและการยืม-คืนสำหรับร้านให้เช่าอุปกรณ์ขนาดเล็ก
 — ร้านเช่ากล้อง ร้านเช่าเครื่องมือช่าง ร้านเช่าอุปกรณ์จัดงาน
 
-🔗 **ทดลองใช้งาน:** TBD (ยังไม่ขึ้นใช้งานจริง)
+🔗 **ทดลองใช้งาน:** https://lebis-project.vercel.app
+📘 **เอกสาร API:** https://lebis-project-production.up.railway.app/docs
 
 ---
 
@@ -92,10 +93,10 @@ docker compose up --build
 
 เปิดใช้งานที่
 
-| ปลายทาง | ที่อยู่ |
-|---|---|
-| หน้าเว็บ | http://localhost:3000 |
-| เอกสาร API (Swagger UI) | http://localhost:8000/docs |
+| ปลายทาง | บนเครื่องตัวเอง | บนระบบจริง |
+|---|---|---|
+| หน้าเว็บ | http://localhost:3000 | https://lebis-project.vercel.app |
+| เอกสาร API (Swagger UI) | http://localhost:8000/docs | https://lebis-project-production.up.railway.app/docs |
 
 ### บัญชีทดสอบ
 
