@@ -2,7 +2,11 @@
 //
 // ใช้ในหน้าที่ต้อง login ก่อนเข้า:
 //   const { user, loading } = useAuth({ redirectTo: "/login" });
-//   if (loading) return <p>กำลังโหลด...</p>;
+//   if (loading && !user) return <AppShell><LoadingState /></AppShell>;
+//
+// ใช้ LoadingState ไม่ใช่ <p>กำลังโหลด...</p> (docs/brand.md หัวข้อ 5 — โครงรอ
+// ไม่ใช่ตัวหมุน) และเช็ก `&& !user` ด้วย ไม่งั้นหน้าจะวูบเป็นจอว่างทุกครั้งที่โหลดซ้ำ
+// ก้อนตัวอย่างที่รันได้จริงทั้งหน้าอยู่ที่ pages/template.js
 //
 // ใช้ในหน้าที่ไม่บังคับ login (เช่นหน้าแรก) ก็เรียก useAuth() เปล่าๆ
 //

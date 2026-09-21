@@ -15,82 +15,35 @@
    ถ้าใส่ค่าสีเอง โหมดมืดจะพัง
 2. **ห้ามตั้งขนาดตัวอักษรเอง** ใช้คลาส `t-page-title` `t-section` `t-body` `t-label` `t-caption` `t-eyebrow`
 3. **ข้อความทุกคำต้องผ่าน `t()`** เพราะเว็บนี้มีสองภาษา (ดูหัวข้อ "ข้อความสองภาษา")
-4. **ข้อผิดพลาดต้องบอกใต้ช่องที่ผิดเสมอ** ไม่ใช่บอกผ่าน toast อย่างเดียว
+4. **ข้อผิดพลาดต้องบอกใต้ช่องที่ผิดเสมอ** ห้ามบอกผ่าน toast (brand.md หัวข้อ 6)
    เพราะ toast ไม่ได้บอกว่าช่องไหนผิดและหายไปเอง (ดูหัวข้อ "บอกข้อผิดพลาดให้ถูกวิธี")
 
 ---
 
 ## โครงหน้าที่ถูกต้อง
 
-```jsx
-import { AppShell } from "@/components/AppShell";
-import { PageHeader } from "@/components/PageHeader";
-import { EmptyState } from "@/components/EmptyState";
-import { LoadingState } from "@/components/LoadingState";
-import { FormError } from "@/components/FormError";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { errorMessage } from "@/lib/api";
-import { useAuth } from "@/lib/useAuth";
-import { useLanguage } from "@/lib/useLanguage";
+> ⚠️ แม่แบบไม่ได้อยู่ในเอกสารนี้แล้ว — อยู่ที่ **`nextjs/pages/template.js`**
+>
+> ก็อปทั้งไฟล์นั้นไปเริ่มหน้าใหม่ได้เลย และเปิดดูของจริงที่ `/template` ตอนรัน dev
+>
+> ย้ายออกมาเพราะก้อนโค้ดในเอกสารไม่มีใครตรวจให้ว่ารันได้จริง เคยพลาดมาแล้วสองรอบ
+> (รอบแรกลืม import · รอบสองใช้ตัวแปรที่ไม่ได้ประกาศ) ทั้งสองครั้งกว่าจะรู้คือตอน
+> เอาไปใช้แล้วเจอจอขาว ไฟล์จริงถูก build ทุกครั้ง ถ้าพังจะพังตั้งแต่ตอน build
 
-export default function Workspace() {
-  // loadError = ติดต่อเซิร์ฟเวอร์ไม่ได้ (token ยังใช้ได้) · reload = ลองใหม่
-  const { user, loading, loadError, reload, logout } = useAuth({ redirectTo: "/login" });
-  const { t } = useLanguage();
+หน้าทุกหน้าในระบบมี **4 สถานะ** เสมอ และแม่แบบวางครบทั้งสี่ไว้ให้แล้ว
 
-  // สถานะที่ 1 — กำลังโหลดครั้งแรก
-  if (loading && !user) {
-    return (
-      <AppShell>
-        <LoadingState />
-      </AppShell>
-    );
-  }
+| สถานะ | เงื่อนไข | สิ่งที่วาด |
+|---|---|---|
+| 1 · กำลังโหลดครั้งแรก | `loading && !user` | `<LoadingState />` |
+| 2 · ยังไม่ได้เข้าสู่ระบบ | `!user && !loadError` | `return null` (useAuth พาไปหน้า login แล้ว) |
+| 3 · โหลดไม่สำเร็จ | `!user` | `<FormError onRetry={reload} retrying={loading} />` |
+| 4 · มีข้อมูลแล้ว | นอกนั้น | เนื้อหาจริงของหน้า |
 
-  // สถานะที่ 2 — ยังไม่ได้เข้าสู่ระบบ (useAuth พาไปหน้า login ให้แล้ว)
-  if (!user && !loadError) return null;
+ข้างในสถานะที่ 4 ข้อมูลของหน้าเองก็มีอีก 4 สถานะ (กำลังโหลด / พลาด / ว่าง / มี)
+แม่แบบวางไว้ครบเหมือนกัน
 
-  // สถานะที่ 3 — โหลดไม่สำเร็จเพราะเน็ตหรือเซิร์ฟเวอร์ ต้องมีทางให้ลองใหม่
-  if (!user) {
-    return (
-      <AppShell onLogout={logout}>
-        <PageHeader title={t("workspace.title")} />
-        <FormError message={errorMessage(loadError, t)} onRetry={reload} retrying={loading} />
-      </AppShell>
-    );
-  }
-
-  // สถานะที่ 4 — มีข้อมูลแล้ว
-  return (
-    <AppShell user={user} onLogout={logout}>
-      <PageHeader
-        title={t("workspace.title")}
-        description={t("workspace.subtitle")}
-        action={<Button>{t("workspace.addItem")}</Button>}
-      />
-
-      {/* ในหน้ายังมีอีก 2 สถานะของข้อมูล: ยังไม่มีข้อมูล / มีข้อมูล */}
-      {itemsLoading ? (
-        <LoadingState />
-      ) : items.length === 0 ? (
-        <EmptyState
-          title={t("workspace.emptyTitle")}
-          description={t("workspace.emptyBody")}
-          action={<Button>{t("workspace.addItem")}</Button>}
-        />
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("workspace.listTitle")}</CardTitle>
-          </CardHeader>
-          <CardContent>{/* ตารางของคุณ */}</CardContent>
-        </Card>
-      )}
-    </AppShell>
-  );
-}
-```
+🔴 สถานะที่ 3 ห้ามข้าม ถ้าข้ามแล้วเน็ตหลุด หน้าจะหมุนค้างเป็น "กำลังโหลด..."
+ตลอดไป ซึ่งเป็นการโกหกผู้ใช้ว่าระบบยังทำงานอยู่ทั้งที่เลิกพยายามไปแล้ว
 
 `AppShell` จัดการแถบหัวเว็บ โลโก้ ชื่อผู้ใช้ ป้ายแพ็กเกจ ปุ่มสลับภาษา
 ปุ่มออกจากระบบ ความกว้างเนื้อหา และระยะขอบบนมือถือให้หมดแล้ว
@@ -142,7 +95,7 @@ export default function Workspace() {
 ทุกหน้าที่มีฟอร์มทำเหมือนกันหมด 3 ขั้น
 
 ```jsx
-import { apiFetch, errorMessage } from "@/lib/api";
+import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
 
 const [errors, setErrors] = useState({});
 
@@ -176,9 +129,15 @@ async function handleSubmit(event) {
     const message = errorMessage(error, t);
 
     // backend บอกมาด้วยว่าผิดที่ช่องไหน (error.field) ก็แปะที่ช่องนั้น
-    // ไม่บอก = ขึ้นเป็นข้อความระดับฟอร์ม
+    // 🔴 ต้องผ่าน fieldToInputId() เสมอ ห้ามใช้ error.field ดิบๆ
+    //    backend ตั้งชื่อช่องแบบ shop_name แต่ id ของ <input> คือ shopName
+    //    ถ้าไม่แปลง ข้อความจะไปแปะกับช่องที่ไม่มีอยู่จริง หน้าจะเงียบสนิท
+    //    ผู้ใช้กดส่งแล้วไม่มีอะไรเกิดขึ้น และไม่มีทางรู้ว่าต้องแก้อะไร
+    // ไม่บอกช่อง = ขึ้นเป็นข้อความระดับฟอร์ม
     if (error?.field) {
-      setErrors({ [error.field]: message });
+      setFormError("");
+      setErrors({ [fieldToInputId(error.field)]: message });
+      document.getElementById(fieldToInputId(error.field))?.focus();
     } else {
       setFormError(message);
     }
@@ -308,7 +267,9 @@ const { t } = useLanguage();
 - [ ] ข้อความทุกคำผ่าน `t()` และเติมครบทั้ง th และ en
 - [ ] หน้ามีครบ 4 สถานะ: กำลังโหลด / โหลดไม่สำเร็จ (มีปุ่มลองใหม่) / ไม่มีข้อมูล / มีข้อมูล
 - [ ] ทุกการกดที่เปลี่ยนข้อมูลมี toast ตอนสำเร็จ · ตอนพลาดขึ้นในหน้า ไม่ใช่ toast
-- [ ] ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่แค่ toast
+- [ ] ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่ toast
+- [ ] ข้อผิดพลาดที่ backend ระบุช่องมา ผ่าน `fieldToInputId(error.field)` ไม่ใช่ `error.field` ดิบ
+- [ ] `node scripts/check-conventions.mjs` ผ่าน (ตรวจกฎข้างบนให้อัตโนมัติ)
 - [ ] ข้อความผิดพลาดจาก backend ผ่าน `errorMessage(error, t)` ไม่ใช่ `error.message`
 - [ ] เปิดที่ 390px แล้วไม่มีอะไรล้นออกนอกจอ
 - [ ] ลองสลับเป็นโหมดมืดแล้วยังอ่านออกทุกบรรทัด

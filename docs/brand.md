@@ -91,6 +91,14 @@ re-draws the logo by hand.
 > edges, which carry no such requirement.
 > *(Widened 21 Sep 2569 from "input borders only" — the narrower wording left
 > secondary buttons failing the same criterion the token was introduced to satisfy.)*
+>
+> **Amendment — 21 Sep 2569 · badge text.** `--amber-text` `#99641A` and the
+> success green are specified against **white**. A status badge does not sit on
+> white: it sits on an 8% tint of its own hue, which lifts the background and drops
+> the measured ratio to 4.53:1 and 4.51:1 — passing, but by less than rounding.
+> Badge text therefore uses its own darker pair, `--badge-warning-text` `#8A5915`
+> and `--badge-success-text` `#256A4C`, measured at 5.40:1 and 5.85:1 on the tint.
+> `--amber-text` itself is unchanged and stays pinned for text on white.
 > `--primary-border` `#2E8C9C` — dark mode only, the 1px edge on the primary
 > button, which otherwise sits at 1.8:1 against the card.
 > `--header-line` `#4A7D86` light / `#3F6D76` dark — the outline of buttons that
@@ -131,11 +139,33 @@ Two faces, both from Google Fonts.
 
 Never use Inter, Roboto, or Arial.
 
+> **Amendment — 21 Sep 2569 · Thai text.** Space Grotesk and DM Sans carry no Thai
+> glyphs, and LEBIS is a Thai-first product. Thai is set in **Prompt**, self-hosted
+> from `nextjs/public/Prompt/`, listed after DM Sans in the body stack so Latin
+> characters still fall to DM Sans. Prompt is not a third brand voice and is never
+> chosen for Latin text; it exists so a Thai sentence is not rendered in whatever
+> the operating system happens to install. Recorded here because the rule above is
+> absolute and this is a real exception to it — an exception nobody wrote down is
+> indistinguishable from a mistake.
+
 ---
 
 ## 4. Shape and space
 
 - Spacing scale: 4, 8, 12, 16, 24, 32, 48, 64. Nothing in between.
+
+> **Amendment — 21 Sep 2569 · where the scale does not apply.** "Nothing in
+> between" governs **layout** — gaps, padding, margins. It does not govern the
+> intrinsic size of a control, which is set by the touch target and by the glyph
+> inside it, not by the rhythm of the page. The values currently outside the scale
+> are all of that kind: the 22px checkbox box and its 6px radius (a 12px radius on a
+> 22px square reads as a circle), the 44px control height that WCAG 2.5.8 fixes, the
+> 76px reveal button sized to the longest word it must hold in either language, and
+> the 1.625rem page-title line height, which is a type metric. Anything that
+> positions one element relative to another still comes from the scale. Written down
+> because three colour deviations were amended here and six geometry deviations were
+> not — a spec that is enforced on one axis and ignored on another teaches the team
+> that it is decorative.
 - Border radius: 8px for inputs and buttons, 12px for small cards and badges,
   20px for large cards and panels.
 - Borders are 1px `--line`. Do not use shadows for ordinary cards; a card is a

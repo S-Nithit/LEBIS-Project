@@ -2,23 +2,10 @@
 // แถบหัวเว็บสีหมึกเข้ม มีโลโก้ซ้าย ชื่อผู้ใช้กับปุ่มออกจากระบบขวา
 // เนื้อหาของหน้าอยู่ข้างล่างบนพื้น --paper (ตาม docs/brand.md หัวข้อ 5)
 //
-// วิธีใช้ (คัดลอกทั้งก้อนนี้ไปเริ่มหน้าใหม่ได้เลย)
-//
-//   import { AppShell } from "@/components/AppShell";
-//   import { PageHeader } from "@/components/PageHeader";
-//   import { useAuth } from "@/lib/useAuth";
-//
-//   export default function Workspace() {
-//     const { user, loading, logout } = useAuth({ redirectTo: "/login" });
-//     if (loading) return <AppShell><LoadingState /></AppShell>;
-//
-//     return (
-//       <AppShell user={user} onLogout={logout}>
-//         <PageHeader title="อุปกรณ์ทั้งหมด" description="..." />
-//         {/* เนื้อหาของหน้าใส่ตรงนี้ */}
-//       </AppShell>
-//     );
-//   }
+// วิธีใช้ — อย่าคัดลอกจากคอมเมนต์ตรงนี้
+// ก้อนตัวอย่างที่รันได้จริงอยู่ที่ pages/template.js เปิดไฟล์นั้นแล้วก็อปทั้งไฟล์
+// (ไฟล์นั้นถูก build ทุกครั้งที่ build โปรเจกต์ ถ้ามันพัง จะพังตอน build ไม่ใช่
+//  ตอนเพื่อนก็อปไปใช้แล้วเจอจอขาว — คอมเมนต์ในไฟล์ไม่มีใครตรวจให้)
 
 import Link from "next/link";
 
@@ -45,7 +32,11 @@ export function AppShell({ user, onLogout, children }) {
         <div className="app-container flex h-16 items-center justify-between gap-4">
           {/* โลโก้พากลับหน้าบัญชี ไม่ใช่ "/" เพราะหน้าแรกยังเป็นหน้าตัวอย่างของ boilerplate
               เมื่อหน้า workspace ของ Neo เสร็จแล้วให้เปลี่ยนปลายทางตรงนี้ */}
-          <Link href="/account" aria-label="LEBIS" className="rounded-control">
+          <Link
+            href="/account"
+            aria-label="LEBIS"
+            className="inline-flex min-h-[44px] items-center rounded-control"
+          >
             <Logo variant="dark" size={26} />
           </Link>
 
@@ -65,11 +56,7 @@ export function AppShell({ user, onLogout, children }) {
             <LanguageToggle onDark />
 
             {onLogout ? (
-              <Button
-                variant="secondary"
-                onClick={onLogout}
-                className="border-header-line bg-transparent text-header-fg hover:border-header-fg"
-              >
+              <Button variant="onDark" onClick={onLogout}>
                 {t("nav.logout")}
               </Button>
             ) : null}
@@ -84,10 +71,12 @@ export function AppShell({ user, onLogout, children }) {
           <span className="t-caption">{t("brand.tagline")}</span>
 
           {/* ทางเข้าความช่วยเหลือ มีอยู่ในทุกหน้าที่ใช้ AppShell
-              ไม่ใช่มีแค่ในหน้าเข้าสู่ระบบเหมือนเดิม */}
+              🔴 ป้ายต้องตรงกับหัวข้อของหน้าปลายทาง ไม่ใช่แค่ "ต้องการความช่วยเหลือ"
+                 ลอยๆ เพราะหน้าปลายทางพูดเรื่องการเข้าใช้งานอย่างเดียว
+                 ป้ายที่สัญญากว้างกว่าของที่มีจริง คือการหลอกให้กดแล้วผิดหวัง */}
           <Link
             href="/forgot-password"
-            className="t-caption underline underline-offset-4 hover:no-underline"
+            className="t-caption inline-flex min-h-[44px] items-center underline underline-offset-4 hover:no-underline"
           >
             {t("nav.helpSignedIn")}
           </Link>

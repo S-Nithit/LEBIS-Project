@@ -13,7 +13,7 @@
 // 🔴 validate ในไฟล์นี้เป็นแค่ความสะดวกของผู้ใช้ ตัวที่กันจริงคือ Pydantic
 // กับ dependency ที่ฝั่ง backend เพราะคนแก้ JavaScript ในเบราว์เซอร์ได้
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -42,6 +42,17 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  const emailRef = useRef(null);
+
+  // โฟกัสช่องแรกให้เฉพาะเครื่องที่มีเมาส์ (คอมพิวเตอร์) — กฎเดียวกับหน้าเข้าสู่ระบบ
+  // บนมือถือไม่โฟกัส เพราะคีย์บอร์ดจะเด้งขึ้นมาบังครึ่งจอทันทีที่เปิดหน้า
+  // (หน้านี้ไม่เติมอีเมลที่เคยใช้ให้เหมือนหน้าเข้าสู่ระบบ เพราะคนที่มาสมัคร
+  //  กำลังจะสร้างบัญชีใหม่ การเติมอีเมลของบัญชีเดิมให้คือการชวนให้สมัครซ้ำ)
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      emailRef.current?.focus();
+    }
+  }, []);
 
   // ล้างข้อความผิดพลาดของช่องที่ผู้ใช้เริ่มแก้ (FormField เรียกให้เอง)
   function clearError(field) {
@@ -156,6 +167,7 @@ export default function Register() {
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
           <FormField
+            ref={emailRef}
             id="email"
             label={t("register.email")}
             hint={t("register.emailHint")}

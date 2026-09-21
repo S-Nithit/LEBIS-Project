@@ -7,7 +7,7 @@
     แล้วค่อยลงมาแก้ไฟล์นี้ที่เดียว ทั้งเว็บจะเปลี่ยนตาม */
 
 /* ---------------------------------------------------------------------------
-   Space Grotesk กับ DM Sans โหลดจาก Google Fonts ใน pages/_app.js (brand.md หัวข้อ 3)
+   Space Grotesk กับ DM Sans โหลดจาก Google Fonts ใน pages/_document.js (brand.md หัวข้อ 3)
    ทั้งสองตัวไม่มีตัวอักษรไทย เลยใส่ Prompt ที่มากับ boilerplate ต่อท้ายไว้
    เพื่อให้ภาษาไทยได้ฟอนต์ที่ออกแบบมาเหมือนกันทุกเครื่อง ไม่ใช่ฟอนต์ของระบบ
    ที่หน้าตาต่างกันระหว่าง Mac กับ Windows
@@ -52,8 +52,12 @@
     --line-strong: #7d9094;
     /* สีตัวอักษรของป้ายสถานะขนาด 13px บนพื้นอ่อนของสีตัวเอง
        เข้มกว่าสีสถานะปกติเล็กน้อย เพื่อให้วัดจริงแล้วผ่าน 4.5:1 ทุกป้าย */
-    --badge-success-text: #2f7d5d;
-    --badge-warning-text: #99641a;
+    /* ตัวอักษรบนป้ายสถานะเข้มกว่า --amber-text / --success ปกติ
+       เพราะป้ายมีพื้นเป็นสีอ่อนของตัวเอง ไม่ใช่พื้นขาว ค่าที่ผ่านบนพื้นขาว
+       พอมาอยู่บนพื้นอ่อนจะเหลือ 4.51:1 กับ 4.53:1 ซึ่งเฉียดเกณฑ์เกินไป
+       (ดู docs/brand.md หัวข้อ 2 ฉบับแก้ไข 21 ก.ย. 2569) */
+    --badge-success-text: #256a4c;
+    --badge-warning-text: #8a5915;
     --badge-danger-text: #b3453b;
     --paper: #f7f9f9; /* พื้นหลังของหน้า */
     --surface: #ffffff; /* การ์ด ตาราง ช่องกรอก */
@@ -398,13 +402,33 @@
     border-color: var(--ink);
   }
 
+  /* ปุ่มจางก็ยังเป็นปุ่ม เวลาเอาเมาส์ชี้หรือเลื่อนคีย์บอร์ดมาถึง ต้องมีขอบขึ้นมา
+     ให้เห็นว่ากดได้ตรงไหนถึงตรงไหน (docs/brand.md หัวข้อ 2 — ขอบของสิ่งที่กดได้
+     ใช้ --line-strong) ตอนอยู่เฉยๆ ปล่อยให้โปร่ง เพราะมันคือปุ่มรองสุดในหน้า */
   .btn-ghost {
     background: transparent;
     color: var(--muted);
+    border-color: transparent;
   }
 
-  .btn-ghost:hover:not(:disabled) {
+  .btn-ghost:hover:not(:disabled),
+  .btn-ghost:focus-visible {
     color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  /* ปุ่มที่วางบนแถบหัวเว็บสีหมึก — สีทั้งชุดอยู่ในไฟล์นี้ ไม่ใช่เขียนทับเป็น
+     className ในหน้า เพราะ components/ui/button.js เขียนไว้ว่าห้ามแก้สีปุ่มในหน้าตัวเอง
+     ถ้าปล่อยให้แต่ละหน้าเขียนทับเอง วันหนึ่งจะมีปุ่มบนแถบหัวเว็บสามแบบที่ไม่เหมือนกัน */
+  .btn-on-dark {
+    background: transparent;
+    color: var(--header-fg);
+    border-color: var(--header-line);
+  }
+
+  .btn-on-dark:hover:not(:disabled),
+  .btn-on-dark:focus-visible {
+    border-color: var(--header-fg);
   }
 
   .btn-danger {

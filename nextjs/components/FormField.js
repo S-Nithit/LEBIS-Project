@@ -14,7 +14,7 @@
 //     required
 //   />
 //
-// 🔴 เวลาผู้ใช้กรอกผิด ให้ส่งข้อความผ่าน prop error เสมอ อย่าบอกผ่าน toast อย่างเดียว
+// 🔴 เวลาผู้ใช้กรอกผิด ให้ส่งข้อความผ่าน prop error เสมอ ห้ามบอกผ่าน toast
 //    เพราะ toast ไม่ได้บอกว่าช่องไหนผิด และหายไปเองภายในไม่กี่วินาที
 //    ตัว component จัดการให้แล้วทั้งกรอบสีแดง ข้อความใต้ช่อง และการบอกโปรแกรม
 //    อ่านหน้าจอ (aria-invalid / aria-describedby) — หน้าเว็บแค่ส่งข้อความมา
@@ -46,7 +46,13 @@ export const FormField = forwardRef(function FormField(
   }
   const [revealed, setRevealed] = useState(false);
   const inputType = isPassword && revealed ? "text" : inputProps.type;
-  const hintId = hint ? `${id}-hint` : undefined;
+  // ถึงขีดสูงสุดแล้วเบราว์เซอร์จะกลืนตัวอักษรที่พิมพ์ต่อโดยไม่บอกอะไรเลย
+  // คนที่วางข้อความยาวมาจะเห็นของหายไปครึ่งหนึ่งโดยไม่รู้ว่าเพราะอะไร
+  const atLimit =
+    typeof inputProps.maxLength === "number" &&
+    String(inputProps.value ?? "").length >= inputProps.maxLength;
+  const shownHint = atLimit ? t("field.limit") : hint;
+  const hintId = shownHint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
 
   // บอกโปรแกรมอ่านหน้าจอว่าข้อความไหนอธิบายช่องนี้อยู่
@@ -80,7 +86,11 @@ export const FormField = forwardRef(function FormField(
             onClick={() => setRevealed((current) => !current)}
             aria-pressed={revealed}
             aria-label={`${revealed ? t("field.hide") : t("field.show")} ${label}`}
-            className="absolute right-1 top-1/2 inline-flex min-h-[44px] w-[76px] -translate-y-1/2 items-center justify-center whitespace-nowrap rounded-control border border-line-strong bg-surface text-label font-medium text-muted hover:border-ink hover:text-ink"
+            /* ปุ่มนี้ต้องไม่ดูเหมือนช่องกรอกอีกช่องซ้อนอยู่ในช่องกรอก
+               เดิมใช้ขอบ 1px --line-strong กับมุมมนชุดเดียวกับช่อง ขอบเลยทับกันพอดี
+               ตอนนี้ไม่มีขอบรอบตัว มีแค่เส้นคั่นด้านซ้าย + พื้นคนละสีกับช่อง
+               ยังเห็นขอบเขตของสิ่งที่กดได้ (brand.md หัวข้อ 2) แต่ไม่ปลอมเป็นช่องกรอก */
+            className="absolute right-0 top-1/2 inline-flex min-h-[44px] w-[76px] -translate-y-1/2 items-center justify-center whitespace-nowrap rounded-r-control border-l border-line-strong bg-paper text-label font-medium text-muted hover:bg-surface hover:text-ink"
           >
             {revealed ? t("field.hide") : t("field.show")}
           </button>
@@ -95,9 +105,9 @@ export const FormField = forwardRef(function FormField(
         </p>
       ) : null}
 
-      {hint ? (
+      {shownHint ? (
         <p id={hintId} className="t-caption mt-2">
-          {hint}
+          {shownHint}
         </p>
       ) : null}
     </div>

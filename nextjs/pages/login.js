@@ -6,7 +6,7 @@
 //   3. FastAPI: routes/auth.py -> login() -> verify_password() เทียบ hash ใน DB
 //   4. ถูก -> backend คืน JWT -> saveToken() เก็บลง localStorage -> ไปหน้าแรก
 //      ผิด -> backend ตอบ 401 พร้อมรหัส invalid_credentials
-//             -> errorMessage() แปลเป็นภาษาที่ผู้ใช้เลือก -> ขึ้นทั้งใต้ช่องและเป็น toast
+//             -> errorMessage() แปลเป็นภาษาที่ผู้ใช้เลือก -> ขึ้นในหน้า ไม่ใช่ toast
 //
 // หน้าตาทั้งหมดมาจากระบบดีไซน์กลาง ไม่มีการกำหนดสีหรือขนาดเองแม้แต่จุดเดียว
 // อยากรู้ว่ามีอะไรให้ใช้บ้าง อ่าน docs/ui-guide.md
@@ -77,7 +77,10 @@ export default function Login() {
     // ตรวจความยาวตั้งแต่ในหน้าเว็บ ไม่งั้นรหัสที่ยาวเกินจะถูกส่งไปถึง backend
     // แล้วได้ข้อความคนละแบบกับ "อีเมลหรือรหัสผ่านไม่ถูกต้อง" ซึ่งบอกใบ้ว่า
     // รหัสที่พิมพ์ผิดรูปแบบ ไม่ใช่ผิดรหัส
-    else if (new Blob([password]).size > 72) found.password = t("validate.passwordLong");
+    // ข้อความคนละใบกับหน้าสมัคร — ที่นี่รหัสที่ยาวเกินแปลว่าพิมพ์เกินมา
+    // ไม่ใช่ว่าตั้งรหัสไว้ยาวเกิน เพราะรหัสยาวขนาดนั้นสมัครไม่ผ่านตั้งแต่แรก
+    // บอกว่า "กรุณาใช้ไม่เกิน 24 ตัวอักษร" กับคนที่มีรหัสอยู่แล้ว คือบอกสิ่งที่ไม่จริง
+    else if (new Blob([password]).size > 72) found.password = t("validate.passwordLongLogin");
     return found;
   }
 
@@ -210,7 +213,7 @@ export default function Login() {
 
               <Link
                 href="/forgot-password"
-                className="t-caption underline underline-offset-4 hover:no-underline"
+                className="t-caption inline-flex min-h-[44px] items-center underline underline-offset-4 hover:no-underline"
               >
                 {t("login.forgot")}
               </Link>

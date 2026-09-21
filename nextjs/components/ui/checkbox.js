@@ -12,7 +12,7 @@
 
 import { cn } from "@/lib/utils";
 
-export function Checkbox({ id, label, hint, className, ...inputProps }) {
+export function Checkbox({ id, label, className, ...inputProps }) {
   return (
     <label
       htmlFor={id}

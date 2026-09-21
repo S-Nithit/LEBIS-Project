@@ -29,7 +29,7 @@ const TEXT = {
 
     "nav.logout": "ออกจากระบบ",
     "nav.language": "เลือกภาษา",
-    "nav.helpSignedIn": "ต้องการความช่วยเหลือ",
+    "nav.helpSignedIn": "ช่วยเหลือเรื่องการเข้าสู่ระบบ",
 
     "role.free": "แพ็กเกจฟรี",
     "role.pro": "แพ็กเกจ Pro",
@@ -57,7 +57,7 @@ const TEXT = {
     "register.shopNameOptional": "ไม่บังคับ",
     "register.shopNamePlaceholder": "เช่น นิธิศ เช่ากล้อง",
     "register.password": "รหัสผ่าน",
-    "register.passwordHint": "ตั้งแต่ 8 ตัวอักษรขึ้นไป ใช้ตัวเลขและอักษรไทยได้",
+    "register.passwordHint": "ตั้งแต่ 8 ถึง 24 ตัวอักษรไทย หรือถึง 72 ตัวอักษรอังกฤษ ใช้ตัวเลขได้",
     "register.confirmPassword": "ยืนยันรหัสผ่าน",
     "register.submit": "สมัครสมาชิก",
     "register.submitting": "กำลังสมัครสมาชิก...",
@@ -85,7 +85,7 @@ const TEXT = {
     // ---- ข้อผิดพลาด: รหัสจาก backend ถูกแปลเป็นประโยคตรงนี้ ----
     "error.invalid_credentials": "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบแล้วลองอีกครั้ง",
     "error.email_taken": "อีเมลนี้มีบัญชีอยู่แล้ว หากเป็นบัญชีของคุณ กรุณาเข้าสู่ระบบ",
-    "error.invalid_input": "ข้อมูลที่กรอกยังไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
+    "error.invalid_input": "ข้อมูลที่กรอกยังไม่ถูกต้อง กรุณาตรวจช่องที่ทำเครื่องหมายไว้",
     "error.forbidden": "บัญชีของคุณยังไม่มีสิทธิ์ใช้ส่วนนี้",
     "error.role_required": "ส่วนนี้เปิดให้เฉพาะผู้ดูแลระบบเท่านั้น",
     "error.tier_required": "ฟีเจอร์นี้อยู่ในแพ็กเกจ Pro หากต้องการใช้งาน กรุณาอัปเกรดแพ็กเกจของร้าน",
@@ -103,43 +103,58 @@ const TEXT = {
     "login.remember": "จำฉันไว้ในเครื่องนี้",
     "login.rememberHint": "เหมาะกับเครื่องส่วนตัวหรือเครื่องที่ร้าน จะได้ไม่ต้องกรอกใหม่ทุกวัน",
     "validate.passwordRequired": "กรุณากรอกรหัสผ่าน",
+    // บนหน้าเข้าสู่ระบบ รหัสผ่านที่ยาวเกินแปลว่าพิมพ์เกินมา ไม่ใช่ว่าตั้งรหัสไว้ยาวเกิน
+    // เพราะรหัสที่ยาวเกินขีดนี้สมัครไม่ผ่านตั้งแต่แรกอยู่แล้ว
+    "validate.passwordLongLogin": "รหัสผ่านที่พิมพ์ยาวเกินกว่าที่ระบบรับได้ กรุณาตรวจว่าพิมพ์เกินมาหรือไม่",
+    "field.limit": "ถึงความยาวสูงสุดแล้ว พิมพ์ต่อจะไม่ถูกบันทึก",
     "field.show": "แสดง",
     "field.hide": "ซ่อน",
     "account.title": "บัญชีของคุณ",
     "account.subtitle": "ข้อมูลบัญชีร้านของคุณในระบบ LEBIS",
     "account.email": "อีเมลที่ใช้เข้าสู่ระบบ",
+    "account.name": "ชื่อผู้ใช้งาน",
+    "account.noName": "ยังไม่ได้ตั้งชื่อ",
     "account.shop": "ชื่อร้าน",
-    "account.emptyTitle": "ยังไม่มีอุปกรณ์ในระบบ",
-    "account.emptyBody":
-      "ส่วนจัดการอุปกรณ์และใบยืม-คืนกำลังอยู่ระหว่างพัฒนา เมื่อเปิดใช้งานแล้ว รายการอุปกรณ์ของร้านคุณจะแสดงที่นี่",
+    "account.buildNote": "ส่วนจัดการอุปกรณ์และใบยืม-คืนกำลังอยู่ระหว่างพัฒนา เมื่อเปิดใช้งานแล้วรายการอุปกรณ์ของร้านคุณจะแสดงที่นี่",
     "account.noShop": "ยังไม่ได้ตั้งชื่อร้าน",
     "account.edit": "แก้ไข",
     "account.save": "บันทึก",
     "account.saving": "กำลังบันทึก...",
     "account.cancel": "ยกเลิก",
-    "account.saved": "บันทึกชื่อร้านเรียบร้อยแล้ว",
+    "account.saved": "บันทึกเรียบร้อยแล้ว",
     "account.setShopName": "ตั้งชื่อร้าน",
     "account.editShopName": "แก้ไขชื่อร้าน",
     "account.planTitle": "แพ็กเกจของคุณให้อะไรบ้าง",
     "account.planFree":
-      "แพ็กเกจฟรีบันทึกอุปกรณ์ได้สูงสุด 50 ชิ้น ดูรายงานย้อนหลังได้ 7 วัน และยังไม่รวมการแจ้งเตือนผ่าน LINE กับการส่งออกไฟล์",
+      "บันทึกอุปกรณ์ได้สูงสุด 50 ชิ้น ดูรายงานย้อนหลังได้ 7 วัน และยังไม่รวมการแจ้งเตือนผ่าน LINE กับการส่งออกไฟล์",
     "account.planPro":
-      "แพ็กเกจ Pro บันทึกอุปกรณ์ได้ไม่จำกัด ดูรายงานย้อนหลังได้ทั้งหมด แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน และส่งออกไฟล์ได้",
+      "บันทึกอุปกรณ์ได้ไม่จำกัด ดูรายงานย้อนหลังได้ทั้งหมด แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน และส่งออกไฟล์ได้",
 
     "help.tipsTitle": "ลองสองเรื่องนี้ก่อน ส่วนใหญ่แก้ได้เองในไม่กี่วินาที",
     "help.tip1": "อีเมลพิมพ์ครบถ้วนหรือไม่ ระบบไม่แยกตัวพิมพ์เล็กใหญ่ พิมพ์แบบไหนก็เข้าได้",
     "help.tip2": "กดปุ่ม แสดง ข้างช่องรหัสผ่าน เพื่อดูว่าพิมพ์ตรงกับที่ตั้งไว้จริงไหม",
-    "help.title": "ลืมรหัสผ่านใช่ไหม",
+    "help.title": "ช่วยเหลือเรื่องการเข้าสู่ระบบ",
     "help.body":
       "ข้อมูลร้านของคุณยังอยู่ครบ ไม่ได้หายไปไหน",
     "help.note":
       "ถ้าลองสองข้อข้างบนแล้วยังเข้าไม่ได้ ระบบยังไม่มีการตั้งรหัสผ่านใหม่ด้วยตัวเอง กรุณาติดต่อทีมงาน LEBIS เพื่อขอตั้งรหัสผ่านใหม่ให้",
+    // 🔴 ห้ามลงท้ายด้วยการชี้ไปหาคนที่หน้าจอไม่มีปุ่มให้ติดต่อ
+    //    ตอนนี้ยังไม่มีช่องทางติดต่อจริง จึงต้องบอกตรงๆ ว่าฟีเจอร์นี้ยังไม่เปิด
+    //    แล้วให้ทางที่เธอทำเองได้ตอนนี้ ไม่ใช่สัญญาถึงคนที่เธอหาไม่เจอ
     "help.noteNoChannel":
-      "ถ้าลองสองข้อข้างบนแล้วยังเข้าไม่ได้ ข้อมูลร้านของคุณยังอยู่ครบและไม่ได้หายไปไหน ขณะนี้ระบบยังตั้งรหัสผ่านใหม่ด้วยตัวเองไม่ได้ ต้องให้ทีมงานตั้งให้",
+      "การตั้งรหัสผ่านใหม่ด้วยตัวเองยังไม่เปิดใช้งาน ถ้าวิธีข้างบนยังไม่ได้ผล ให้สมัครบัญชีใหม่ด้วยอีเมลอื่นไปก่อน ข้อมูลในบัญชีเดิมไม่ได้หายไปไหน และจะกลับเข้าใช้ได้เมื่อฟีเจอร์นี้เปิด",
     "help.contactLabel": "ติดต่อทีมงาน LEBIS",
     "help.back": "กลับไปหน้าเข้าสู่ระบบ",
 
     "state.loading": "กำลังโหลดข้อมูล...",
+
+    // ใช้เฉพาะหน้าแม่แบบ pages/template.js (เปิดได้เฉพาะตอน dev)
+    "template.title": "หน้าแม่แบบ",
+    "template.subtitle": "ก็อปไฟล์ pages/template.js ไปเริ่มหน้าใหม่ของคุณได้เลย",
+    "template.addItem": "เพิ่มรายการ",
+    "template.listTitle": "รายการทั้งหมด",
+    "template.emptyTitle": "ยังไม่มีรายการ",
+    "template.emptyBody": "เมื่อมีข้อมูลแล้ว รายการจะแสดงตรงนี้ ระหว่างนี้กล่องนี้คือสิ่งที่ผู้ใช้เห็น",
   },
 
   en: {
@@ -151,7 +166,7 @@ const TEXT = {
 
     "nav.logout": "Sign out",
     "nav.language": "Choose language",
-    "nav.helpSignedIn": "Need help?",
+    "nav.helpSignedIn": "Help with signing in",
 
     "role.free": "Free plan",
     "role.pro": "Pro plan",
@@ -179,7 +194,7 @@ const TEXT = {
     "register.shopNameOptional": "optional",
     "register.shopNamePlaceholder": "e.g. Nithit Camera Rental",
     "register.password": "Password",
-    "register.passwordHint": "8 characters or more. Numbers and Thai letters are fine.",
+    "register.passwordHint": "Between 8 and 72 characters (up to 24 if you use Thai letters). Numbers are fine.",
     "register.confirmPassword": "Confirm password",
     "register.submit": "Create account",
     "register.submitting": "Creating your account...",
@@ -207,7 +222,7 @@ const TEXT = {
     // ---- Errors: backend sends a code, it is turned into a sentence here ----
     "error.invalid_credentials": "That email or password is not correct. Please check and try again.",
     "error.email_taken": "An account already uses this email. If it is yours, please sign in.",
-    "error.invalid_input": "Some details are not right yet. Please check the fields below.",
+    "error.invalid_input": "Some details are not right yet. Please check the marked field.",
     "error.forbidden": "Your account does not have access to this part yet.",
     "error.role_required": "This area is for administrators only.",
     "error.tier_required": "This feature is part of the Pro plan. Upgrade your shop's plan to use it.",
@@ -225,43 +240,52 @@ const TEXT = {
     "login.remember": "Keep me signed in on this device",
     "login.rememberHint": "Best for your own phone or the shop's computer, so you do not sign in every day.",
     "validate.passwordRequired": "Please enter your password.",
+    "validate.passwordLongLogin": "That is longer than any LEBIS password can be — check for extra characters.",
+    "field.limit": "Maximum length reached — anything more will not be kept.",
     "field.show": "Show",
     "field.hide": "Hide",
     "account.title": "Your account",
     "account.subtitle": "The details LEBIS holds for your shop",
     "account.email": "Sign-in email",
+    "account.name": "Your name",
+    "account.noName": "No name set",
     "account.shop": "Shop name",
-    "account.emptyTitle": "No equipment yet",
-    "account.emptyBody":
-      "Equipment and borrow records are still being built. Once they are ready, your shop's items will appear here.",
+    "account.buildNote": "Equipment and borrow records are still being built. Once they are ready, your shop's items will appear here.",
     "account.noShop": "No shop name set",
     "account.edit": "Edit",
     "account.save": "Save",
     "account.saving": "Saving...",
     "account.cancel": "Cancel",
-    "account.saved": "Shop name saved.",
+    "account.saved": "Saved.",
     "account.setShopName": "Set your shop name",
     "account.editShopName": "Edit shop name",
     "account.planTitle": "What your plan includes",
     "account.planFree":
-      "The free plan covers up to 50 items and 7 days of report history. LINE reminders and CSV export are not included.",
+      "Up to 50 items and 7 days of report history. LINE reminders and CSV export are not included.",
     "account.planPro":
-      "Pro covers unlimited items, full report history, LINE reminders before each due date, and CSV export.",
+      "Unlimited items, full report history, LINE reminders before each due date, and CSV export.",
 
     "help.tipsTitle": "Two quick things solve most sign-in problems",
     "help.tip1": "Is the email typed in full? Capital letters do not matter — either way signs you in.",
     "help.tip2": "Use the Show button beside the password field to check what you typed.",
-    "help.title": "Forgotten password",
+    "help.title": "Help with signing in",
     "help.body":
       "Your shop's records are safe — nothing has been lost.",
     "help.note":
       "If neither helps, LEBIS cannot reset a password by itself yet — contact the LEBIS team and we will set a new one for you.",
     "help.noteNoChannel":
-      "If neither helps, your shop's records are safe and nothing has been lost. LEBIS cannot reset a password by itself yet, so the team has to set a new one for you.",
+      "Self-service password reset is not available yet. If neither tip helped, register again with a different email for now — nothing in the old account is lost, and you will be able to reach it once resets are switched on.",
     "help.contactLabel": "Contact the LEBIS team",
     "help.back": "Back to sign in",
 
     "state.loading": "Loading...",
+
+    "template.title": "Page template",
+    "template.subtitle": "Copy pages/template.js to start a new page",
+    "template.addItem": "Add item",
+    "template.listTitle": "All items",
+    "template.emptyTitle": "Nothing here yet",
+    "template.emptyBody": "Once there is data it appears here. Until then this box is what the user sees.",
   },
 };
 

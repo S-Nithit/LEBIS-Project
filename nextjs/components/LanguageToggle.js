@@ -37,7 +37,10 @@ export function LanguageToggle({ onDark = false, className }) {
               "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-control px-3 text-label font-medium transition-colors",
               active
                 ? onDark
-                  ? "bg-white text-ink"
+                  // 🔴 ห้ามใช้ bg-white กับ text-ink บนแถบหัวเว็บ
+                  //    --ink พลิกเป็นสีอ่อนในโหมดมืด ตัวอักษรอ่อนบนพื้นขาว = 1.10:1
+                  //    ซึ่งคือมองไม่เห็นเลย ต้องใช้สีคู่ของแถบหัวเว็บที่ไม่พลิกตามธีม
+                  ? "bg-header-fg text-header-bg"
                   : "bg-ink text-on-ink"
                 : onDark
                   ? "text-header-fg hover:text-header-fg"

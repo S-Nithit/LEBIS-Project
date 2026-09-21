@@ -28,8 +28,10 @@ export default function App({ Component, pageProps }) {
       <Component {...pageProps} />
 
       {/* ที่อยู่ของข้อความแจ้งเตือน (toast) ทุกใบในเว็บ ต้องวางไว้ที่นี่ครั้งเดียว
-          หน้าไหนอยากแจ้งเตือนก็  import { toast } from "sonner"
-          แล้วเรียก toast.success("...") หรือ toast.error("...") ได้เลย
+          หน้าไหนอยากบอกว่าทำสำเร็จก็  import { toast } from "sonner"
+          แล้วเรียก toast.success("...")
+          🔴 ห้ามใช้ toast บอกความล้มเหลว (docs/brand.md หัวข้อ 6) ความล้มเหลว
+             ต้องขึ้นในหน้าตรงจุดที่ล้มเหลว และอยู่จนกว่าผู้ใช้จะแก้ ไม่ใช่หายเอง
           วางไว้ล่างจอเพราะบนจอมีแถบหัวเว็บอยู่ และล่างจออยู่ใกล้นิ้วโป้งกว่า */}
       <Toaster position="bottom-center" richColors />
     </LanguageProvider>

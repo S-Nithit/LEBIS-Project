@@ -7,6 +7,7 @@
 //   <Button variant="secondary">ยกเลิก</Button>       ปุ่มรอง
 //   <Button variant="secondary" size="sm">แก้ไข</Button>  ปุ่มเล็กในแถวตาราง
 //   <Button variant="danger">ลบอุปกรณ์</Button>        ปุ่มที่ทำแล้วย้อนยาก
+//   <Button variant="onDark">ออกจากระบบ</Button>       ปุ่มบนแถบหัวเว็บสีหมึก
 //   <Button asChild><Link href="/x">ไปหน้า x</Link></Button>
 //
 // ความสูง 44px มุมมน 8px ตาม docs/brand.md — ห้ามแก้สีหรือขนาดในหน้าตัวเอง
@@ -21,6 +22,7 @@ const VARIANTS = {
   secondary: "btn-secondary",
   ghost: "btn-ghost",
   danger: "btn-danger",
+  onDark: "btn-on-dark", // ปุ่มที่วางบนแถบหัวเว็บสีหมึก
 };
 
 const Button = React.forwardRef(

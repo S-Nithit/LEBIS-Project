@@ -65,7 +65,7 @@ export function AuthLayout({ title, description, children, footer, bare = false 
               หน้าที่ส่ง bare เข้ามาจะไม่แสดงแผงนี้ เช่นหน้าลืมรหัสผ่าน
               คนที่เข้าระบบไม่ได้ไม่ควรเจอคำโฆษณาแพ็กเกจขวางอยู่ */}
           {bare ? null : (
-          <aside className="rounded-card border border-line bg-paper p-5 md:p-6">
+          <aside className="rounded-card border border-line bg-surface p-5 md:p-6">
             <p className="t-eyebrow">{t("sample.caption")}</p>
 
             <ul className="mt-4 flex flex-col">

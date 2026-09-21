@@ -4,8 +4,11 @@
 // หรืออีเมลกับรหัสผ่านไม่ตรงกัน (ซึ่งไม่รู้ว่าผิดที่ช่องไหน)
 //
 // วิธีใช้ — วางไว้ "ติดกับปุ่มส่ง" เสมอ
-//   <FormError message={formError} onRetry={handleSubmit} />
+//   <FormError message={formError} onRetry={handleSubmit} retrying={submitting} />
 //   <Button type="submit">...</Button>
+//
+// ส่ง onRetry กับ retrying ให้ครบทุกที่ที่เรียก ไม่งั้นกล่องจะบอกว่าพังแล้วไม่มีปุ่มให้กด
+// คนที่เน็ตสะดุดตอนกดบันทึกจะเหลือทางเดียวคือเดาเอาเองว่าต้องทำอะไรต่อ
 //
 // 🔴 อย่าวางไว้บนสุดของฟอร์ม เพราะบนมือถือฟอร์มยาว ผู้ใช้กดปุ่มที่อยู่ล่างสุด
 //    แล้วข้อความจะไปโผล่นอกจอที่เขามองอยู่ กล่องนี้จะเลื่อนหน้าจอมาหาตัวเอง
@@ -19,8 +22,19 @@ export function FormError({ message, onRetry, retrying = false }) {
   const boxRef = useRef(null);
   const { t } = useLanguage();
 
+  // เลื่อนหน้าจอและย้ายโฟกัสเฉพาะ "ตอนกล่องเพิ่งโผล่" ไม่ใช่ทุกครั้งที่ข้อความเปลี่ยน
+  // role="alert" อ่านข้อความใหม่ให้เองอยู่แล้ว ถ้าย้ายโฟกัสซ้ำระหว่างที่โปรแกรม
+  // อ่านหน้าจอกำลังอ่านอยู่ จะกระชากผู้ใช้กลับไปต้นกล่องกลางประโยค
+  const wasShown = useRef(false);
+
   useEffect(() => {
-    if (!message) return;
+    if (!message) {
+      wasShown.current = false;
+      return;
+    }
+    if (wasShown.current) return;
+    wasShown.current = true;
+
     // ถ้าผู้ใช้ตั้งเครื่องให้ลดการเคลื่อนไหว ต้องเลื่อนแบบกระโดด ไม่ใช่ไถลนุ่มๆ
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     boxRef.current?.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });

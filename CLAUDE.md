@@ -409,7 +409,7 @@ the schema, and finish one complete reference page for the others to copy.
   the shadcn CLI rather than hand-writing them.
 - Every mutating action shows a toast on success. Failures are shown in the page
   at the point of failure (under the field, or in a form-level alert beside the
-  submit button), never only in a toast — see the amendment in `docs/brand.md` §6.
+  submit button), never in a toast — see the amendment in `docs/brand.md` §6.
 - All pages must work at phone width.
 - The team is three first-time web developers: keep functions short, and add brief
   Thai comments where a beginner would get stuck.

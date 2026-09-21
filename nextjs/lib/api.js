@@ -71,7 +71,11 @@ function readErrorCode(data, response) {
 // แปลงรหัสข้อผิดพลาดเป็นประโยคในภาษาที่ผู้ใช้เลือก
 //
 //   import { errorMessage } from "@/lib/api";
-//   catch (error) { toast.error(errorMessage(error, t)); }
+//   catch (error) { setFormError(errorMessage(error, t)); }
+//
+// 🔴 ความล้มเหลวขึ้นในหน้า ตรงจุดที่ล้มเหลว ไม่ใช่ toast (docs/brand.md หัวข้อ 6)
+//    toast หายเองใน 4 วินาที คนที่อ่านภาษาไทยช้ากว่านั้นจะไม่ทันเห็นว่าพังเพราะอะไร
+//    toast มีไว้บอก "สำเร็จแล้ว" เท่านั้น
 //
 // 🔴 หน้าเว็บต้องเรียกตัวนี้เสมอ ห้ามเอา error.message ไปโชว์ตรงๆ
 //    เพราะข้อความดิบอาจเป็นภาษาไทยเสมอ หรือเป็นข้อความของเบราว์เซอร์
