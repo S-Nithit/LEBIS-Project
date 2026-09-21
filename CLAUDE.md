@@ -309,7 +309,7 @@ Each of the three algorithm files is one person's graded work:
   `sorted()` inside the implementations — only as a benchmark baseline), plus
   grouping.
 - `datasets.py` — **Neo**. `make_dataset()` producing test sets A–D
-  (10 clean / 12 with duplicate names / 10 with zero stock / 120 large).
+  (10 clean / 12 with duplicate names / 10 with zero stock / 1,000 large).
 
 Do not "improve" these by replacing them with standard-library equivalents. The
 hand-written implementation *is* the deliverable.
