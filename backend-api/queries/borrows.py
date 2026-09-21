@@ -109,6 +109,19 @@ async def count_active_by_item(item_id: int) -> int:
     )
 
 
+async def count_all_by_item(item_id: int) -> int:
+    """ใบยืมของอุปกรณ์ชิ้นนี้ทั้งหมด รวมที่คืนไปแล้ว
+
+    ใช้กันลบอุปกรณ์ที่เคยถูกเช่า เพราะ borrows.item_id ชี้มาที่ items.id
+    ฐานข้อมูลจึงไม่ยอมให้ลบแถวที่ยังมีคนอ้างถึง ถ้าไม่เช็กตรงนี้ก่อน
+    คำสั่ง DELETE จะพังเป็น 500 แทนที่จะบอกเหตุผลให้ผู้ใช้เข้าใจ
+    """
+    return await database.fetch_val(
+        "SELECT COUNT(*) FROM borrows WHERE item_id = :item_id",
+        {"item_id": item_id},
+    )
+
+
 async def count_overdue_by_owner(owner_email: str) -> int:
     """จำนวนใบที่เลยกำหนดคืนแล้ว — ตัวเลขช่องที่สามของแถบสถานะ"""
     return await database.fetch_val(

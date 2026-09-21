@@ -217,6 +217,8 @@ const TEXT = {
     "error.item_code_taken": "รหัสนี้ถูกใช้กับอุปกรณ์ชิ้นอื่นในร้านแล้ว กรุณาใช้รหัสอื่น",
     "error.item_limit_reached":
       "แพ็กเกจฟรีเก็บอุปกรณ์ได้ 50 รายการ อัปเกรดเป็น Pro เพื่อเพิ่มได้ไม่จำกัด",
+    "error.item_has_history":
+      "อุปกรณ์ชิ้นนี้เคยถูกเช่าไปแล้ว ลบไม่ได้เพราะประวัติการเช่าจะหายไปด้วย ถ้าเลิกใช้แล้วให้ทำเครื่องหมายว่าชำรุดแทน",
     "error.item_has_active_borrows":
       "อุปกรณ์ชิ้นนี้ยังอยู่กับลูกค้า กรุณารับคืนให้ครบก่อนจึงจะลบได้",
     "error.item_total_below_borrowed":
@@ -428,6 +430,8 @@ const TEXT = {
     "error.item_code_taken": "Another item in your shop already uses this code. Please pick a different one.",
     "error.item_limit_reached":
       "The free plan holds 50 items. Upgrade to Pro for unlimited equipment.",
+    "error.item_has_history":
+      "This item has been rented before, so deleting it would erase that history. Mark it out of order instead.",
     "error.item_has_active_borrows":
       "This item is still out with a customer. Please take it back before deleting it.",
     "error.item_total_below_borrowed":

@@ -281,10 +281,18 @@ async def update_item(item_id: int, payload: ItemUpdate, user=Depends(get_curren
 
 @router.delete("/{item_id}")
 async def delete_item(item_id: int, user=Depends(get_current_user)):
-    """ลบอุปกรณ์ — ลบไม่ได้ถ้าของยังอยู่กับลูกค้า
+    """ลบอุปกรณ์ — ลบได้เฉพาะชิ้นที่ยังไม่เคยถูกเช่าเลย
 
-    ถ้าปล่อยให้ลบ ใบยืมที่ค้างอยู่จะชี้ไปหาอุปกรณ์ที่ไม่มีแล้ว และประวัติ
-    การเช่าทั้งหมดของชิ้นนั้นก็หายตามไปด้วย
+    มีสองด่าน เพราะเหตุผลคนละเรื่องกัน
+
+    ด่านแรก ของยังอยู่กับลูกค้า — บอกให้รับคืนก่อน แก้ได้
+
+    ด่านสอง เคยถูกเช่าแต่คืนครบแล้ว — ลบไม่ได้เหมือนกัน เพราะทุกแถวใน
+    borrows ชี้กลับมาที่ items.id ถ้าลบอุปกรณ์ทิ้ง ประวัติการเช่าจะชี้ไปหา
+    ของที่ไม่มีอยู่ ฐานข้อมูลกันไว้ด้วย foreign key อยู่แล้ว แต่ถ้าปล่อยให้
+    ไปโดนด่านนั้น ผู้ใช้จะเจอ 500 แทนที่จะเจอคำอธิบาย เลยต้องดักที่นี่ก่อน
+
+    ของที่เลิกใช้แล้วให้ทำเครื่องหมายว่าชำรุดแทน (PUT status = broken)
     """
     from queries import borrows as borrows_query
 
@@ -298,6 +306,15 @@ async def delete_item(item_id: int, user=Depends(get_current_user)):
                 409,
                 "item_has_active_borrows",
                 f"ยังมีรายการเช่าค้างอยู่ {active} รายการ กรุณารับคืนให้ครบก่อน",
+            )
+
+        history = await borrows_query.count_all_by_item(item_id)
+
+        if history:
+            fail(
+                409,
+                "item_has_history",
+                f"อุปกรณ์ชิ้นนี้มีประวัติการเช่า {history} ครั้ง ลบแล้วประวัติจะหาย",
             )
 
         await items_query.delete(item_id, user["email"])
