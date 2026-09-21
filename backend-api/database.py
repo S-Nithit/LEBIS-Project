@@ -15,6 +15,16 @@ POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
 TRUE_VALUES = ("1", "true", "yes", "on")
 SEED_DEMO_ACCOUNTS = os.getenv("SEED_DEMO_ACCOUNTS", "true").strip().lower() in TRUE_VALUES
 
+# บัญชีผู้ดูแลระบบ — มาจาก environment variable เท่านั้น ไม่มีรหัสผ่านอยู่ในโค้ด
+# ตั้งครบทั้งสองค่า = สร้างบัญชีให้ · ขาดค่าใดค่าหนึ่ง = ข้ามไปเฉยๆ ไม่ error
+# ต่างจากบัญชีทดลองตรงที่ตัวนี้ตั้งบน production ได้ เพราะรหัสไม่ได้อยู่ใน repo
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip()
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+
+# โดเมนที่ตัวตรวจอีเมล (EmailStr ใน routes/auth.py) ไม่ยอมรับ
+# สร้างบัญชีด้วยโดเมนพวกนี้ได้ แต่จะ login ไม่ได้เลย เลยเตือนไว้ตอนสตาร์ท
+RESERVED_EMAIL_SUFFIXES = (".local", ".test", ".localhost", ".invalid", ".example", ".onion")
+
 
 def normalize_database_url(url: str) -> str:
     """แปลง connection string ของผู้ให้บริการให้เป็นรูปที่ไลบรารีนี้ใช้ได้
@@ -195,31 +205,34 @@ async def setup_db():
     for statement in ALTER_USERS:
         await database.execute(statement)
 
+    # บัญชีทดลอง — เฉพาะตอนรันในเครื่อง
     if SEED_DEMO_ACCOUNTS:
         await seed_demo_accounts()
         # เตือนดังๆ ในล็อก เผื่อลืมปิดตอน deploy จะได้เห็นตั้งแต่บรรทัดแรกที่สตาร์ท
         print(
-            "[LEBIS] ⚠️  SEED_DEMO_ACCOUNTS เปิดอยู่ — ใส่บัญชีทดสอบที่รหัสผ่าน"
+            "[LEBIS] ⚠️  SEED_DEMO_ACCOUNTS เปิดอยู่ — ใส่บัญชีทดลองที่รหัสผ่าน"
             " เปิดเผยในโค้ดแล้ว ตอน deploy จริงต้องตั้งเป็น false",
             flush=True,
         )
     else:
-        print("[LEBIS] ข้ามการใส่บัญชีทดสอบ (SEED_DEMO_ACCOUNTS=false)", flush=True)
+        print("[LEBIS] ข้ามการใส่บัญชีทดลอง (SEED_DEMO_ACCOUNTS=false)", flush=True)
+
+    # บัญชีผู้ดูแลระบบ — แยกจากบัญชีทดลอง เพราะ production ก็ต้องมี
+    await seed_admin_account()
 
 
-# 🔴 บัญชี seed สำหรับ "ทดสอบบนเครื่องตัวเอง" เท่านั้น ไม่ใช่บัญชีผู้ใช้จริง
+# 🔴 บัญชีทดลองสำหรับ "รันบนเครื่องตัวเอง" เท่านั้น ไม่ใช่บัญชีผู้ใช้จริง
 #
-#    ระบบสร้างให้เองตอนสตาร์ท เพื่อให้ทุกคนในทีมมีของเล่นเหมือนกันตั้งแต่วินาทีแรก
-#    ที่ docker compose ขึ้น โดยไม่ต้องไปนั่ง INSERT เองใน psql
-#    (Kul ใช้เทียบ free/pro ตอนทดสอบระบบล็อกฟีเจอร์ · Sea ใช้เปิดหน้า admin)
+#    มีไว้ให้ทุกคนในทีมมีของเล่นเหมือนกันตั้งแต่วินาทีแรกที่ docker compose ขึ้น
+#    โดยไม่ต้องไปนั่ง INSERT เองใน psql (Kul ใช้เทียบ free/pro ตอนทดสอบ
+#    ระบบล็อกฟีเจอร์ตามแพ็กเกจ)
 #
-#    รหัสผ่านที่เขียนไว้ตรงนี้ไม่ใช่ความลับ ทุกคนที่ clone repo ก็เห็น —
-#    และนั่นคือเหตุผลที่ตอน deploy ขึ้นใช้งานจริงต้องตั้ง SEED_DEMO_ACCOUNTS=false
-#    ไม่งั้นระบบจะสร้างบัญชี admin ที่ทุกคนรู้รหัสไว้บนอินเทอร์เน็ต
-#    เท่ากับเปิดประตูทิ้งไว้ให้ใครก็ได้
+#    รหัสผ่านตรงนี้ไม่ใช่ความลับ ทุกคนที่ clone repo ก็เห็น — และนั่นคือเหตุผล
+#    ที่ตอน deploy ขึ้นใช้งานจริงต้องตั้ง SEED_DEMO_ACCOUNTS=false
 #
-#    อีเมลต้องเป็นโดเมนปกติที่ EmailStr ยอมรับ ห้ามใช้ .local .test .localhost
-#    ไม่งั้นบัญชีจะมีแถวอยู่ใน DB แต่ login ไม่ได้ (ได้ 422 ตั้งแต่ชั้นตรวจข้อมูล)
+#    บัญชีผู้ดูแลระบบไม่ได้อยู่ในลิสต์นี้ เพราะ production ก็ต้องมีเหมือนกัน
+#    (หน้า Admin Dashboard เป็นหนึ่งในหน้าที่โจทย์บังคับ) ตัวนั้นอ่านค่าจาก
+#    ADMIN_EMAIL / ADMIN_PASSWORD แทน ดู seed_admin_account() ข้างล่าง
 DEMO_ACCOUNTS = [
     # บัญชีที่ติดมากับ boilerplate — คงแพ็กเกจ pro ไว้เหมือนเดิม
     {
@@ -229,43 +242,84 @@ DEMO_ACCOUNTS = [
         "shop_name": "Demo Rental Shop",
         "role": "pro",
     },
-    # บัญชีผู้ดูแลระบบ — Sea ใช้เปิดหน้า admin, Kul ใช้เทียบกับบัญชี free
-    # ตอนทดสอบว่าระบบล็อกฟีเจอร์ตามแพ็กเกจจริงมั้ย
-    {
-        "email": "admin@lebis-demo.com",
-        "password": "admin1234",
-        "name": "LEBIS Admin",
-        "shop_name": None,
-        "role": "admin",
-    },
 ]
 
 
-async def seed_demo_accounts():
-    """ใส่บัญชีทดสอบถ้ายังไม่มี — มีอยู่แล้วก็ข้ามไป ไม่ไปทับของเดิม
+async def insert_user_if_missing(email, password, name, shop_name, role):
+    """เพิ่มผู้ใช้ถ้ายังไม่มีอีเมลนี้ — มีอยู่แล้วก็ข้ามไป ไม่ไปทับของเดิม
 
     ON CONFLICT DO NOTHING คือจุดสำคัญ: ถ้าใครเปลี่ยนรหัสหรือเปลี่ยน role
     ของบัญชีพวกนี้ไว้ การรีสตาร์ท backend จะไม่ไปรีเซ็ตทับของเขา
     """
-    for account in DEMO_ACCOUNTS:
-        hashed = bcrypt.hashpw(
-            account["password"].encode("utf-8"), bcrypt.gensalt()
-        ).decode("utf-8")
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-        await database.execute(
-            """
-            INSERT INTO users (email, password, name, shop_name, role)
-            VALUES (:email, :password, :name, :shop_name, :role)
-            ON CONFLICT (email) DO NOTHING
-            """,
-            {
-                "email": account["email"],
-                "password": hashed,
-                "name": account["name"],
-                "shop_name": account["shop_name"],
-                "role": account["role"],
-            },
+    await database.execute(
+        """
+        INSERT INTO users (email, password, name, shop_name, role)
+        VALUES (:email, :password, :name, :shop_name, :role)
+        ON CONFLICT (email) DO NOTHING
+        """,
+        {
+            "email": email,
+            "password": hashed,
+            "name": name,
+            "shop_name": shop_name,
+            "role": role,
+        },
+    )
+
+
+async def seed_demo_accounts():
+    """ใส่บัญชีทดลองจากลิสต์ DEMO_ACCOUNTS"""
+    for account in DEMO_ACCOUNTS:
+        await insert_user_if_missing(
+            email=account["email"],
+            password=account["password"],
+            name=account["name"],
+            shop_name=account["shop_name"],
+            role=account["role"],
         )
+
+
+async def seed_admin_account():
+    """สร้างบัญชีผู้ดูแลระบบจาก ADMIN_EMAIL / ADMIN_PASSWORD
+
+    ไม่ได้ตั้งค่าไว้ = ข้ามไปเงียบๆ ไม่ใช่ error เพราะระบบทำงานได้โดยไม่มี admin
+    ตั้งไว้แล้วมีบัญชีนั้นอยู่ก่อน = ไม่ทับ (ON CONFLICT DO NOTHING)
+    ฉะนั้นการเปลี่ยนรหัส admin ทำโดยแก้ env แล้วรีสตาร์ทไม่ได้ ต้องแก้ในฐานข้อมูล
+    """
+    if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+        print(
+            "[LEBIS] ไม่ได้ตั้ง ADMIN_EMAIL/ADMIN_PASSWORD — ข้ามการสร้างบัญชีผู้ดูแลระบบ",
+            flush=True,
+        )
+        return
+
+    # bcrypt รับรหัสผ่านได้ไม่เกิน 72 ไบต์ ยาวกว่านั้นจะ error ตอน hash
+    # ดักไว้ที่นี่เพื่อไม่ให้ backend ล้มทั้งตัวเพราะตั้งค่าผิด
+    if len(ADMIN_PASSWORD.encode("utf-8")) > 72:
+        print(
+            "[LEBIS] ⚠️  ADMIN_PASSWORD ยาวเกิน 72 ไบต์ — ข้ามการสร้างบัญชีผู้ดูแลระบบ",
+            flush=True,
+        )
+        return
+
+    if ADMIN_EMAIL.lower().endswith(RESERVED_EMAIL_SUFFIXES):
+        # สร้างแถวได้ แต่ EmailStr ที่ /api/auth/login จะปฏิเสธ = login ไม่ได้
+        print(
+            f"[LEBIS] ⚠️  ADMIN_EMAIL ใช้โดเมนสงวน ({ADMIN_EMAIL.split('@')[-1]})"
+            " บัญชีจะถูกสร้างแต่ login ไม่ได้ ให้เปลี่ยนเป็นโดเมนปกติ",
+            flush=True,
+        )
+
+    await insert_user_if_missing(
+        email=ADMIN_EMAIL,
+        password=ADMIN_PASSWORD,
+        name="LEBIS Admin",
+        shop_name=None,
+        role="admin",
+    )
+    print(f"[LEBIS] บัญชีผู้ดูแลระบบพร้อมใช้งาน: {ADMIN_EMAIL}", flush=True)
 
 
 async def get_user_by_email(email: str):
