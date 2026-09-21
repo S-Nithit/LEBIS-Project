@@ -29,7 +29,6 @@ const TEXT = {
 
     "nav.logout": "ออกจากระบบ",
     "nav.language": "เลือกภาษา",
-    "nav.help": "เข้าสู่ระบบไม่ได้ใช่ไหม",
     "nav.helpSignedIn": "ต้องการความช่วยเหลือ",
 
     "role.free": "แพ็กเกจฟรี",
@@ -152,7 +151,6 @@ const TEXT = {
 
     "nav.logout": "Sign out",
     "nav.language": "Choose language",
-    "nav.help": "Trouble signing in?",
     "nav.helpSignedIn": "Need help?",
 
     "role.free": "Free plan",
