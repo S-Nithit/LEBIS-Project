@@ -14,7 +14,12 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from database import create_user, get_user_by_email, update_user_token
+from database import (
+    create_user,
+    get_user_by_email,
+    update_user_profile,
+    update_user_token,
+)
 from services.security import (
     create_access_token,
     get_current_user,
@@ -49,6 +54,8 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8)
     name: str = Field(min_length=1, max_length=120)
     shop_name: str | None = Field(default=None, max_length=120)
+    # ติ๊ก "จำฉันไว้ในเครื่องนี้" ตั้งแต่ตอนสมัคร ก็ได้ token อายุ 30 วันเลย
+    remember: bool = False
 
     # 🔴 อีเมลถูกใช้เป็น primary key ของตาราง users และ Postgres แยกตัวพิมพ์เล็กใหญ่
     #    ถ้าไม่แปลงเป็นตัวพิมพ์เล็กก่อน คนที่สมัครด้วย Ann@shop.com
@@ -85,6 +92,17 @@ class LoginRequest(BaseModel):
     @classmethod
     def password_fits_bcrypt(cls, value: str) -> str:
         return check_password_bytes(value)
+
+
+class UpdateProfileRequest(BaseModel):
+    """ข้อมูลที่เจ้าของร้านแก้เองได้จากหน้าบัญชี
+
+    มีแค่ชื่อกับชื่อร้านเท่านั้น — อีเมล รหัสผ่าน และ role ไม่อยู่ในนี้
+    เพราะสามอย่างนั้นเปลี่ยนตัวตนหรือสิทธิ์ของบัญชี ต้องมีเส้นทางของมันเอง
+    """
+
+    name: str | None = Field(default=None, max_length=120)
+    shop_name: str | None = Field(default=None, max_length=120)
 
 
 class TokenResponse(BaseModel):
@@ -156,7 +174,7 @@ async def register(payload: RegisterRequest):
         role="free",
     )
 
-    token = create_access_token(user["email"])
+    token = create_access_token(user["email"], remember=payload.remember)
 
     return TokenResponse(access_token=token, email=user["email"], role=user["role"])
 
@@ -196,3 +214,22 @@ async def me(user=Depends(get_current_user)):
     ถ้าไม่ได้ส่ง token มา หรือ token ใช้ไม่ได้ จะไม่เข้าฟังก์ชันนี้เลย (ตอบ 401 ไปก่อน)
     """
     return to_user_response(user)
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(payload: UpdateProfileRequest, user=Depends(get_current_user)):
+    """แก้ชื่อและชื่อร้านของตัวเอง
+
+    ช่องที่ไม่ได้ส่งมาจะใช้ค่าเดิม ส่งมาเป็นค่าว่างถือว่าตั้งใจล้างค่า
+    Depends(get_current_user) ทำให้แก้ได้เฉพาะบัญชีของตัวเองเท่านั้น
+    ไม่มีทางส่งอีเมลคนอื่นมาแก้ข้อมูลเขาได้
+    """
+    name = payload.name if payload.name is not None else user["name"]
+
+    updated = await update_user_profile(
+        email=user["email"],
+        name=name.strip() if isinstance(name, str) else name,
+        shop_name=payload.shop_name.strip() if payload.shop_name else None,
+    )
+
+    return to_user_response(updated)

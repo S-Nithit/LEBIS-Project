@@ -10,7 +10,7 @@
 //
 //   export default function Workspace() {
 //     const { user, loading, logout } = useAuth({ redirectTo: "/login" });
-//     if (loading) return null;
+//     if (loading) return <AppShell><LoadingState /></AppShell>;
 //
 //     return (
 //       <AppShell user={user} onLogout={logout}>

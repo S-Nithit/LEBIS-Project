@@ -23,6 +23,7 @@ import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Login() {
   const router = useRouter();
@@ -47,7 +48,10 @@ export default function Login() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("lebis_last_email");
-      if (saved) setEmail(saved);
+      if (saved) {
+        setEmail(saved);
+        setRemember(true); // เคยเลือกให้จำไว้ ก็ติ๊กค้างไว้ให้เลย
+      }
     } catch (error) {
       // เบราว์เซอร์ปิด localStorage ไว้ ก็แค่ไม่เติมให้
     }
@@ -99,7 +103,13 @@ export default function Login() {
       saveToken(data.access_token);
 
       try {
-        localStorage.setItem("lebis_last_email", email.trim().toLowerCase());
+        // จำอีเมลเฉพาะเมื่อผู้ใช้ติ๊กให้จำเท่านั้น
+        // เครื่องที่ร้านใช้กันหลายคน คนที่ไม่ได้ติ๊กแปลว่าไม่อยากให้เหลือร่องรอยไว้
+        if (remember) {
+          localStorage.setItem("lebis_last_email", email.trim().toLowerCase());
+        } else {
+          localStorage.removeItem("lebis_last_email");
+        }
       } catch (error) {
         // จำไม่ได้ก็ไม่เป็นไร ไม่ใช่เรื่องคอขาดบาดตาย
       }
@@ -115,8 +125,15 @@ export default function Login() {
       // ว่าผิดที่อีเมลหรือรหัส (กันคนไล่เดาว่าอีเมลไหนมีบัญชีอยู่จริง)
       // ถ้าหน้าเว็บไปทำกรอบแดงที่ช่องรหัสผ่าน เท่ากับบอกว่าอีเมลถูกแล้ว
       // ซึ่งขัดกับสิ่งที่ backend ตั้งใจ และอาจทำให้คนที่พิมพ์อีเมลผิดไปแก้รหัสที่ถูกอยู่แล้ว
-      setFormError(message);
-      toast.error(message);
+      // backend บอกมาว่าผิดที่ช่องไหนก็แปะที่ช่องนั้น ไม่งั้นขึ้นระดับฟอร์ม
+      if (error?.field) {
+        setErrors({ [error.field]: message });
+        document.getElementById(error.field)?.focus();
+      } else {
+        setFormError(message);
+      }
+
+      // ไม่ขึ้น toast ซ้ำ ข้อความอยู่ในหน้าแล้วและอยู่ต่อจนกว่าจะแก้
     } finally {
       setLoading(false);
     }
@@ -177,16 +194,12 @@ export default function Login() {
 
             {/* จำฉันไว้ + ลืมรหัสผ่าน อยู่บรรทัดเดียวกันใต้ช่องรหัสผ่าน */}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              {/* พื้นที่กดคือทั้งป้าย ไม่ใช่แค่กล่องติ๊ก จะได้กดด้วยนิ้วโป้งง่าย */}
-              <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(event) => setRemember(event.target.checked)}
-                  className="h-5 w-5 rounded-control border border-line accent-ink"
-                />
-                <span className="t-label">{t("login.remember")}</span>
-              </label>
+              <Checkbox
+                id="remember"
+                label={t("login.remember")}
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
+              />
 
               <Link
                 href="/forgot-password"
@@ -196,7 +209,11 @@ export default function Login() {
               </Link>
             </div>
 
-            <p className="lebis-hint t-caption mt-2">{t("login.rememberHint")}</p>
+            {/* คำอธิบายโผล่เฉพาะตอนติ๊ก คนที่ไม่ได้ใช้จะได้ไม่มีอะไรมาคั่นระหว่าง
+                ช่องสุดท้ายกับปุ่ม */}
+            {remember ? (
+              <p className="t-caption mt-2">{t("login.rememberHint")}</p>
+            ) : null}
           </div>
 
           <FormError message={formError} onRetry={handleSubmit} />

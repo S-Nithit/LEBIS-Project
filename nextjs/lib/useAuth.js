@@ -10,7 +10,7 @@
 // ว่า token ยังใช้ได้อยู่หรือเปล่า เพราะ token อาจหมดอายุไปแล้วก็ได้
 // (เช็กแค่ว่ามี token ในเครื่อง ยังไม่พอ)
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { apiFetch, clearToken, getToken } from "@/lib/api";
@@ -22,11 +22,18 @@ export function useAuth(options = {}) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  // เพิ่มค่านี้ทีละ 1 เพื่อสั่งให้โหลดข้อมูลใหม่ (ปุ่ม "ลองอีกครั้ง")
+  const [reloadCount, setReloadCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false; // กันกรณีผู้ใช้เปลี่ยนหน้าไปก่อนที่ข้อมูลจะมาถึง
 
     async function loadUser() {
+      if (!cancelled) {
+        setLoading(true);
+        setLoadError(null);
+      }
+
       if (!getToken()) {
         if (!cancelled) setLoading(false);
         if (redirectTo) router.replace(redirectTo);
@@ -64,10 +71,19 @@ export function useAuth(options = {}) {
     return () => {
       cancelled = true;
     };
-  }, [redirectTo, router]);
+  }, [redirectTo, router, reloadCount]);
+
+  // สั่งโหลดข้อมูลผู้ใช้ใหม่ ใช้กับปุ่ม "ลองอีกครั้ง" ตอนเน็ตหลุด
+  const reload = useCallback(() => setReloadCount((n) => n + 1), []);
 
   function logout() {
     clearToken();
+    try {
+      // ลบอีเมลที่จำไว้ด้วย ไม่งั้นคนถัดไปที่ใช้เครื่องร้านจะเห็นอีเมลของคนก่อน
+      localStorage.removeItem("lebis_last_email");
+    } catch (error) {
+      // ลบไม่ได้ก็ไม่เป็นไร
+    }
     setUser(null);
     router.replace("/login");
   }
@@ -76,6 +92,7 @@ export function useAuth(options = {}) {
     user, // ข้อมูล user จาก /api/auth/me (null ถ้ายังไม่ login)
     loading, // true ระหว่างที่ยังถาม backend ไม่เสร็จ
     loadError, // มีค่าเมื่อโหลดข้อมูลไม่สำเร็จเพราะเน็ต/เซิร์ฟเวอร์ (token ยังอยู่)
+    reload, // เรียกเพื่อลองโหลดข้อมูลผู้ใช้ใหม่
     isLoggedIn: user !== null,
     logout,
   };

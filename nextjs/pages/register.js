@@ -25,6 +25,7 @@ import { AuthLayout } from "@/components/AuthLayout";
 import { FormError } from "@/components/FormError";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Register() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,6 +54,9 @@ export default function Register() {
     if (!email.trim().includes("@")) found.email = t("validate.email");
     if (name.trim().length === 0) found.name = t("validate.name");
     if (password.length < 8) found.password = t("validate.passwordShort");
+    // bcrypt รับได้ 72 ไบต์ ภาษาไทยกิน 3 ไบต์ต่อตัว ตรวจตั้งแต่ในหน้าเว็บ
+    // จะได้ไม่ต้องรอให้ยิงไปถึง backend แล้วค่อยรู้
+    else if (new Blob([password]).size > 72) found.password = t("validate.passwordLong");
     if (confirmPassword !== password) {
       found.confirmPassword = t("validate.passwordMismatch");
     }
@@ -83,6 +88,7 @@ export default function Register() {
           name: name.trim(),
           // ช่องนี้ไม่บังคับ ถ้าเว้นว่างส่ง null ไปแทนสตริงว่าง
           shop_name: shopName.trim() === "" ? null : shopName.trim(),
+          remember,
         },
       });
 
@@ -93,16 +99,20 @@ export default function Register() {
     } catch (error) {
       const message = errorMessage(error, t);
 
-      // อีเมลซ้ำเป็นความผิดของช่องอีเมล จึงแปะไว้ที่ช่องนั้นโดยตรง
-      // เรื่องอื่น (เน็ตหลุด เซิร์ฟเวอร์ล่ม) ขึ้นเป็นข้อความระดับฟอร์ม
-      // ห้ามปล่อยให้เหลือแค่ toast เพราะ toast หายไปเองภายในไม่กี่วินาที
-      if (error?.code === "email_taken") {
-        setErrors({ email: message });
+      // backend บอกมาว่าผิดที่ช่องไหน (เช่น password ยาวเกิน) ก็แปะที่ช่องนั้น
+      // อีเมลซ้ำก็เป็นความผิดของช่องอีเมล
+      // เรื่องที่ไม่ได้ผิดที่ช่องใดช่องหนึ่ง (เน็ตหลุด เซิร์ฟเวอร์ล่ม) ขึ้นระดับฟอร์ม
+      const field = error?.field || (error?.code === "email_taken" ? "email" : null);
+
+      if (field) {
+        setErrors({ [field]: message });
+        document.getElementById(field)?.focus();
       } else {
         setFormError(message);
       }
 
-      toast.error(message);
+      // ไม่ขึ้น toast ซ้ำ ข้อความอยู่ในหน้าแล้วและอยู่ต่อจนกว่าจะแก้
+      // toast มีไว้สำหรับเรื่องที่ไม่มีที่ทางในหน้า ไม่ใช่พูดซ้ำสิ่งที่พูดไปแล้ว
     } finally {
       setLoading(false); // ปลดล็อกปุ่มทั้งกรณีสำเร็จและกรณีพลาด
     }
@@ -195,6 +205,13 @@ export default function Register() {
               required
             />
           </div>
+
+          <Checkbox
+            id="remember"
+            label={t("login.remember")}
+            checked={remember}
+            onChange={(event) => setRemember(event.target.checked)}
+          />
 
           <FormError message={formError} onRetry={handleSubmit} />
 

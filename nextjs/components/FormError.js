@@ -15,13 +15,15 @@ import { useEffect, useRef } from "react";
 
 import { useLanguage } from "@/lib/useLanguage";
 
-export function FormError({ message, onRetry }) {
+export function FormError({ message, onRetry, retrying = false }) {
   const boxRef = useRef(null);
   const { t } = useLanguage();
 
   useEffect(() => {
     if (!message) return;
-    boxRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    // ถ้าผู้ใช้ตั้งเครื่องให้ลดการเคลื่อนไหว ต้องเลื่อนแบบกระโดด ไม่ใช่ไถลนุ่มๆ
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    boxRef.current?.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
     boxRef.current?.focus();
   }, [message]);
 
@@ -32,7 +34,12 @@ export function FormError({ message, onRetry }) {
       <p>{message}</p>
 
       {onRetry ? (
-        <button type="button" onClick={onRetry} className="mt-2 font-medium underline underline-offset-4">
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={retrying}
+          className="mt-2 font-medium underline underline-offset-4 disabled:opacity-60"
+        >
           {t("action.retry")}
         </button>
       ) : null}

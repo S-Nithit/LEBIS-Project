@@ -39,11 +39,12 @@ export function clearToken() {
 // ---------------------------------------------------------------------------
 
 export class ApiError extends Error {
-  constructor(code, { status = 0, fallback = "" } = {}) {
+  constructor(code, { status = 0, field = null, fallback = "" } = {}) {
     super(fallback || code);
     this.name = "ApiError";
     this.code = code; // เช่น "invalid_credentials" · "network" · "server"
     this.status = status;
+    this.field = field; // ชื่อช่องที่ผิด ถ้า backend บอกมา เช่น "password"
   }
 }
 
@@ -135,6 +136,7 @@ export async function apiFetch(path, options = {}) {
   if (!response.ok) {
     throw new ApiError(readErrorCode(data, response), {
       status: response.status,
+      field: data?.detail?.field ?? null,
       fallback: `HTTP ${response.status}`,
     });
   }

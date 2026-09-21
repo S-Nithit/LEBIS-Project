@@ -27,13 +27,14 @@ export default function ForgotPassword() {
       </Head>
 
       <AuthLayout bare title={t("help.title")} description={t("help.body")}>
+        <h2 className="t-section mb-4">{t("help.tipsTitle")}</h2>
         {/* สองเรื่องที่คนมักพลาดและแก้เองได้ทันที ไม่ต้องรอใคร */}
         <ol className="flex flex-col gap-4">
           {["help.tip1", "help.tip2"].map((key, index) => (
             <li key={key} className="flex gap-3 border-b border-line pb-4 last:border-b-0 last:pb-0">
               <span
                 aria-hidden="true"
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-badge border border-line text-label font-medium text-muted"
+                className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-badge border border-line text-label font-medium text-muted"
               >
                 {index + 1}
               </span>
@@ -42,7 +43,11 @@ export default function ForgotPassword() {
           ))}
         </ol>
 
-        <p className="t-caption mt-5 border-t border-line pt-4">{t("help.note")}</p>
+        {/* ถ้ายังไม่ได้ตั้งช่องทางติดต่อไว้ ห้ามเขียนว่า "กรุณาติดต่อทีมงาน"
+            เพราะหน้าจอไม่มีอะไรให้กด ให้บอกสิ่งที่เป็นจริงและช่วยให้ใจชื้นแทน */}
+        <p className="t-caption mt-5 border-t border-line pt-4">
+          {SUPPORT_CONTACT ? t("help.note") : t("help.noteNoChannel")}
+        </p>
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           {/* ปุ่มติดต่อจะขึ้นก็ต่อเมื่อมีช่องทางจริงใน lib/config.js
@@ -53,7 +58,13 @@ export default function ForgotPassword() {
             </Button>
           ) : null}
 
-          <Button asChild variant="secondary" className="w-full sm:w-auto">
+          {/* ไม่มีช่องทางติดต่อ = ปุ่มกลับไปเข้าสู่ระบบกลายเป็นปุ่มหลักของหน้า
+              หน้าหนึ่งหน้าต้องมีปุ่มหลักเสมอ ไม่งั้นผู้ใช้ไม่รู้ว่าควรทำอะไรต่อ */}
+          <Button
+            asChild
+            variant={SUPPORT_CONTACT ? "secondary" : "primary"}
+            className="w-full sm:w-auto"
+          >
             <Link href="/login">{t("help.back")}</Link>
           </Button>
         </div>

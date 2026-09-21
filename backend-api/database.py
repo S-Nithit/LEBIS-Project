@@ -366,3 +366,21 @@ async def create_user(
             "role": role,
         },
     )
+
+
+async def update_user_profile(email: str, name: str | None, shop_name: str | None):
+    """แก้ข้อมูลร้านของผู้ใช้ แล้วคืนแถวที่แก้แล้วกลับไป
+
+    ส่ง None มาในช่องไหน = ล้างค่าช่องนั้น (เช่นลบชื่อร้านออก)
+    ไม่แตะคอลัมน์ password, role และ email เด็ดขาด เพราะสามตัวนั้น
+    เปลี่ยนสิทธิ์และตัวตนของบัญชี ต้องมีเส้นทางของมันเอง
+    """
+    return await database.fetch_one(
+        """
+        UPDATE users
+        SET name = :name, shop_name = :shop_name
+        WHERE email = :email
+        RETURNING email, name, shop_name, role, create_at
+        """,
+        {"email": email, "name": name, "shop_name": shop_name},
+    )

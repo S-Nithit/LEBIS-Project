@@ -56,7 +56,7 @@ const TEXT = {
     "register.shopNameOptional": "ไม่บังคับ",
     "register.shopNamePlaceholder": "เช่น นิธิศ เช่ากล้อง",
     "register.password": "รหัสผ่าน",
-    "register.passwordHint": "ความยาวอย่างน้อย 8 ตัวอักษร",
+    "register.passwordHint": "ความยาวอย่างน้อย 8 ตัวอักษร (ภาษาไทยใส่ได้ไม่เกิน 24 ตัว)",
     "register.confirmPassword": "ยืนยันรหัสผ่าน",
     "register.submit": "สมัครสมาชิก",
     "register.submitting": "กำลังสมัครสมาชิก...",
@@ -67,6 +67,7 @@ const TEXT = {
     "validate.email": "กรุณากรอกอีเมลให้ถูกต้อง เช่น you@example.com",
     "validate.name": "กรุณากรอกชื่อของคุณ",
     "validate.passwordShort": "รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร",
+    "validate.passwordLong": "รหัสผ่านยาวเกินไป กรุณาใช้รหัสที่สั้นลง (ภาษาไทยใส่ได้ไม่เกิน 24 ตัวอักษร)",
     "validate.passwordMismatch": "รหัสผ่านทั้งสองช่องยังไม่ตรงกัน",
 
     "sample.caption": "ตัวอย่างหน้าจอบันทึกการยืม (ข้อมูลสมมติ)",
@@ -91,7 +92,7 @@ const TEXT = {
     "error.network": "เชื่อมต่อไม่ได้ กรุณาตรวจสอบสัญญาณอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง",
     "error.server": "ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งในอีกสักครู่",
     "error.unknown": "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
-    "error.token_expired": "คุณออกจากระบบไปแล้วเนื่องจากไม่ได้ใช้งานนาน กรุณาเข้าสู่ระบบอีกครั้ง",
+    "error.token_expired": "การเข้าสู่ระบบครั้งก่อนหมดอายุแล้ว กรุณาเข้าสู่ระบบอีกครั้ง",
     "error.token_invalid": "ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง กรุณาเข้าสู่ระบบอีกครั้ง",
     "error.not_signed_in": "กรุณาเข้าสู่ระบบก่อนใช้งานส่วนนี้",
     "error.user_not_found": "ไม่พบบัญชีนี้ในระบบ กรุณาเข้าสู่ระบบอีกครั้ง",
@@ -113,6 +114,12 @@ const TEXT = {
     "account.emptyBody":
       "ส่วนจัดการอุปกรณ์และใบยืม-คืนกำลังอยู่ระหว่างพัฒนา เมื่อเปิดใช้งานแล้ว รายการอุปกรณ์ของร้านคุณจะแสดงที่นี่",
     "account.noShop": "ยังไม่ได้ตั้งชื่อร้าน",
+    "account.edit": "แก้ไข",
+    "account.save": "บันทึก",
+    "account.saving": "กำลังบันทึก...",
+    "account.cancel": "ยกเลิก",
+    "account.saved": "บันทึกชื่อร้านเรียบร้อยแล้ว",
+    "account.setShopName": "ตั้งชื่อร้าน",
     "account.planTitle": "แพ็กเกจของคุณให้อะไรบ้าง",
     "account.planFree":
       "แพ็กเกจฟรีบันทึกอุปกรณ์ได้สูงสุด 50 ชิ้น ดูรายงานย้อนหลังได้ 7 วัน และยังไม่รวมการแจ้งเตือนผ่าน LINE กับการส่งออกไฟล์",
@@ -127,6 +134,8 @@ const TEXT = {
       "ส่วนใหญ่แล้วเข้าระบบไม่ได้เพราะสองเรื่องข้างล่างนี้ ลองตรวจดูก่อนได้เลย",
     "help.note":
       "ถ้าลองสองข้อข้างบนแล้วยังเข้าไม่ได้ ระบบยังไม่มีการตั้งรหัสผ่านใหม่ด้วยตัวเอง กรุณาติดต่อทีมงาน LEBIS เพื่อขอตั้งรหัสผ่านใหม่ให้",
+    "help.noteNoChannel":
+      "ถ้าลองสองข้อข้างบนแล้วยังเข้าไม่ได้ ข้อมูลร้านของคุณยังอยู่ครบและไม่ได้หายไปไหน ขณะนี้ระบบยังตั้งรหัสผ่านใหม่ด้วยตัวเองไม่ได้ ต้องให้ทีมงานตั้งให้",
     "help.contactLabel": "ติดต่อทีมงาน LEBIS",
     "help.back": "กลับไปหน้าเข้าสู่ระบบ",
 
@@ -169,7 +178,7 @@ const TEXT = {
     "register.shopNameOptional": "optional",
     "register.shopNamePlaceholder": "e.g. Nithit Camera Rental",
     "register.password": "Password",
-    "register.passwordHint": "At least 8 characters.",
+    "register.passwordHint": "At least 8 characters (about 24 in Thai).",
     "register.confirmPassword": "Confirm password",
     "register.submit": "Create account",
     "register.submitting": "Creating your account...",
@@ -180,6 +189,7 @@ const TEXT = {
     "validate.email": "Please enter a valid email address, for example you@example.com",
     "validate.name": "Please enter your name.",
     "validate.passwordShort": "Use at least 8 characters.",
+    "validate.passwordLong": "That password is too long. Please use a shorter one (about 24 characters in Thai).",
     "validate.passwordMismatch": "The two passwords do not match.",
 
     "sample.caption": "Sample borrow log (illustrative data)",
@@ -226,6 +236,12 @@ const TEXT = {
     "account.emptyBody":
       "Equipment and borrow records are still being built. Once they are ready, your shop's items will appear here.",
     "account.noShop": "No shop name set",
+    "account.edit": "Edit",
+    "account.save": "Save",
+    "account.saving": "Saving...",
+    "account.cancel": "Cancel",
+    "account.saved": "Shop name saved.",
+    "account.setShopName": "Set your shop name",
     "account.planTitle": "What your plan includes",
     "account.planFree":
       "The free plan covers up to 50 items and 7 days of report history. LINE reminders and CSV export are not included.",
@@ -240,6 +256,8 @@ const TEXT = {
       "Most sign-in problems come down to the two things below. Try them first.",
     "help.note":
       "If neither helps, LEBIS cannot reset a password by itself yet — contact the LEBIS team and we will set a new one for you.",
+    "help.noteNoChannel":
+      "If neither helps, your shop's records are safe and nothing has been lost. LEBIS cannot reset a password by itself yet, so the team has to set a new one for you.",
     "help.contactLabel": "Contact the LEBIS team",
     "help.back": "Back to sign in",
 

@@ -85,7 +85,9 @@ export default function Workspace() {
 | `StatusBadge` | `components/StatusBadge.js` | ป้ายสถานะเม็ดเล็ก |
 | `Card` | `components/ui/card.js` | กล่องเนื้อหา พื้นขาว ขอบ 1px มุมมน 20px |
 | `Button` | `components/ui/button.js` | ปุ่มทุกชนิด |
-| `FormField` | `components/FormField.js` | ช่องกรอก 1 ช่อง พร้อมป้ายกำกับ |
+| `FormField` | `components/FormField.js` | ช่องกรอก 1 ช่อง พร้อมป้ายกำกับและข้อความผิดพลาด |
+| `FormError` | `components/FormError.js` | ข้อความผิดพลาดของทั้งฟอร์ม วางติดปุ่มส่ง |
+| `Checkbox` | `components/ui/checkbox.js` | ช่องติ๊ก — อย่าใช้ `<input type="checkbox">` เปล่าๆ |
 | `LanguageToggle` | `components/LanguageToggle.js` | ปุ่มสลับภาษา (อยู่ใน AppShell แล้ว) |
 | `AuthLayout` | `components/AuthLayout.js` | เฉพาะหน้าเข้าสู่ระบบ/สมัครสมาชิก |
 
@@ -134,7 +136,6 @@ async function handleSubmit(event) {
   const found = validate();
   setErrors(found);
   if (Object.keys(found).length > 0) {
-    toast.error(t("error.summary"));
     // 2) พาโฟกัสไปช่องแรกที่ผิด ผู้ใช้จะได้ไม่ต้องไล่หาเอง
     document.getElementById(Object.keys(found)[0])?.focus();
     return;
@@ -147,7 +148,16 @@ async function handleSubmit(event) {
     // 3) แปลรหัสข้อผิดพลาดจาก backend เป็นภาษาที่ผู้ใช้เลือกอยู่
     //    🔴 ห้ามใช้ error.message ตรงๆ เพราะอาจเป็นภาษาไทยเสมอ
     //       หรือเป็นข้อความของเบราว์เซอร์อย่าง "Failed to fetch"
-    toast.error(errorMessage(error, t));
+    const message = errorMessage(error, t);
+
+    // backend บอกมาด้วยว่าผิดที่ช่องไหน (error.field) ก็แปะที่ช่องนั้น
+    // ไม่บอก = ขึ้นเป็นข้อความระดับฟอร์ม
+    if (error?.field) {
+      setErrors({ [error.field]: message });
+    } else {
+      setFormError(message);
+    }
+    // ไม่ต้อง toast ซ้ำ ข้อความอยู่ในหน้าแล้วและอยู่ต่อจนกว่าจะแก้
   }
 }
 ```

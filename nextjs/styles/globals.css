@@ -412,7 +412,49 @@
 
   /* ป้ายสถานะ — พื้นอ่อนของสีนั้นๆ ขอบบาง ตัวอักษรสีที่อ่านออกบนพื้นขาว
      ใช้ color-mix เพื่อผสมสีกับพื้น จะได้ไม่ต้องประกาศสีเพิ่มอีกชุด */
+  /* ช่องติ๊ก — วาดเองทั้งหมด ไม่ปล่อยให้เบราว์เซอร์วาด
+     เพราะในโหมดมืดเบราว์เซอร์จะวาดกล่องทึบสีเทาอุ่น ซึ่งดูเหมือนติ๊กไว้แล้ว */
+  .lebis-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+    display: inline-grid;
+    place-content: center;
+    transition: background-color 140ms ease, border-color 140ms ease;
+  }
+
+  /* เครื่องหมายถูกวาดด้วย ::before เพื่อให้ควบคุมสีได้เอง */
+  .lebis-checkbox::before {
+    content: "";
+    width: 11px;
+    height: 6px;
+    border-left: 2px solid var(--primary-foreground);
+    border-bottom: 2px solid var(--primary-foreground);
+    transform: rotate(-45deg) translate(1px, -1px) scale(0);
+    transition: transform 140ms ease;
+  }
+
+  .lebis-checkbox:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .lebis-checkbox:checked::before {
+    transform: rotate(-45deg) translate(1px, -1px) scale(1);
+  }
+
   /* กล่องบอกข้อผิดพลาดระดับฟอร์ม */
+  .form-error:focus {
+    outline: 2px solid var(--danger);
+    outline-offset: 2px;
+  }
+
   .form-error {
     border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
     background: color-mix(in srgb, var(--danger) 7%, var(--surface));
