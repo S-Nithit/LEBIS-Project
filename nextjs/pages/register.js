@@ -248,9 +248,10 @@ export default function Register() {
               checked={remember}
               onChange={(event) => setRemember(event.target.checked)}
             />
-            {remember ? (
-              <p className="t-caption mt-2">{t("login.rememberHint")}</p>
-            ) : null}
+            {/* อยู่ตรงนี้ตลอด ไม่ใช่โผล่หลังติ๊ก — เหตุผลเดียวกับหน้าเข้าสู่ระบบ
+                คำอธิบายที่โผล่ตอนติ๊กจะดันปุ่มส่งลงไป 47px ตอนที่นิ้วกำลังเคลื่อนไปหา
+                และเป็นคำที่ต้องอ่านก่อนตัดสินใจ ไม่ใช่หลังตัดสินใจไปแล้ว */}
+            <p className="t-caption mt-2">{t("login.rememberHint")}</p>
           </div>
 
           <FormError message={formError} onRetry={handleSubmit} retrying={loading} />

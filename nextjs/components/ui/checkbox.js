@@ -18,6 +18,8 @@ export function Checkbox({ id, label, className, ...inputProps }) {
       htmlFor={id}
       className={cn("flex min-h-[44px] cursor-pointer items-center gap-3", className)}
     >
+      {/* ok-touch-target: กล่องติ๊กเองกว้าง 22px ตามการออกแบบ แต่พื้นที่กดจริงคือ
+          <label> ที่ครอบอยู่ซึ่งสูง 44px — กดที่ตัวหนังสือก็ติ๊กได้ */}
       <input id={id} type="checkbox" className="lebis-checkbox" {...inputProps} />
       <span className="t-label">{label}</span>
     </label>

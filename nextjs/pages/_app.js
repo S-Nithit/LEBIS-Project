@@ -42,6 +42,26 @@ export default function App({ Component, pageProps }) {
       <Toaster
         position="bottom-center"
         offset={72}
+        // ไม่ระบุ theme = sonner ล็อกเป็นโหมดสว่างตลอด ทั้งที่หน้าเว็บเป็นโหมดมืด
+        // ผลคือกล่องขาวโพลนอยู่ล่างจอมืด ซึ่งจะเป็นของที่สว่างที่สุดในแอป
+        // และมันโผล่ทุกครั้งที่ทำสำเร็จ
+        theme="system"
+        // 🔴 sonner ไม่ได้อ่านค่า background จาก CSS ของเราตรงๆ
+        //    มันอ่านจากตัวแปรของมันเอง (--normal-bg / --normal-text / --normal-border)
+        //    การเขียนทับ .lebis-toast จึงไม่มีผลเลย ไม่ว่าจะเพิ่มน้ำหนักเท่าไหร่
+        //    ทางที่ถูกคือป้อนตัวแปรของมันด้วยสีของเรา ซึ่งเป็นวิธีที่ไลบรารีออกแบบไว้
+        //    กว่าจะรู้ต้องเปิดหน้าจริงแล้วไล่ดูว่ากฎไหนชนะ อ่านจากไฟล์ไม่มีทางเห็น
+        style={{
+          "--normal-bg": "var(--surface)",
+          "--normal-text": "var(--ink)",
+          "--normal-border": "var(--line-strong)",
+          "--success-bg": "var(--surface)",
+          "--success-text": "var(--ink)",
+          "--success-border": "var(--line-strong)",
+          "--error-bg": "var(--surface)",
+          "--error-text": "var(--ink)",
+          "--error-border": "var(--line-strong)",
+        }}
         toastOptions={{
           classNames: {
             toast: "lebis-toast",

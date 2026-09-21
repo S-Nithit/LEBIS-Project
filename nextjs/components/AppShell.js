@@ -11,7 +11,6 @@ import Link from "next/link";
 
 import { Logo } from "@/components/Logo";
 import { StatusBadge } from "@/components/StatusBadge";
-import { LanguageToggle } from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/useLanguage";
 
@@ -52,8 +51,6 @@ export function AppShell({ user, onLogout, children }) {
                 </StatusBadge>
               </div>
             ) : null}
-
-            <LanguageToggle onDark />
 
             {onLogout ? (
               <Button variant="onDark" onClick={onLogout}>

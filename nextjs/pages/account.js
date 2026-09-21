@@ -19,6 +19,7 @@ import { FormError } from "@/components/FormError";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/FormField";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
@@ -195,6 +196,17 @@ export default function Account() {
             <Button type="button" size="sm" variant="ghost" onClick={cancelEditing}>
               {t("account.cancel")}
             </Button>
+
+            {/* 🔴 กล่องผิดพลาดอยู่ในฟอร์มของแถวนี้ ไม่ใช่ท้ายการ์ด
+                   เคยวาดไว้ท้ายการ์ดใบเดียว ผลคือแก้แถว "ชื่อผู้ใช้งาน" แล้วพัง
+                   กล่องแดงไปโผล่ห่างจากปุ่มบันทึก 110px คนละฝั่งของแถว "ชื่อร้าน"
+                   ผู้ใช้จะไปไล่ดูแถวที่ไม่ได้แตะเลยว่าผิดตรงไหน
+                   (docs/brand.md หัวข้อ 6 · คอมเมนต์หัวไฟล์ FormError.js) */}
+            {saveError ? (
+              <div className="w-full">
+                <FormError message={saveError} onRetry={handleSave} retrying={saving} />
+              </div>
+            ) : null}
           </form>
         ) : (
           <span className="flex flex-wrap items-center gap-3">
@@ -240,9 +252,16 @@ export default function Account() {
               <Row label={t("account.email")} value={user.email} />
               {editableRow("name")}
               {editableRow("shop_name")}
-              {saveError ? (
-                <FormError message={saveError} onRetry={handleSave} retrying={saving} />
-              ) : null}
+
+              {/* ภาษาเป็นค่าที่ตั้งครั้งเดียวต่อบัญชี ไม่ใช่การกระทำที่ทำซ้ำทุกหน้า
+                  เดิมอยู่บนแถบหัวเว็บของทุกหน้าที่เข้าสู่ระบบแล้ว ซึ่งทำให้ปุ่มที่
+                  แทบไม่มีใครกดเป็นของที่เด่นที่สุดในหน้า และทุกหน้าที่เพื่อนจะเขียน
+                  ต่อจากนี้ก็จะได้มันติดมาด้วย ที่นี่คือที่ของค่าประจำบัญชี */}
+              <Row label={t("nav.language")}>
+                {/* justify-self-start ไม่งั้นช่องของ grid จะยืดกล่องของปุ่มสลับภาษา
+                    ออกไปเต็มคอลัมน์ กลายเป็นกรอบยาว 500px ที่มีปุ่มเล็กสองปุ่มอยู่ซ้ายสุด */}
+                <LanguageToggle className="justify-self-start" />
+              </Row>
             </CardContent>
           </Card>
 

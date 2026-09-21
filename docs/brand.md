@@ -128,6 +128,53 @@ re-draws the logo by hand.
 > Of these, `--line-strong`, `--primary-border`, `--header-line`,
 > `--focus-on-header` and `--checked-border` are never used as a text colour.
 
+### Every colour token that ships, both themes
+
+This table is generated from `nextjs/styles/globals.css` and checked against it by
+`scripts/check-conventions.mjs` (rules 9 and 10) on every run. A token that exists in
+the stylesheet and not here fails the check, and so does a value that disagrees. The
+table above is the palette a designer reads; this one is the complete inventory a
+developer needs, including the tokens that exist only to satisfy a contrast rule.
+
+| Token | Light | Dark |
+|---|---|---|
+| `--ink` | `#0F3B43` | `#EEF5F5` |
+| `--ink-2` | `#1A5A66` | `#1A5A66` |
+| `--amber` | `#E09540` | — |
+| `--amber-text` | `#99641A` | `#E6A65A` |
+| `--line-strong` | `#7D9094` | `#729298` |
+| `--badge-success-text` | `#256A4C` | `#57B58C` |
+| `--badge-warning-text` | `#8A5915` | `#E6A65A` |
+| `--badge-danger-text` | `#B3453B` | `#E4847A` |
+| `--paper` | `#F7F9F9` | `#0B2126` |
+| `--surface` | `#FFFFFF` | `#103139` |
+| `--line` | `#DCE6E7` | `#234E56` |
+| `--muted` | `#4A6268` | `#9DB6BB` |
+| `--success` | `#2F7D5D` | `#57B58C` |
+| `--warning` | `#99641A` | `#E0A45C` |
+| `--danger` | `#B3453B` | `#E4847A` |
+| `--danger-solid` | `#B3453B` | `#8C2F27` |
+| `--on-danger` | `#FFFFFF` | — |
+| `--on-ink` | `#FFFFFF` | `#0B2126` |
+| `--header-bg` | `#0F3B43` | `#0A2A31` |
+| `--header-fg` | `#FFFFFF` | `#EEF5F5` |
+| `--header-line` | `#7FA8B0` | `#6B99A2` |
+| `--focus-on-header` | `#E6A65A` | — |
+
+In **light** mode `--primary`, `--primary-hover`, `--primary-foreground`,
+`--primary-border` and `--checked-border` are aliases pointing at `--ink`, `--ink-2`,
+`--on-ink`, `transparent` and `--primary`. In **dark** mode they take literal values,
+because the dark theme cannot simply re-point them — a white button with white text
+is what happens if it does:
+
+| Token | Dark |
+|---|---|
+| `--primary` | `#1A5A66` |
+| `--primary-hover` | `#226D7B` |
+| `--primary-foreground` | `#EEF5F5` |
+| `--primary-border` | `#2E8C9C` |
+| `--checked-border` | `#2E8C9C` |
+
 Rules
 
 - Amber is an accent, not a theme. One amber element per screen is usually

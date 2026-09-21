@@ -36,6 +36,31 @@ function eachLine(file, fn) {
   file.text.split("\n").forEach((line, i) => fn(line, i + 1));
 }
 
+// อ่าน attribute ของแท็กให้ถูก — หยุดที่ ">" ที่อยู่นอกวงเล็บปีกกาเท่านั้น
+// ไม่งั้น onClick={() => ...} จะทำให้ตัดจบกลางทางที่ ">" ของลูกศร
+// แล้วจะพลาดคลาสที่อยู่ข้างหลัง ซึ่งคือ min-h-[44px] พอดี
+function readTag(text, from) {
+  let depth = 0;
+  for (let i = from; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === "{") depth += 1;
+    else if (c === "}") depth -= 1;
+    else if (c === ">" && depth === 0) return text.slice(from, i);
+  }
+  return text.slice(from, from + 600);
+}
+
+
+// กฎที่ตรวจ "โครงสร้าง JSX" ต้องไม่อ่านโค้ดตัวอย่างในคอมเมนต์ว่าเป็นของจริง
+// (กฎที่ตรวจ "กฎที่สอนผิด" ต้องอ่านคอมเมนต์ นั่นคือกฎ 1 ซึ่งใช้ข้อความดิบ)
+// แทนที่ด้วยช่องว่างความยาวเท่าเดิม เลขบรรทัดกับตำแหน่งจะได้ไม่เพี้ยน
+function stripComments(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (m, p1) => p1 + " ".repeat(m.length - p1.length));
+}
+for (const file of files) file.code = stripComments(file.text);
+
 // ── กฎ 1 · ความล้มเหลวขึ้นในหน้า ไม่ใช่ toast (docs/brand.md หัวข้อ 6)
 //    รวมถึงในคอมเมนต์ด้วย เพราะคอมเมนต์คือสิ่งที่เพื่อนก็อปไปใช้
 for (const file of files) {
@@ -118,51 +143,59 @@ for (const file of files) {
 //       ปุ่มที่เคยมีคนชี้ให้ทีละบรรทัด ส่วนที่ไม่มีใครเคยชี้ก็ไม่มีใครเห็นต่อไป
 //       ตอนนี้ "ไม่รู้ = ไม่ผ่าน" ของที่ยกเว้นได้ต้องเขียนคำว่า ok-touch-target
 //       พร้อมเหตุผลกำกับไว้ ไม่ใช่เงียบแล้วผ่าน
-const TOUCH_OK = /\bbtn\b|min-h-\[44px\]|\bh-(1[1-9]|[2-9]\d)\b|ok-touch-target/;
-
-// อ่าน attribute ของแท็กให้ถูก — หยุดที่ ">" ที่อยู่นอกวงเล็บปีกกาเท่านั้น
-// ไม่งั้น onClick={() => ...} จะทำให้ตัดจบกลางทางที่ ">" ของลูกศร
-// แล้วจะพลาดคลาสที่อยู่ข้างหลัง ซึ่งคือ min-h-[44px] พอดี
-function readTag(text, from) {
-  let depth = 0;
-  for (let i = from; i < text.length; i += 1) {
-    const c = text[i];
-    if (c === "{") depth += 1;
-    else if (c === "}") depth -= 1;
-    else if (c === ">" && depth === 0) return text.slice(from, i);
-  }
-  return text.slice(from, from + 600);
-}
+// 🔴 "sm:min-h-[44px]" ไม่นับ — มันสูง 44px เฉพาะจอ 640px ขึ้นไป
+//    ส่วนบนมือถือที่หน้าร้านซึ่งเป็นที่ที่นิ้วโป้งใช้งานจริง ยังเตี้ยอยู่
+//    จึงต้องไม่มีอะไรนำหน้า (\b กันไม่ได้เพราะ ":" ไม่ใช่ขอบคำ)
+const TOUCH_OK = /(^|[\s"'`])(btn|min-h-\[44px\]|h-(1[1-9]|[2-9]\d)|min-w-\[44px\])([\s"'`]|$)/;
+// ยกเว้นได้ แต่ต้องเขียนเหตุผลต่อท้ายจริงๆ ไม่ใช่แปะคำวิเศษแล้วผ่าน
+const TOUCH_EXEMPT = /ok-touch-target:\s*\S+/;
 
 for (const file of files) {
-  for (const m of file.text.matchAll(/<(button|Link|a|label)\b/g)) {
-    const attrs = readTag(file.text, m.index + m[0].length);
-    const n = file.text.slice(0, m.index).split("\n").length;
+  for (const m of file.code.matchAll(/<(button|Link|a|label|input|select|textarea)\b/g)) {
+    const attrs = readTag(file.code, m.index + m[0].length);
+    const n = file.code.slice(0, m.index).split("\n").length;
 
     // <label> เป็นเป้าหมายสัมผัสก็ต่อเมื่อมันครอบ input อยู่ (เช่นช่องติ๊ก)
     // label ที่เป็นแค่ป้ายอยู่เหนือช่องกรอก ไม่ใช่ปุ่ม ไม่ต้องสูง 44px
+    // ช่องกรอกที่วาดด้วยคลาสของระบบ (.field-input / Input) สูง 44px จาก CSS อยู่แล้ว
+    if (/type="(hidden)"/.test(attrs)) continue;
     if (m[1] === "label") {
-      const body = file.text.slice(m.index, m.index + 900);
+      const body = file.code.slice(m.index, m.index + 900);
       const close = body.indexOf("</label>");
       if (close === -1 || !/<(input|Input)\b/.test(body.slice(0, close))) continue;
     }
 
     // asChild ส่งคลาสของ <Button> ลงไปให้ลูกผ่าน Slot ลูกจึงได้ความสูงมาแล้ว
-    const before = file.text.slice(Math.max(0, m.index - 300), m.index);
-    if (/asChild/.test(before)) continue;
+    // 🔴 ต้องเป็น <Button asChild> ที่เปิดอยู่จริงและยังไม่ปิด ไม่ใช่เจอคำว่า asChild
+    //    ที่ไหนก็ได้ข้างหน้า — เวอร์ชันแรกเป็นการค้นข้อความเฉยๆ คำว่า asChild
+    //    ในคอมเมนต์ภาษาไทยก็ทำให้ข้ามได้
+    const before = file.code.slice(0, m.index);
+    const lastOpen = before.lastIndexOf("<Button");
+    const lastClose = before.lastIndexOf("</Button>");
+    if (lastOpen > lastClose && /asChild/.test(readTag(file.code, lastOpen + 7))) continue;
 
+    // ข้อยกเว้นเขียนเป็นคอมเมนต์เหนือแท็ก จึงต้องอ่านจากข้อความดิบ
+    // (stripComments แทนคอมเมนต์ด้วยช่องว่างความยาวเท่าเดิม ตำแหน่งจึงตรงกันพอดี)
+    if (TOUCH_EXEMPT.test(file.text.slice(Math.max(0, m.index - 400), m.index))) continue;
+    if (TOUCH_EXEMPT.test(attrs)) continue;
     if (TOUCH_OK.test(attrs)) continue;
     fail("touch-target", file.rel, n, `<${m[1]}> ไม่รับประกันความสูง 44px — ใส่ min-h-[44px] ใช้ <Button> หรือเขียน ok-touch-target พร้อมเหตุผล`);
   }
 }
 
-// ── กฎ 7ข · ห้ามเอา onClick ไปแปะบน <div> หรือ <span> (docs/brand.md หัวข้อ 6)
+// ── กฎ 7ข · ห้ามเอา onClick ไปแปะบนแท็กที่กดไม่ได้ (docs/brand.md หัวข้อ 6)
 //    ของแบบนั้นกดด้วยคีย์บอร์ดไม่ได้ และโปรแกรมอ่านหน้าจอไม่รู้ว่ามันกดได้
+//    🔴 เวอร์ชันแรกใช้ [^>]*? ซึ่งตัดจบที่ ">" ของ => ทั้งที่ readTag() ที่เขียนไว้
+//       ข้างบนในคอมมิตเดียวกันมีไว้แก้ปัญหานี้พอดี — เขียนเครื่องมือแล้วไม่ได้ใช้
+const INTERACTIVE = new Set(["button", "a", "input", "select", "textarea", "label", "Link", "Button"]);
 for (const file of files) {
-  for (const m of file.text.matchAll(/<(div|span|p|li)(\s[^>]*?)?>/gs)) {
-    if (!/onClick/.test(m[2] || "")) continue;
-    const n = file.text.slice(0, m.index).split("\n").length;
-    fail("clickable-div", file.rel, n, `<${m[1]}> มี onClick — ใช้ <button> แทน`);
+  for (const m of file.code.matchAll(/<([A-Za-z][\w.]*)\b/g)) {
+    if (INTERACTIVE.has(m[1])) continue;
+    const attrs = readTag(file.code, m.index + m[0].length);
+    if (!/\bon(Click|MouseDown|MouseUp|PointerDown)\b/.test(attrs)) continue;
+    if (/\brole="button"/.test(attrs) && /\bonKeyDown\b/.test(attrs) && /\btabIndex\b/.test(attrs)) continue;
+    const n = file.code.slice(0, m.index).split("\n").length;
+    fail("clickable-nonbutton", file.rel, n, `<${m[1]}> รับการกด แต่ไม่ใช่ปุ่ม — ใช้ <button> แทน`);
   }
 }
 
@@ -207,15 +240,42 @@ function contrast(a, b) {
 }
 // อ่านค่าตัวแปรจากไฟล์จริง ไม่ใช่เขียนค่าซ้ำไว้ในสคริปต์
 // ถ้าเขียนซ้ำ วันที่มีคนแก้สี สคริปต์จะยังตรวจค่าเก่าและบอกว่าผ่าน
+// อ่านตัวแปรจากบล็อกที่ต้องการ โดย "นับวงเล็บ" ไม่ใช่ตัดเอาจำนวนตัวอักษรคงที่
+// 🔴 เวอร์ชันแรกตัดเอา 4000 ตัวอักษร ซึ่งแปลว่าวันที่มีคนเพิ่ม token ใหม่ 6 บรรทัด
+//    token ตัวท้ายๆ จะหลุดออกนอกหน้าต่างเงียบๆ แล้วกฎจะเลิกตรวจมันโดยไม่บอกใคร
+//    ตอนนั้นเคยห่างจากการกลืนบล็อกโหมดมืดเข้ามาด้วยแค่ 4 ตัวอักษร
 function tokens(scopeMarker) {
   const start = css.indexOf(scopeMarker);
-  const slice = css.slice(start, start + 4000);
+  if (start === -1) return {};
+  const open = css.indexOf("{", start);
+  let depth = 0;
+  let end = open;
+  for (let i = open; i < css.length; i += 1) {
+    if (css[i] === "{") depth += 1;
+    else if (css[i] === "}") {
+      depth -= 1;
+      if (depth === 0) { end = i; break; }
+    }
+  }
+  const slice = css.slice(open, end);
   const map = {};
-  for (const m of slice.matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{3,8})\s*;/g)) map[m[1]] = m[2];
+  for (const m of slice.matchAll(/(--[\w-]+):\s*([^;]+);/g)) map[m[1]] = m[2].trim();
   return map;
+}
+
+// token บางตัวชี้ไปที่ token ตัวอื่น เช่น --checked-border: var(--primary)
+// ต้องตามไปจนเจอค่าสีจริง ไม่งั้นจะนึกว่า "หาไม่เจอ"
+function resolve(map, name, depth = 0) {
+  const value = map[name];
+  if (!value || depth > 5) return null;
+  if (/^#[0-9a-fA-F]{3,8}$/.test(value)) return value;
+  const ref = value.match(/^var\(\s*(--[\w-]+)/);
+  return ref ? resolve(map, ref[1], depth + 1) : null;
 }
 const light = tokens(":root {");
 const dark = tokens("prefers-color-scheme: dark");
+
+// ช่องที่ 5 = ตรวจเฉพาะโหมดไหน ("dark" หรือ "light") ไม่ใส่ = ตรวจทั้งสองโหมด
 const PAIRS = [
   ["--header-line", "--header-bg", 3, "ขอบปุ่มบนแถบหัวเว็บ"],
   ["--focus-on-header", "--header-bg", 3, "วงแหวนโฟกัสบนแถบหัวเว็บ"],
@@ -223,14 +283,24 @@ const PAIRS = [
   ["--line-strong", "--surface", 3, "ขอบของสิ่งที่กดได้บนการ์ด"],
   // ตรวจ "ขอบ" ไม่ใช่ "พื้น" — พื้นของปุ่มหลักในโหมดมืดตั้งใจให้ใกล้กับพื้นการ์ด
   // สิ่งที่ทำให้เห็นขอบเขตของปุ่มกับช่องติ๊กคือ --primary-border
-  ["--primary-border", "--surface", 3, "ขอบปุ่มหลัก (โหมดมืด)"],
+  // โหมดสว่าง --primary-border เป็น transparent ตั้งใจ เพราะปุ่มสีหมึกเข้ม
+  // บนพื้นขาวไม่ต้องมีขอบก็เห็นขอบเขตชัดอยู่แล้ว
+  ["--primary-border", "--surface", 3, "ขอบปุ่มหลัก", "dark"],
   ["--checked-border", "--surface", 3, "ขอบช่องติ๊กตอนติ๊กแล้ว"],
   ["--on-danger", "--danger-solid", 4.5, "ตัวอักษรบนปุ่มอันตราย"],
 ];
-for (const [scope, set] of [["โหมดสว่าง", light], ["โหมดมืด", { ...light, ...dark }]]) {
-  for (const [fg, bg, need, what] of PAIRS) {
-    if (!set[fg] || !set[bg]) continue;
-    const r = contrast(set[fg], set[bg]);
+for (const [scope, set, key] of [["โหมดสว่าง", light, "light"], ["โหมดมืด", { ...light, ...dark }, "dark"]]) {
+  for (const [fg, bg, need, what, only] of PAIRS) {
+    if (only && only !== key) continue;
+    // 🔴 "หาไม่เจอ" ต้องเป็นความผิดพลาด ไม่ใช่ความเงียบ
+    //    ถ้าเงียบ วันที่มีคนเปลี่ยนชื่อ token กฎจะเลิกตรวจโดยที่ยังขึ้นว่าผ่าน
+    const fgHex = resolve(set, fg);
+    const bgHex = resolve(set, bg);
+    if (!fgHex || !bgHex) {
+      fail("nontext-contrast", "nextjs/styles/globals.css", 1, `${what} (${scope}) หาค่าสีของ token ไม่ได้: ${!fgHex ? fg : bg}`);
+      continue;
+    }
+    const r = contrast(fgHex, bgHex);
     if (r < need) fail("nontext-contrast", "nextjs/styles/globals.css", 1, `${what} (${scope}) ${r.toFixed(2)}:1 < ${need}:1`);
   }
 }
@@ -252,17 +322,40 @@ for (const rel of ["CLAUDE.md", "docs/ui-guide.md", "docs/brand.md"]) {
 {
   const brand = readFileSync(join(ROOT, "docs/brand.md"), "utf8");
   const all = { ...light, ...dark };
+  const documented = new Set();
   // brand.md เขียนแบบ  `--header-line` `#7FA8B0` light / `#6B99A2` dark
-  for (const m of brand.matchAll(/`(--[\w-]+)`\s+`(#[0-9a-fA-F]{3,8})`(?:\s*(?:light|สว่าง))?(?:\s*\/\s*`?(#[0-9a-fA-F]{3,8})`?\s*(?:dark|มืด))?/g)) {
+  // brand.md เขียนค่าสีไว้ 2 แบบ: ในย่อหน้าอธิบาย และในตารางที่คั่นด้วย |
+  // 🔴 เวอร์ชันแรกอ่านได้แบบเดียว คือแบบที่ token ตัวที่เป็นต้นเหตุบังเอิญใช้
+  //    ตารางสีหลัก 11 แถวซึ่งไฟล์เรียกว่า "ต้นฉบับเดียว" จึงไม่เคยถูกตรวจเลย
+  const DECL = /`(--[\w-]+)`\s*(?:\||\s)\s*`(#[0-9a-fA-F]{3,8})`(?:\s*(?:light|สว่าง))?(?:\s*(?:\/|\|)\s*`?(#[0-9a-fA-F]{3,8})`?\s*(?:dark|มืด))?/g;
+  for (const m of brand.matchAll(DECL)) {
     const [, name, lightHex, darkHex] = m;
     const n = brand.slice(0, m.index).split("\n").length;
-    if (light[name] && light[name].toLowerCase() !== lightHex.toLowerCase()) {
+    // token บางตัวมีค่าสีจริงเฉพาะโหมดมืด (โหมดสว่างชี้ไป token อื่นหรือเป็น transparent)
+    // ค่าเดียวที่เอกสารเขียนไว้จึงต้องเทียบกับโหมดมืด ไม่ใช่โหมดสว่าง
+    const lightIsHex = /^#[0-9a-fA-F]{3,8}$/.test(light[name] || "");
+    if (!lightIsHex && !darkHex && dark[name]) {
+      if (dark[name].toLowerCase() !== lightHex.toLowerCase()) {
+        fail("spec-drift", "docs/brand.md", n, `${name} (โหมดมืด) เอกสารเขียน ${lightHex} แต่ globals.css ใช้ ${dark[name]}`);
+      }
+    } else if (lightIsHex && light[name].toLowerCase() !== lightHex.toLowerCase()) {
       fail("spec-drift", "docs/brand.md", n, `${name} เอกสารเขียน ${lightHex} แต่ globals.css ใช้ ${light[name]}`);
     }
     if (darkHex && dark[name] && dark[name].toLowerCase() !== darkHex.toLowerCase()) {
       fail("spec-drift", "docs/brand.md", n, `${name} (โหมดมืด) เอกสารเขียน ${darkHex} แต่ globals.css ใช้ ${dark[name]}`);
     }
     void all;
+    documented.add(name);
+  }
+
+  // 🔴 กฎนี้เคยจับได้แค่ "เอกสารเขียนไม่ตรง" ไม่เคยจับ "เอกสารไม่ได้เขียนเลย"
+  //    ซึ่งเป็นวิธีที่ token ใหม่ทุกตัวหลุดออกจากเอกสารมาตลอด
+  const INTERNAL = /^--(space|radius|text|shell|font)/;
+  for (const name of Object.keys({ ...light, ...dark })) {
+    if (INTERNAL.test(name) || documented.has(name)) continue;
+    // ตรวจเฉพาะ token ที่เป็นค่าสีจริง ตัวที่ชี้ไป token อื่นถือว่าเอกสารครอบคลุมแล้ว
+    if (!/^#[0-9a-fA-F]{3,8}$/.test({ ...light, ...dark }[name] || "")) continue;
+    fail("spec-undocumented", "docs/brand.md", 1, `${name} มีใน globals.css แต่ไม่มีใน brand.md`);
   }
 }
 

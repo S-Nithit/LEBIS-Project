@@ -477,23 +477,6 @@
   /* ข้อความแจ้งว่าทำสำเร็จ — ใช้สีของระบบ ไม่ใช่จานสีของไลบรารี toast
      ถ้าปล่อยให้ไลบรารีเลือกสีเอง วันที่อัปเดตไลบรารี สีจะเปลี่ยนโดยไม่มีใครสั่ง
      และมันจะไม่พลิกตามโหมดมืดของเราด้วย */
-  .lebis-toast {
-    background: var(--surface);
-    color: var(--ink);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-control);
-    font-family: inherit;
-    font-size: var(--text-body);
-  }
-
-  .lebis-toast-success {
-    border-color: color-mix(in srgb, var(--success) 45%, transparent);
-  }
-
-  .lebis-toast-error {
-    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
-  }
-
   /* ป้ายสถานะ — พื้นอ่อนของสีนั้นๆ ขอบบาง ตัวอักษรสีที่อ่านออกบนพื้นขาว
      ใช้ color-mix เพื่อผสมสีกับพื้น จะได้ไม่ต้องประกาศสีเพิ่มอีกชุด */
   /* ช่องติ๊ก — วาดเองทั้งหมด ไม่ปล่อยให้เบราว์เซอร์วาด
@@ -599,4 +582,34 @@
     padding: 0 var(--space-3);
     font-size: var(--text-label);
   }
+}
+
+/* ---------------------------------------------------------------------------
+   ข้อความแจ้งว่าทำสำเร็จ (toast)
+
+   🔴 สีของ toast ไม่ได้ตั้งที่นี่ — ตั้งที่ pages/_app.js ผ่านตัวแปรของ sonner เอง
+      (--normal-bg / --normal-text / --normal-border) เพราะ sonner อ่านจากตรงนั้น
+      ไม่ได้อ่าน background ที่เราเขียนทับ
+
+   เคยพลาดเรื่องนี้ 3 ชั้นซ้อน และทุกชั้น "ไฟล์ดูถูกหมด"
+     1. เขียน .lebis-toast เปล่าๆ น้ำหนัก (0,1,0) แพ้ของ sonner ที่ (0,2,0)
+     2. เพิ่ม [data-sonner-toast] ให้น้ำหนักเท่ากัน — ยังแพ้ เพราะกฎใน @layer
+        แพ้กฎนอก layer เสมอ และ sonner ฉีด <style> แบบไม่มี layer
+     3. ย้ายออกนอก @layer — ยังไม่มีผล เพราะ sonner ไม่ได้อ่าน background เลย
+
+   สิ่งที่เหลือไว้ตรงนี้คือรูปทรงกับฟอนต์ ซึ่ง sonner ไม่มีตัวแปรให้
+   บทเรียน: เรื่องแบบนี้อ่านจากไฟล์ไม่มีทางเห็น ต้องเปิดหน้าจริงแล้ววัดค่าที่คำนวณได้
+--------------------------------------------------------------------------- */
+[data-sonner-toast].lebis-toast {
+  border-radius: var(--radius-control);
+  font-family: inherit;
+  font-size: var(--text-body);
+}
+
+[data-sonner-toast].lebis-toast-success [data-icon] svg {
+  color: var(--success);
+}
+
+[data-sonner-toast].lebis-toast-error [data-icon] svg {
+  color: var(--danger);
 }

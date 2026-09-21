@@ -1,17 +1,20 @@
 // ปุ่มสลับภาษา ไทย / EN
 //
 // วิธีใช้
-//   <LanguageToggle />           บนพื้นอ่อน
-//   <LanguageToggle onDark />    บนแถบหัวเว็บสีเข้ม
+//   <LanguageToggle />
 //
-// ตัวนี้อยู่ใน AppShell ให้แล้ว หน้าที่ใช้ AppShell ไม่ต้องวางเอง
+// อยู่ 2 ที่เท่านั้น: หน้าที่ยังไม่ได้เข้าสู่ระบบ (AuthLayout) กับหน้าบัญชี
+// ไม่ได้อยู่บนแถบหัวเว็บอีกแล้ว เพราะภาษาเป็นค่าที่ตั้งครั้งเดียวต่อบัญชี
+// ไม่ใช่การกระทำที่ทำซ้ำทุกหน้า ปุ่มที่อยู่ทุกหน้าแต่แทบไม่มีใครกด
+// จะกลายเป็นของที่เด่นที่สุดในหน้าโดยไม่ได้ตั้งใจ
+//
 // ภาษาที่เลือกถูกจำไว้ในเครื่อง และเปลี่ยนทั้งเว็บพร้อมกันทุกหน้า
 
 import { cn } from "@/lib/utils";
 import { LANGUAGES } from "@/lib/i18n";
 import { useLanguage } from "@/lib/useLanguage";
 
-export function LanguageToggle({ onDark = false, className }) {
+export function LanguageToggle({ className }) {
   const { language, setLanguage, t } = useLanguage();
 
   return (
@@ -19,8 +22,7 @@ export function LanguageToggle({ onDark = false, className }) {
       role="group"
       aria-label={t("nav.language")}
       className={cn(
-        "inline-flex items-center rounded-control border p-1",
-        onDark ? "border-header-line" : "border-line bg-surface",
+        "inline-flex items-center rounded-control border border-line bg-surface p-1",
         className
       )}
     >
@@ -35,16 +37,7 @@ export function LanguageToggle({ onDark = false, className }) {
             className={cn(
               // สูงพอให้กดด้วยนิ้วโป้งบนมือถือ (brand.md หัวข้อ 6)
               "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-control px-3 text-label font-medium transition-colors",
-              active
-                ? onDark
-                  // 🔴 ห้ามใช้ bg-white กับ text-ink บนแถบหัวเว็บ
-                  //    --ink พลิกเป็นสีอ่อนในโหมดมืด ตัวอักษรอ่อนบนพื้นขาว = 1.10:1
-                  //    ซึ่งคือมองไม่เห็นเลย ต้องใช้สีคู่ของแถบหัวเว็บที่ไม่พลิกตามธีม
-                  ? "bg-header-fg text-header-bg"
-                  : "bg-ink text-on-ink"
-                : onDark
-                  ? "text-header-fg/70 hover:text-header-fg"
-                  : "text-muted hover:text-ink"
+              active ? "bg-ink text-on-ink" : "text-muted hover:text-ink"
             )}
           >
             {item.label}
