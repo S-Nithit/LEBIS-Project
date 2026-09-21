@@ -497,3 +497,5 @@ discovered on 28 Sep sink the milestone.
 - When generating a route, generate its Pydantic models and its authorization
   dependency in the same change — a route without an explicit authorization check
   is a bug here, not a TODO.
+- Kim's own PRs: merge them yourself once every test in the task passes.
+- Other members' PRs: never merge — Kim reviews first.
