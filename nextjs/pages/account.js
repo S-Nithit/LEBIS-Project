@@ -63,11 +63,20 @@ export default function Account() {
   // ใช้ตัวแก้ตัวเดียวสลับว่ากำลังแก้ช่องไหน (editing = ชื่อ field หรือ null)
   // ถ้าทำแยกกันสองชุด โค้ดจะซ้ำกันสองเท่าและมีโอกาสแก้ที่เดียวลืมอีกที่
   const [editing, setEditing] = useState(null); // null | "name" | "shop_name"
-  const [draft, setDraft] = useState("");
+  // 🔴 เก็บร่างแยกรายช่อง ไม่ใช่ตัวเดียวใช้ร่วมกัน
+  //    ปุ่มแก้ไขสองปุ่มห่างกัน 96px บนจอมือถือ กดพลาดง่ายมาก
+  //    เดิมใช้ร่างตัวเดียว พอกดอีกแถว สิ่งที่พิมพ์ค้างไว้หายทันทีโดยไม่เตือนอะไรเลย
+  const [drafts, setDrafts] = useState({});
+  const draft = editing ? drafts[editing] ?? "" : "";
+  const setDraft = (value) => setDrafts((current) => ({ ...current, [editing]: value }));
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const slow = useSlowRequest(saving);
   const [fieldError, setFieldError] = useState(""); // ผิดที่ช่อง ไม่ใช่ผิดทั้งฟอร์ม
+  // จำไว้ว่าการย้อนกลับครั้งล่าสุดคือย้อนอะไรเป็นอะไร ปุ่ม "ลองอีกครั้ง" จะได้ทำซ้ำได้
+  const [lastUndo, setLastUndo] = useState(null);
+  // ตัวหยุดคำขอที่ผู้ใช้กดเอง เหมือนหน้า login/register
+  const abortRef = useRef(null);
   const editButtonRefs = useRef({});
 
   const FIELDS = {
@@ -87,16 +96,27 @@ export default function Account() {
 
   function startEditing(field) {
     setEditing(field);
-    setDraft(FIELDS[field].value || "");
+    // ถ้าเคยพิมพ์ค้างไว้ที่ช่องนี้ ให้กลับมาเจอของเดิม ไม่ใช่เริ่มใหม่
+    setDrafts((current) => ({
+      ...current,
+      [field]: current[field] ?? FIELDS[field].value ?? "",
+    }));
     setSaveError("");
     setFieldError("");
   }
 
   function cancelEditing() {
     const field = editing;
+    // ถ้ากำลังบันทึกอยู่ ต้องหยุดคำขอนั้นจริงๆ ไม่ใช่แค่ปิดฟอร์มแล้วปล่อยให้มันวิ่งต่อ
+    abortRef.current?.abort();
     // ยกเลิกต้องทิ้งสิ่งที่พิมพ์ค้างไว้จริงๆ ไม่งั้นกดแก้ไขอีกครั้งจะเจอของเดิม
     setEditing(null);
-    setDraft("");
+    // กดยกเลิก = ตั้งใจทิ้งร่างของช่องนั้นจริงๆ (ต่างจากการไปกดอีกแถว ซึ่งไม่ได้ตั้งใจทิ้ง)
+    setDrafts((current) => {
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
     setSaveError("");
     setFieldError("");
     // คืนโฟกัสให้ปุ่มที่กดเข้ามา ไม่งั้นโฟกัสจะตกไปที่ body
@@ -109,9 +129,13 @@ export default function Account() {
   // ถ้าคืนค่าไม่สำเร็จ ต้องบอกด้วย ห้ามเงียบ เพราะผู้ใช้กดย้อนกลับแล้วจะเชื่อว่า
   // มันย้อนแล้ว ถ้าจริงๆ ไม่ได้ย้อน เขาจะเดินจากไปโดยที่ข้อมูลผิดค้างอยู่
   async function undoSave(field, previous) {
+    setSaveError("");
+    setLastUndo({ field, previous });
+    setSaving(true);
     try {
       await apiFetch("/api/auth/me", { method: "PATCH", body: { [field]: previous } });
       applyUser({ [field]: previous });
+      setLastUndo(null);
       toast.success(t("account.undone"));
       reload();
     } catch (error) {
@@ -120,6 +144,8 @@ export default function Account() {
         return;
       }
       setSaveError(errorMessage(error, t));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -139,11 +165,20 @@ export default function Account() {
     setSaving(true);
     setSaveError("");
     setFieldError("");
+    abortRef.current = new AbortController();
 
     const value = draft.trim() === "" ? null : draft.trim();
 
     try {
-      await apiFetch("/api/auth/me", { method: "PATCH", body: { [editing]: value } });
+      await apiFetch("/api/auth/me", {
+        method: "PATCH",
+        body: { [editing]: value },
+        // 🔴 หน้านี้เป็นหน้าเดียวที่เขียนลงฐานข้อมูล และเป็นหน้าเดียวที่เคยไม่มี
+        //    ตัวยกเลิก ผลคือปุ่ม "ยกเลิก" ข้างปุ่มบันทึกเป็นปุ่มหลอก — กดแล้วแถว
+        //    กลับไปเป็นค่าเดิมเหมือนยกเลิกสำเร็จ แต่คำขอยังวิ่งอยู่ อีก 3 วินาที
+        //    ค่าใหม่จะเด้งกลับมาพร้อมข้อความว่าบันทึกสำเร็จ
+        signal: abortRef.current.signal,
+      });
 
       // 🔴 อัปเดตค่าที่แสดงอยู่ "ทันที" จากค่าที่เพิ่งส่งไปสำเร็จ
       //    ไม่ใช่รอให้ reload() ดึงมาใหม่แล้วค่อยเปลี่ยน
@@ -159,7 +194,13 @@ export default function Account() {
       const saved = editing;
       const previous = FIELDS[saved].value ?? null;
       const canUndo = previous !== value;
-      toast.success(t("account.saved"), {
+      // 🔴 ข้อความต้องบอกว่าบันทึก "อะไร" และแต่ละช่องต้องมี id ของตัวเอง
+      //    เดิมทั้งสองช่องขึ้นข้อความเดียวกันเป๊ะว่า "บันทึกเรียบร้อยแล้ว / ย้อนกลับ"
+      //    แก้ชื่อแล้วแก้ชื่อร้านต่อภายใน 10 วินาที จะมีปุ่มย้อนกลับสองใบพร้อมกัน
+      //    หน้าตาเหมือนกันทุกอย่างแต่ย้อนคนละค่า ผู้ใช้ต้องจำเองว่าใบไหนของอะไร
+      //    ซึ่งเป็นสิ่งที่ปุ่มนี้มีไว้เพื่อ "ไม่ต้องจำ" ตั้งแต่แรก
+      toast.success(`${t("account.saved")} · ${FIELDS[saved].label}`, {
+        id: `lebis-saved-${saved}`,
         // ข้อความที่มีปุ่มให้กด ต้องอยู่นานกว่าข้อความที่แค่บอกให้รู้
         // 4 วินาทีเป็นเวลาที่อ่านคำว่า "บันทึกแล้ว" ทัน แต่ไม่ทันคิดว่า "เอ๊ะ ผิดนี่"
         // แล้วมองหาปุ่มย้อนกลับ ซึ่งคือช่วงเวลาที่ปุ่มนี้มีไว้เพื่อ
@@ -169,6 +210,11 @@ export default function Account() {
           : undefined,
       });
       setEditing(null);
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[saved];
+        return next;
+      });
       // คืนโฟกัสให้ปุ่มแก้ไขของแถวที่เพิ่งบันทึก เหมือนตอนกดยกเลิก
       requestAnimationFrame(() => editButtonRefs.current[saved]?.focus());
       reload(); // ดึงข้อมูลใหม่ ชื่อบนแถบหัวเว็บจะได้เปลี่ยนตาม
@@ -181,7 +227,10 @@ export default function Account() {
         logout();
         return;
       }
-      // ขึ้นในหน้าเหมือนหน้าอื่นของระบบ ไม่ใช่ toast ที่หายเอง
+      // ผู้ใช้กดยกเลิกเอง ไม่ใช่ความผิดพลาด จึงไม่ขึ้นกล่องแดงพร้อมปุ่ม "ลองอีกครั้ง"
+      // เขาเป็นคนสั่งเอง และฟอร์มก็ปิดไปแล้ว การขึ้นกล่องแดงจะอ่านเหมือนระบบพัง
+      if (error?.code === "cancelled") return;
+      // ขึ้นในหน้าเหมือนหน้าอื่นของระบบ ไม่ใช่ข้อความแจ้งเตือนที่หายเอง
       setSaveError(errorMessage(error, t));
     } finally {
       setSaving(false);
@@ -323,6 +372,24 @@ export default function Account() {
         {loadError ? (
           <div className="mb-5">
             <FormError message={errorMessage(loadError, t)} onRetry={reload} retrying={loading} />
+          </div>
+        ) : null}
+
+        {/* 🔴 ความล้มเหลวที่เกิด "ตอนไม่ได้อยู่ในโหมดแก้ไข" ต้องมีที่ให้วาดด้วย
+               เคยพลาด: กดย้อนกลับแล้วคำขอล้มเหลว โค้ดเขียน setSaveError() ถูกแล้ว
+               แต่กล่องที่วาด saveError อยู่ในฟอร์มของแถว ซึ่งถูกถอดออกไปตั้งแต่
+               บันทึกสำเร็จ (editing = null) ผลคือข้อความถูกเขียนลงใน component
+               ที่ไม่ได้อยู่บนหน้าจอ — ผู้ใช้กดย้อนกลับ แล้วไม่มีอะไรเกิดขึ้นเลย
+               ไม่มีกล่อง ไม่มีข้อความ และค่าที่ผิดยังอยู่ทั้งบนจอและในฐานข้อมูล
+               สคริปต์ตรวจจับไม่ได้ เพราะมันมองหาการเรียกข้อความแจ้งเตือนแบบผิดพลาด
+               ส่วนโค้ดนี้ไม่ได้เรียกอะไรเลย มันแค่เขียนค่าลงที่ที่ไม่มีใครอ่าน */}
+        {!editing && saveError ? (
+          <div className="mb-5">
+            <FormError
+              message={saveError}
+              onRetry={lastUndo ? () => undoSave(lastUndo.field, lastUndo.previous) : undefined}
+              retrying={saving}
+            />
           </div>
         ) : null}
 

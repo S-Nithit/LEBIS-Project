@@ -286,6 +286,30 @@ for (const file of files) {
   }
 }
 
+// ── กฎ 7ง · ห้ามเขียน prop เดิมซ้ำในแท็กเดียวกัน
+//    JSX ใช้ตัวท้ายสุด ตัวแรกจึงกลายเป็นโค้ดตาย ที่อันตรายคือมันอ่านแล้วเหมือนทำงาน
+//    เคยพลาด: เพิ่ม autoCapitalize="off" เข้าไปโดยไม่เห็นว่ามี autoCapitalize="none"
+//    อยู่ข้างล่างแล้ว ของใหม่จึงไม่มีผลเลย แต่ทั้งคอมเมนต์และรายงานบอกว่าเพิ่มแล้ว
+for (const file of files) {
+  for (const m of file.code.matchAll(/<([A-Z][\w.]*|[a-z]+)\b/g)) {
+    const attrs = readTag(file.code, m.index + m[0].length);
+    // ตัดของที่อยู่ในวงเล็บปีกกาออกก่อน เพราะ footer={<p className="...">} มี JSX ซ้อน
+    // ถ้าไม่ตัด className ของลูกจะถูกนับเป็น prop ของแม่ แล้วรายงานผิด
+    let flat = attrs;
+    for (let i = 0; i < 6; i += 1) flat = flat.replace(/\{[^{}]*\}/g, " ");
+    const names = [...flat.matchAll(/(?:^|\s)([a-zA-Z][\w-]*)=/g)].map((x) => x[1]);
+    const seen = new Set();
+    for (const name of names) {
+      if (seen.has(name)) {
+        const n = file.code.slice(0, m.index).split("\n").length;
+        fail("duplicate-prop", file.rel, n, `<${m[1]}> มี ${name} ซ้ำ — ตัวแรกเป็นโค้ดตาย`);
+        break;
+      }
+      seen.add(name);
+    }
+  }
+}
+
 // ── กฎ 8 · ระบบดีไซน์อยู่ใน globals.css ซึ่งกฎ 4 มองไม่เห็นเพราะไล่แค่ไฟล์ .js
 //    ค่าสีตายตัวนอกบล็อกประกาศตัวแปร คือสีที่ไม่พลิกตามโหมดมืด
 const cssPath = join(WEB, "styles/globals.css");

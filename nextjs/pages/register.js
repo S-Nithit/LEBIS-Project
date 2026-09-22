@@ -19,7 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 
-import { apiFetch, errorMessage, fieldToInputId, saveToken } from "@/lib/api";
+import { apiFetch, errorMessage, fieldToInputId, getToken, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
 import { useSlowRequest } from "@/lib/useSlowRequest";
 import { AuthLayout } from "@/components/AuthLayout";
@@ -48,6 +48,15 @@ export default function Register() {
   // ตัวหยุดคำขอที่ผู้ใช้กดเอง — คนละเรื่องกับตัวตัดเวลา 15 วินาทีใน lib/api.js
   // ตัวนั้นกันหน้าค้างตลอดกาล ตัวนี้คืนอำนาจให้ผู้ใช้ตัดสินใจว่าจะไม่รอแล้ว
   const abortRef = useRef(null);
+
+  // ถ้ายังล็อกอินอยู่ ไม่ควรเห็นหน้านี้
+  //
+  // 🔴 เคยพลาด: เข้าสู่ระบบเสร็จแล้วกดปุ่มย้อนกลับของเบราว์เซอร์ จะเด้งมาหน้านี้
+  //    ทั้งที่ token ยังอยู่ครบ เจ้าของร้านจะคิดว่าระบบเตะเขาออกแล้วกรอกใหม่
+  //    ทั้งที่เขายังอยู่ในระบบตลอดเวลา
+  useEffect(() => {
+    if (getToken()) router.replace("/account");
+  }, [router]);
   function cancelRequest() {
     abortRef.current?.abort();
   }
@@ -201,9 +210,6 @@ export default function Register() {
             // enterKeyHint บอกว่าปุ่มมุมขวาล่างของแป้นควรเขียนว่าอะไร
             type="email"
             inputMode="email"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
             enterKeyHint="next"
             value={email}
             onChange={(event) => setEmail(event.target.value)}

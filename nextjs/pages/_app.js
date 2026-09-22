@@ -74,6 +74,10 @@ export default function App({ Component, pageProps, initialLanguage }) {
             toast: "lebis-toast",
             success: "lebis-toast-success",
             error: "lebis-toast-error",
+            // ปุ่มในข้อความแจ้งเตือน (เช่น "ย้อนกลับ") เป็นปุ่มจริงที่ผู้ใช้ต้องกด
+            // ค่าเริ่มต้นของ sonner คือ 60x24px ตัวอักษร 12px ซึ่งเป็นของชิ้นเดียว
+            // ในทั้งระบบที่เล็กกว่า 44px และมันคือปุ่มที่ต้องกดให้ทันใน 10 วินาที
+            actionButton: "lebis-toast-action",
           },
         }}
       />

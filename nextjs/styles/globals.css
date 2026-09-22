@@ -667,3 +667,23 @@
 [data-sonner-toast].lebis-toast-error [data-icon] svg {
   color: var(--danger);
 }
+
+/* ปุ่มในข้อความแจ้งเตือน — ต้องอยู่ในระบบเดียวกับปุ่มอื่นทั้งเว็บ
+   ค่าเริ่มต้นของ sonner คือ 60x24px ตัวอักษร 12px ซึ่งเล็กกว่าเกณฑ์ 44px ที่
+   docs/brand.md หัวข้อ 6 กำหนด และเป็นของชิ้นเดียวในทั้งระบบที่หลุดเกณฑ์นี้
+   สคริปต์ตรวจมองไม่เห็น เพราะปุ่มนี้เกิดจากการส่งข้อความให้ไลบรารี ไม่ได้เขียนเป็น JSX */
+[data-sonner-toast] .lebis-toast-action {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--text-body);
+  font-weight: 500;
+}
+
+[data-sonner-toast] .lebis-toast-action:hover {
+  border-color: var(--ink);
+}
