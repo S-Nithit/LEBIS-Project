@@ -209,14 +209,23 @@ export default function Account() {
           ? { label: t("action.undo"), onClick: () => undoSave(saved, previous) }
           : undefined,
       });
-      setEditing(null);
+      // 🔴 ปิดฟอร์มเฉพาะถ้าผู้ใช้ยังอยู่ที่ช่องเดิม
+      //    เน็ตร้านช้า การบันทึกใช้เวลาหลายวินาที ระหว่างนั้นผู้ใช้กดแก้ไขอีกแถวได้
+      //    ถ้าปิดดื้อๆ ตอนคำขอเก่าสำเร็จ ฟอร์มที่เขาเพิ่งเปิดจะหายไปต่อหน้า
+      //    วัดจริง: กดบันทึกชื่อร้าน (หน่วง 2.5 วินาที) แล้วกดแก้ไขชื่อระหว่างรอ
+      //    ฟอร์มเปิดขึ้นมาแล้วหายไปเองเมื่อคำขอเก่าลงจอด
+      //    การกระทำล่าสุดของผู้ใช้ต้องชนะคำขอที่ค้างอยู่เสมอ
+      setEditing((current) => (current === saved ? null : current));
       setDrafts((current) => {
         const next = { ...current };
         delete next[saved];
         return next;
       });
       // คืนโฟกัสให้ปุ่มแก้ไขของแถวที่เพิ่งบันทึก เหมือนตอนกดยกเลิก
-      requestAnimationFrame(() => editButtonRefs.current[saved]?.focus());
+      // แต่ถ้าผู้ใช้ย้ายไปช่องอื่นแล้ว อย่าไปแย่งโฟกัสของเขากลับมา
+      requestAnimationFrame(() => {
+        if (document.activeElement === document.body) editButtonRefs.current[saved]?.focus();
+      });
       reload(); // ดึงข้อมูลใหม่ ชื่อบนแถบหัวเว็บจะได้เปลี่ยนตาม
     } catch (error) {
       // 🔴 token หมดอายุระหว่างเปิดหน้าค้างไว้ ต้องพาออกไปหน้าเข้าสู่ระบบจริงๆ
