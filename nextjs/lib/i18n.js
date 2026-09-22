@@ -261,7 +261,9 @@ const TEXT = {
     "borrow.customer": "ผู้เช่า",
     "borrow.item": "อุปกรณ์",
     "borrow.borrowedAt": "วันที่เช่า",
-    "borrow.days": "จำนวนวัน",
+    // 🔴 ของเดิมเอาตัวเลขมาต่อกับคีย์ borrow.days ตรงๆ ผลบนหน้าจอคือ "1 จำนวนวัน"
+    //    เพราะ "จำนวนวัน" เป็นชื่อหัวข้อของคอลัมน์ ไม่ใช่หน่วยที่ต่อท้ายตัวเลขได้
+    "borrow.dayCount": "{days} วัน",
     "borrow.estimated": "ค่าเช่าโดยประมาณ",
     "borrow.statusActive": "กำลังเช่าอยู่",
     "borrow.statusOverdue": "เลยกำหนดคืน",
@@ -533,7 +535,7 @@ const TEXT = {
     "borrow.customer": "Customer",
     "borrow.item": "Equipment",
     "borrow.borrowedAt": "Rented on",
-    "borrow.days": "Days",
+    "borrow.dayCount": "{days} days",
     "borrow.estimated": "Estimated charge",
     "borrow.statusActive": "Out on rent",
     "borrow.statusOverdue": "Past due",

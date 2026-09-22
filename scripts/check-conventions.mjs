@@ -10,9 +10,15 @@
 // ออก 0 = ผ่าน · ออก 1 = มีข้อที่ยังไม่ผ่าน (พิมพ์บอกว่าไฟล์ไหนบรรทัดไหน)
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+// 🔴 ต้องแปลง URL เป็น path ด้วย fileURLToPath ห้ามใช้ .pathname ตรงๆ
+//    บน Windows ค่า .pathname คือ "/C:/Users/..." (มี / นำหน้าตัวอักษรไดรฟ์)
+//    พอเอาไป join() ต่อ จะได้ "C:\C:\Users\..." แล้วสคริปต์ตายตั้งแต่บรรทัดแรก
+//    ที่ไล่อ่านไฟล์ ด้วย ENOENT — แปลว่าคนที่ใช้ Windows รันตัวตรวจนี้ไม่ได้เลย
+//    สักครั้ง และ PR ของเขาจะถูกส่งเข้ามาโดยไม่เคยผ่านการตรวจ
+const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/[\\/]$/, "");
 const WEB = join(ROOT, "nextjs");
 const failures = [];
 
@@ -26,7 +32,17 @@ function walk(dir, out = []) {
   return out;
 }
 
-const files = walk(WEB).map((f) => ({ path: f, rel: relative(ROOT, f), text: readFileSync(f, "utf8") }));
+// 🔴 rel ต้องใช้ "/" คั่นเสมอ ไม่ว่ารันบนเครื่องอะไร
+//    ข้างล่างมีข้อยกเว้น 5 ที่ที่เทียบด้วย endsWith("lib/api.js") แบบนี้
+//    บน Windows ค่าที่ relative() คืนมาคือ "nextjs\lib\api.js" การเทียบจึงเป็นเท็จหมด
+//    ผลคือไฟล์ที่ "ตั้งใจยกเว้น" ไม่ถูกยกเว้นจริง — Logo.js ที่ brand.md อนุญาตให้ใช้
+//    สีตายตัวได้ ถูกฟ้อง 3 ข้อทุกครั้งที่คนใช้ Windows รัน ทั้งที่บนเครื่อง Mac ผ่านสะอาด
+//    ตัวเลขผลลัพธ์จึงขึ้นกับว่าใครเป็นคนรัน ซึ่งทำให้ทุกคนเลิกเชื่อผลของสคริปต์
+const files = walk(WEB).map((f) => ({
+  path: f,
+  rel: relative(ROOT, f).split(sep).join("/"),
+  text: readFileSync(f, "utf8"),
+}));
 
 // นิยามเดียวของคำว่า "ค่าสีตายตัว" ใช้ร่วมกันทุกกฎ
 // 🔴 เคยมีสองนิยาม: กฎ 4 รู้จักแค่ #hex 6 หลัก ส่วนกฎ 8 รู้จัก rgb() hsl() ด้วย
@@ -236,11 +252,24 @@ for (const file of files) {
 //    ของแบบนั้นกดด้วยคีย์บอร์ดไม่ได้ และโปรแกรมอ่านหน้าจอไม่รู้ว่ามันกดได้
 //    🔴 เวอร์ชันแรกใช้ [^>]*? ซึ่งตัดจบที่ ">" ของ => ทั้งที่ readTag() ที่เขียนไว้
 //       ข้างบนในคอมมิตเดียวกันมีไว้แก้ปัญหานี้พอดี — เขียนเครื่องมือแล้วไม่ได้ใช้
+//    🔴 และต้องตัด JSX ที่ซ้อนอยู่ในปีกกาออกก่อนเหมือนกฎ 7ง ไม่งั้น
+//       <PageHeader action={<Button onClick={...}>...</Button>} /> จะถูกฟ้องว่า
+//       PageHeader รับการกด ทั้งที่ตัวที่รับการกดคือ <Button> ข้างในซึ่งเป็นปุ่มจริง
+//       กฎ 7ง ตัดปีกกาออกก่อนด้วยเหตุผลข้อเดียวกันเป๊ะ แต่กฎนี้ถูกลืม
+//       ผลคือคนที่ส่งปุ่มเข้าไปทาง prop (ซึ่งเป็นวิธีที่ถูกของ React) โดนฟ้อง
+//       แล้วทางแก้ที่สคริปต์ชี้ให้ทำคือการทำให้โค้ดแย่ลง
 const INTERACTIVE = new Set(["button", "a", "input", "select", "textarea", "label", "Link", "Button"]);
 for (const file of files) {
   for (const m of file.code.matchAll(/<([A-Za-z][\w.]*)\b/g)) {
     if (INTERACTIVE.has(m[1])) continue;
-    const attrs = readTag(file.code, m.index + m[0].length);
+    const raw = readTag(file.code, m.index + m[0].length);
+
+    // ตัดของที่อยู่ในปีกกาออก เหลือแต่ "ชื่อ prop" ของแท็กตัวนี้เอง
+    // onClick={handleX} ของแท็กนี้ยังเหลือคำว่า onClick อยู่ จึงยังถูกจับได้เหมือนเดิม
+    // ส่วน onClick ที่อยู่ใน JSX ซ้อนข้างในหายไปพร้อมปีกกา
+    let attrs = raw;
+    for (let i = 0; i < 6; i += 1) attrs = attrs.replace(/\{[^{}]*\}/g, " ");
+
     if (!/\bon(Click|MouseDown|MouseUp|PointerDown|PointerUp|TouchStart|TouchEnd)\b/.test(attrs)) continue;  // onKeyDown ไม่ใช่การกดด้วยเมาส์ เช่น Esc บนฟอร์ม
     if (/\brole="button"/.test(attrs) && /\bonKeyDown\b/.test(attrs) && /\btabIndex\b/.test(attrs)) continue;
     const n = file.code.slice(0, m.index).split("\n").length;

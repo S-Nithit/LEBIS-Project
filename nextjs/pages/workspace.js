@@ -98,6 +98,17 @@ function StatCard({ label, value, unit }) {
   );
 }
 
+// หนึ่งบรรทัดข้อมูลในการ์ดของมือถือ — ป้ายกำกับอยู่ซ้าย ค่าอยู่ขวา
+// ต้องมีป้ายกำกับ เพราะบนการ์ดไม่มีหัวตารางคอยบอกว่าตัวเลขที่เห็นคืออะไร
+function CardRow({ label, children }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="t-caption shrink-0">{label}</span>
+      <span className="t-body text-right">{children}</span>
+    </div>
+  );
+}
+
 // แถบยืนยันก่อนทำสิ่งที่ย้อนกลับยาก — ใช้แทน confirm() ของเบราว์เซอร์
 // เพราะกล่องของเบราว์เซอร์ขึ้นเป็นภาษาของเบราว์เซอร์ ไม่ใช่ภาษาที่ผู้ใช้เลือกในเว็บเรา
 function ConfirmPanel({ message, confirmLabel, onConfirm, onCancel, busy, error }) {
@@ -716,6 +727,10 @@ export default function Workspace() {
                 <label htmlFor="filter-category" className="t-label mb-2 block">
                   {t("workspace.filterCategory")}
                 </label>
+                {/* ok-touch-target: .field-input ตั้ง min-height: 44px ไว้ใน globals.css แล้ว
+                    สคริปต์ตรวจอ่านแต่ไฟล์ .js จึงมองไม่เห็นความสูงที่มาจาก CSS
+                    ไม่ใส่ min-h-[44px] ซ้ำที่นี่ เพราะจะกลายเป็นความสูงสองที่
+                    ที่ต้องแก้ให้ตรงกันเองตลอดไป */}
                 <select
                   id="filter-category"
                   className="field-input"
@@ -738,6 +753,7 @@ export default function Workspace() {
                 <label htmlFor="filter-status" className="t-label mb-2 block">
                   {t("workspace.filterStatus")}
                 </label>
+                {/* ok-touch-target: .field-input ตั้ง min-height: 44px ไว้ใน globals.css แล้ว */}
                 <select
                   id="filter-status"
                   className="field-input"
@@ -775,9 +791,67 @@ export default function Workspace() {
             ) : (
               <Card>
                 <CardContent className="p-0">
-                  {/* ตารางกว้างกว่าจอมือถือ เลยต้องครอบด้วย overflow-x-auto
-                      ไม่งั้นทั้งหน้าจะเลื่อนซ้ายขวาได้ */}
-                  <div className="overflow-x-auto">
+                  {/* มือถือ: หนึ่งอุปกรณ์เป็นหนึ่งการ์ด (docs/brand.md หัวข้อ 6)
+                      🔴 ของเดิมใช้ตารางกว้าง 46rem ครอบด้วย overflow-x-auto ทุกขนาดจอ
+                         บนจอ 390px จึงเห็นแค่ 3 คอลัมน์แรก ส่วนคอลัมน์ "จัดการ" ที่มีปุ่ม
+                         ปล่อยเช่า/แก้ไข/ลบ อยู่นอกจอ และไม่มีอะไรบอกว่าต้องเลื่อนไปทางขวา
+                         เท่ากับเจ้าของร้านที่ยืนอยู่หน้าร้านพร้อมมือถือ ใช้หน้านี้ไม่ได้เลย
+                         ซึ่งเป็นสถานการณ์ที่หน้านี้ถูกสร้างมาเพื่อมันโดยตรง */}
+                  <ul className="flex flex-col sm:hidden">
+                    {items.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex flex-col gap-3 border-b border-line p-4 last:border-0"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="t-body font-medium">{item.name}</p>
+                            <p className="t-caption">{item.code}</p>
+                          </div>
+                          {itemStatusBadge(item.status, t)}
+                        </div>
+
+                        <CardRow label={t("item.category")}>{item.category}</CardRow>
+                        <CardRow label={t("item.available")}>
+                          {item.available} / {item.total}
+                        </CardRow>
+                        <CardRow label={t("item.dailyRate")}>
+                          {formatMoney(item.daily_rate)}
+                        </CardRow>
+
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => setPanel({ mode: "borrow", item })}
+                            disabled={item.available <= 0 || item.status === "broken"}
+                          >
+                            {t("borrow.open")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPanel({ mode: "edit", item })}
+                          >
+                            {t("item.edit")}
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => toggleBroken(item)}>
+                            {item.status === "broken" ? t("item.markOk") : t("item.markBroken")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirm({ kind: "delete", item })}
+                          >
+                            {t("item.delete")}
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* จอกว้างกว่ามือถือ: ตารางเหมือนเดิม ยังครอบ overflow-x-auto ไว้
+                      เผื่อจอแท็บเล็ตแคบๆ ที่ยังไม่ถึงความกว้างของตาราง */}
+                  <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full min-w-[46rem] border-collapse">
                       <thead>
                         <tr className="border-b border-line text-left">
@@ -875,6 +949,7 @@ export default function Workspace() {
               <label htmlFor="filter-borrow" className="t-label mb-2 block">
                 {t("workspace.filterStatus")}
               </label>
+              {/* ok-touch-target: .field-input ตั้ง min-height: 44px ไว้ใน globals.css แล้ว */}
               <select
                 id="filter-borrow"
                 className="field-input"
@@ -903,7 +978,53 @@ export default function Workspace() {
             ) : (
               <Card>
                 <CardContent className="p-0">
-                  <div className="overflow-x-auto">
+                  {/* มือถือ: หนึ่งรายการเช่าเป็นหนึ่งการ์ด เหตุผลเดียวกับตารางอุปกรณ์
+                      ปุ่ม "รับคืน" เป็นปุ่มที่ถูกกดบ่อยที่สุดตอนยืนอยู่หน้าร้าน
+                      จึงห้ามอยู่นอกจอ */}
+                  <ul className="flex flex-col sm:hidden">
+                    {borrows.map((borrow) => (
+                      <li
+                        key={borrow.id}
+                        className="flex flex-col gap-3 border-b border-line p-4 last:border-0"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="t-body font-medium">{borrow.item_name}</p>
+                            <p className="t-caption">{borrow.item_code}</p>
+                          </div>
+                          {borrowStatusBadge(borrow.status, t)}
+                        </div>
+
+                        <CardRow label={t("borrow.customer")}>
+                          {borrow.customer_name}
+                          {borrow.customer_phone ? (
+                            <span className="t-caption"> · {borrow.customer_phone}</span>
+                          ) : null}
+                        </CardRow>
+                        <CardRow label={t("borrow.borrowedAt")}>
+                          {formatDate(borrow.borrowed_at, language)}
+                        </CardRow>
+                        <CardRow label={t("borrow.dueDate")}>
+                          {formatDate(borrow.due_date, language)}
+                        </CardRow>
+                        <CardRow label={t("borrow.estimated")}>
+                          {formatMoney(borrow.estimated_price)}
+                          <span className="t-caption">
+                            {" "}
+                            · {fill(t("borrow.dayCount"), { days: borrow.days })}
+                          </span>
+                        </CardRow>
+
+                        {borrow.returned_at ? null : (
+                          <Button size="sm" onClick={() => setConfirm({ kind: "return", borrow })}>
+                            {t("borrow.return")}
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full min-w-[46rem] border-collapse">
                       <thead>
                         <tr className="border-b border-line text-left">
@@ -933,7 +1054,10 @@ export default function Workspace() {
                             <td className="t-body p-4">{formatDate(borrow.due_date, language)}</td>
                             <td className="t-body p-4">
                               {formatMoney(borrow.estimated_price)}
-                              <span className="t-caption"> · {borrow.days} {t("borrow.days")}</span>
+                              <span className="t-caption">
+                                {" "}
+                                · {fill(t("borrow.dayCount"), { days: borrow.days })}
+                              </span>
                             </td>
                             <td className="p-4">{borrowStatusBadge(borrow.status, t)}</td>
                             <td className="p-4">
