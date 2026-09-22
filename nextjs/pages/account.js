@@ -22,6 +22,7 @@ import { FormField } from "@/components/FormField";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
 import { isDeadToken, useAuth } from "@/lib/useAuth";
+import { planFor } from "@/lib/plan";
 import { useLanguage } from "@/lib/useLanguage";
 import { useSlowRequest } from "@/lib/useSlowRequest";
 
@@ -34,7 +35,13 @@ import { useSlowRequest } from "@/lib/useSlowRequest";
 // ไม่งั้นคำว่า "ชื่อร้าน" จะขึ้นสองครั้งติดกัน และโปรแกรมอ่านหน้าจอจะอ่านซ้ำสองรอบ
 function Row({ label, value, children, hideLabel = false }) {
   return (
-    <div className="grid gap-2 border-b border-line py-3 last:border-b-0 last:pb-0 sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)] sm:items-center sm:gap-4">
+    // 🔴 ต้องมี minmax(0,1fr) ที่ "จอมือถือ" ด้วย ไม่ใช่เฉพาะ sm: ขึ้นไป
+    //    ของเดิมมีเฉพาะฝั่งจอคอม ส่วนจอมือถือปล่อยให้คอลัมน์เป็น auto
+    //    ซึ่งจะขยายตามคำที่ตัดบรรทัดไม่ได้ เช่นอีเมลยาวๆ ที่ไม่มีขีดกลาง
+    //    วัดที่ 390px: อีเมล 53 ตัวอักษร ทำให้ทั้งหน้าเลื่อนซ้ายขวาได้ 81px
+    //    break-words ช่วยไม่ได้ เพราะกล่องไม่เคยแคบพอให้มันทำงาน
+    //    รอดมา 13 รอบเพราะทุกการทดสอบล็อกอินด้วย demo@example.com ซึ่งยาว 16 ตัว
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 border-b border-line py-3 last:border-b-0 last:pb-0 sm:grid-cols-[minmax(0,180px)_minmax(0,1fr)] sm:items-center sm:gap-4">
       {hideLabel ? (
         <span className="hidden sm:block" aria-hidden="true" />
       ) : (
@@ -312,7 +319,7 @@ export default function Account() {
             <CardContent className="p-5">
               <h2 className="t-section">{t("account.planTitle")}</h2>
               <p className="t-caption mt-2">
-                {user.role === "free" ? t("account.planFree") : t("account.planPro")}
+                {t(planFor(user.role, t).copyKey)}
               </p>
             </CardContent>
           </Card>

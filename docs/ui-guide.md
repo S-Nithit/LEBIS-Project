@@ -287,8 +287,14 @@ const { t } = useLanguage();
 - [ ] ทุกการกดที่เปลี่ยนข้อมูลมี toast ตอนสำเร็จ · ตอนพลาดขึ้นในหน้า ไม่ใช่ toast
 - [ ] ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่ toast
 - [ ] ข้อผิดพลาดที่ backend ระบุช่องมา ผ่าน `fieldToInputId(error.field)` ไม่ใช่ `error.field` ดิบ
-- [ ] `node scripts/check-conventions.mjs` ผ่าน (ตรวจกฎข้างบนให้อัตโนมัติ)
-- [ ] `node scripts/check-pages.mjs` ผ่าน — ตัวนี้ **เปิดหน้าจริง** ไม่ได้อ่านไฟล์
+- [ ] `cd nextjs && npm run check` ผ่าน (ตรวจกฎข้างบนให้อัตโนมัติ)
+- [ ] `cd nextjs && npm run check:pages` ผ่าน — ตัวนี้ **เปิดหน้าจริง** ไม่ได้อ่านไฟล์
+      ครั้งแรกต้องติดตั้งก่อน: `npm i && npx playwright install chromium`
+      ถ้ารันแล้วบอกว่าหา playwright ไม่เจอทั้งที่ลงแล้ว แปลว่า node_modules ในเครื่อง
+      กับใน container คนละชุดกัน (compose ครอบทับไว้) ให้ `docker compose down -v`
+      แล้ว `up --build` ใหม่หนึ่งรอบ
+      🔴 ต้องเรียกผ่าน `npm run` ไม่ใช่ `node scripts/...` ตรงๆ เพราะ playwright
+         ถูกประกาศไว้ใน nextjs/package.json จะหาเจอก็ต่อเมื่อรันจากโฟลเดอร์นั้น
       ตรวจ: มี error ใน console ไหม · เนื้อหาเปลี่ยนเองหลังโหลดเสร็จไหม · ล้นจอไหม
 - [ ] 🔴 **เปิดหน้าจริงแล้วดูสองอย่าง**
       1. สิ่งที่เขียนไป "ชนะ" จริงไหม — ถ้าเขียนทับสไตล์ของไลบรารี (toast, ปฏิทิน,

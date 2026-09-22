@@ -12,14 +12,8 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { planFor } from "@/lib/plan";
 import { useLanguage } from "@/lib/useLanguage";
-
-// แปลง role ที่ได้จาก API เป็นคำที่ผู้ใช้อ่านรู้เรื่อง
-function planLabel(role, t) {
-  if (role === "admin") return t("role.admin");
-  if (role === "pro") return t("role.pro");
-  return t("role.free");
-}
 
 export function AppShell({ user, onLogout, children }) {
   const { t } = useLanguage();
@@ -46,8 +40,8 @@ export function AppShell({ user, onLogout, children }) {
                   {user.shop_name || user.name || user.email}
                 </span>
                 {/* ป้ายแพ็กเกจ — Pro ได้สีอำพัน ซึ่งเป็นไฮไลต์จุดเดียวของแถบนี้ */}
-                <StatusBadge tone={user.role === "free" ? "neutral" : "accent"}>
-                  {planLabel(user.role, t)}
+                <StatusBadge tone={planFor(user.role, t).tone}>
+                  {planFor(user.role, t).label}
                 </StatusBadge>
               </div>
             ) : null}
@@ -79,8 +73,11 @@ export function AppShell({ user, onLogout, children }) {
           </Link>
           {/* ชื่อผู้ใช้ย้ายมาท้ายหน้าบนจอมือถือ แทนที่จะอัดไว้ในแถบบน */}
           {user ? (
-            <span className="t-caption md:hidden">
-              {user.email} · {planLabel(user.role, t)}
+            // 🔴 ต้องตัดคำได้ อีเมลยาวๆ ที่ไม่มีขีดกลางตัดบรรทัดเองไม่ได้
+            //    วัดที่ 320px: อีเมล 53 ตัวอักษรดันทั้งหน้าให้เลื่อนซ้ายขวาได้ 60px
+            //    ที่ไม่เคยเจอเพราะทุกการทดสอบล็อกอินด้วย demo@example.com ซึ่งสั้น
+            <span className="t-caption min-w-0 break-all md:hidden">
+              {user.email} · {planFor(user.role, t).label}
             </span>
           ) : null}
         </div>

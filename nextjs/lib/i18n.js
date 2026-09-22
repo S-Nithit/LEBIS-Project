@@ -25,6 +25,10 @@ const TEXT = {
     "page.login": "เข้าสู่ระบบ · LEBIS",
     "page.register": "สมัครสมาชิก · LEBIS",
     "page.help": "ช่วยเหลือเรื่องการเข้าสู่ระบบ · LEBIS",
+    "page.notFound": "ไม่พบหน้านี้ · LEBIS",
+    "notFound.title": "ไม่พบหน้าที่คุณเปิด",
+    "notFound.body": "ลิงก์อาจพิมพ์ผิด หรือเป็นลิงก์เก่าที่ย้ายไปแล้ว ข้อมูลร้านของคุณยังอยู่ครบ",
+    "notFound.goLogin": "ไปหน้าเข้าสู่ระบบ",
     "page.account": "บัญชีของคุณ · LEBIS",
 
     "nav.logout": "ออกจากระบบ",
@@ -106,6 +110,7 @@ const TEXT = {
     "error.user_not_found": "ไม่พบบัญชีนี้ในระบบ กรุณาเข้าสู่ระบบอีกครั้ง",
 
     "action.retry": "ลองอีกครั้ง",
+    "action.retrying": "กำลังลองใหม่...",
     "login.forgot": "เข้าสู่ระบบไม่ได้ใช่ไหม",
     "login.remember": "จำฉันไว้ในเครื่องนี้",
     "login.rememberHint": "เหมาะกับเครื่องส่วนตัวหรือเครื่องที่ร้าน จะได้ไม่ต้องกรอกใหม่ทุกวัน",
@@ -134,6 +139,8 @@ const TEXT = {
     "account.planTitle": "แพ็กเกจของคุณให้อะไรบ้าง",
     "account.planFree":
       "บันทึกอุปกรณ์ได้สูงสุด 50 ชิ้น ดูรายงานย้อนหลังได้ 7 วัน และยังไม่รวมการแจ้งเตือนผ่าน LINE กับการส่งออกไฟล์",
+    "account.planAdmin":
+      "บัญชีผู้ดูแลระบบ ใช้ดูแลระบบหลังบ้าน ไม่ใช่บัญชีสำหรับใช้งานร้าน จึงไม่ได้ผูกกับแพ็กเกจใด",
     "account.planPro":
       "บันทึกอุปกรณ์ได้ไม่จำกัด ดูรายงานย้อนหลังได้ทั้งหมด แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน และส่งออกไฟล์ได้",
 
@@ -172,6 +179,10 @@ const TEXT = {
     "page.login": "Sign in · LEBIS",
     "page.register": "Create account · LEBIS",
     "page.help": "Help with signing in · LEBIS",
+    "page.notFound": "Page not found · LEBIS",
+    "notFound.title": "We could not find that page",
+    "notFound.body": "The link may have a typo, or it may be an old one that has moved. Nothing in your shop's records is affected.",
+    "notFound.goLogin": "Go to sign in",
     "page.account": "Your account · LEBIS",
 
     "nav.logout": "Sign out",
@@ -251,6 +262,7 @@ const TEXT = {
     "error.user_not_found": "That account no longer exists. Please sign in again.",
 
     "action.retry": "Try again",
+    "action.retrying": "Trying again…",
     "login.forgot": "Trouble signing in?",
     "login.remember": "Keep me signed in on this device",
     "login.rememberHint": "Best for your own phone or the shop's computer, so you do not sign in every day.",
@@ -277,6 +289,8 @@ const TEXT = {
     "account.planTitle": "What your plan includes",
     "account.planFree":
       "Up to 50 items and 7 days of report history. LINE reminders and CSV export are not included.",
+    "account.planAdmin":
+      "An administrator account. It is for running the system, not a shop, so it is not tied to any plan.",
     "account.planPro":
       "Unlimited items, full report history, LINE reminders before each due date, and CSV export.",
 

@@ -32,7 +32,19 @@ const files = walk(WEB).map((f) => ({ path: f, rel: relative(ROOT, f), text: rea
 // 🔴 เคยมีสองนิยาม: กฎ 4 รู้จักแค่ #hex 6 หลัก ส่วนกฎ 8 รู้จัก rgb() hsl() ด้วย
 //    ผลคือ style={{ color: "#fff" }} กับ style={{ color: "rgb(255,0,0)" }} ผ่านฉลุย
 //    ทั้งที่เป็นค่าสีที่ไม่พลิกตามโหมดมืดเหมือนกันทุกประการ
-const COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(|\b(white|black|red|blue|green|rebeccapurple|transparent)\b\s*[;"']/;
+//    และต้องจับคลาสสีสำเร็จรูปของ Tailwind ด้วย เช่น text-white / bg-slate-100
+//    ซึ่งไม่พลิกตามโหมดมืดเหมือนกัน และเป็นวิธีที่คนเผลอใช้บ่อยที่สุด
+//    รายชื่อข้างล่างเป็นสีของ Tailwind ล้วน ไม่มีชื่อ token ของโปรเจกต์
+//    (paper · surface · ink · line · amber · muted · success · warning · danger)
+//    จึงไม่ไปชนกับคลาสที่ถูกต้องอย่าง bg-paper หรือ text-amber-text
+const TAILWIND_COLOURS =
+  "red|blue|green|yellow|purple|pink|gray|grey|slate|zinc|neutral|stone|orange|lime|emerald|teal|cyan|sky|indigo|violet|fuchsia|rose";
+const COLOUR = new RegExp(
+  "#[0-9a-fA-F]{3,8}\\b" +
+    "|\\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\\(" +
+    "|(^|[\\s:\"'`(])(white|black|red|blue|green|rebeccapurple)([\\s;\"'`)]|$)" +
+    `|\\b(text|bg|border|fill|stroke|ring|outline|decoration|divide|from|via|to)-(white|black|${TAILWIND_COLOURS})\\b`
+);
 
 function fail(rule, rel, line, detail) {
   failures.push(`${rel}:${line}  [${rule}] ${detail}`);
@@ -130,7 +142,10 @@ for (const key of en) if (!th.has(key)) fail("i18n-parity", "nextjs/lib/i18n.js"
 
 // คีย์ที่ถูกประกอบขึ้นตอนรัน หาด้วยการ grep ตรงๆ ไม่เจอ
 const DYNAMIC = ["error.", "sample."];
-const allCode = files.filter((f) => !f.rel.endsWith("lib/i18n.js")).map((f) => f.text).join("\n");
+// 🔴 ต้องอ่าน file.code (ตัดคอมเมนต์ออกแล้ว) ไม่ใช่ file.text
+//    ไม่งั้นคีย์ที่ถูกพูดถึงในคอมเมนต์อย่างเดียวจะนับว่า "มีคนเรียก" ทั้งที่ไม่มี
+//    เป็นรูแบบเดียวกับกฎ 4 และกฎ 8 ที่แก้ไปแล้ว แต่กฎนี้ถูกลืมตอนแปลงทั้งสามที่
+const allCode = files.filter((f) => !f.rel.endsWith("lib/i18n.js")).map((f) => f.code).join("\n");
 for (const key of th) {
   if (DYNAMIC.some((prefix) => key.startsWith(prefix))) continue;
   if (!allCode.includes(`"${key}"`)) {
@@ -250,15 +265,23 @@ for (const file of files) {
 //    ลบทั้งก้อนที่เป็นเนื้อของการแก้ทิ้ง สคริปต์ก็ยังขึ้นว่าผ่าน
 {
   const busyCss = readFileSync(join(WEB, "styles/globals.css"), "utf8");
-  const escape = busyCss.match(/\.btn\[aria-busy="true"\]:disabled\s*\{([^}]*)\}/);
-  if (!escape) {
+  // 🔴 ต้องเก็บ "ทุก" ก้อนที่พูดถึง aria-busy แล้วดูค่าสุดท้าย ไม่ใช่ก้อนแรกที่เจอ
+  //    เพราะ CSS ใช้ค่าที่เขียนทีหลัง เขียนก้อนที่สองทับไว้ข้างล่างก็ผ่านได้
+  //    และต้องจับ .btn[aria-busy="true"] ที่ไม่มี :disabled ต่อท้ายด้วย
+  //    ซึ่งเป็นการทำให้จางเหมือนกันทุกประการ แค่เขียนสั้นกว่าหนึ่งตัว
+  const busyBlocks = [...busyCss.matchAll(/\.btn\[aria-busy="true"\][^{]*\{([^}]*)\}/g)];
+  if (busyBlocks.length === 0) {
     fail("busy-not-faded", "nextjs/styles/globals.css", 1,
-      'ไม่มีกฎ .btn[aria-busy="true"]:disabled — ปุ่มที่กำลังทำงานจะจางลงจนอ่านไม่ออก');
+      'ไม่มีกฎ .btn[aria-busy="true"] — ปุ่มที่กำลังทำงานจะจางลงจนอ่านไม่ออก');
   } else {
-    const opacity = escape[1].match(/opacity:\s*([\d.]+)/);
-    if (!opacity || Number(opacity[1]) < 1) {
+    let effective = null;
+    for (const block of busyBlocks) {
+      const found = block[1].match(/opacity:\s*([\d.]+)/);
+      if (found) effective = Number(found[1]);
+    }
+    if (effective === null || effective < 1) {
       fail("busy-not-faded", "nextjs/styles/globals.css", 1,
-        `ปุ่มที่กำลังทำงานถูกทำให้จาง (opacity: ${opacity ? opacity[1] : "ไม่ได้ตั้ง"}) ต้องเป็น 1`);
+        `ปุ่มที่กำลังทำงานถูกทำให้จาง (opacity: ${effective === null ? "ไม่ได้ตั้ง" : effective}) ต้องเป็น 1`);
     }
   }
 }
@@ -268,26 +291,42 @@ for (const file of files) {
 const cssPath = join(WEB, "styles/globals.css");
 const css = readFileSync(cssPath, "utf8");
 {
-  let depth = 0;
-  let inRoot = false;
-  css.split("\n").forEach((line, i) => {
-    // 🔴 ต้องดูจาก "โค้ด" ไม่ใช่ทั้งบรรทัด — คอมเมนต์ภาษาไทยที่มีคำว่า :root
-    //    เคยเปิดโหมดยกเว้นค้างไว้ทั้งไฟล์ที่เหลือ (ถูกพิสูจน์มาแล้วสองรอบ)
-    const codeOnly = line.split("/*")[0].split("*/").pop();
-    if (/(^|[\s,}])(:root|@media[^{]*prefers-color-scheme)/.test(codeOnly)) inRoot = true;
-    const before = depth;
-    depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
-    if (inRoot && depth <= 0) inRoot = false;
-    // ไม่ต้องยกเว้น color-mix() เลย — การใช้งานที่ถูกต้องรับแต่ var(--token)
-    // ซึ่งไม่เข้าเงื่อนไข COLOUR อยู่แล้ว ถ้ามีค่าสีดิบอยู่ข้างในก็ควรถูกจับ
-    const code = line.split("/*")[0];
-    // ห้ามทุก "รูปแบบ" ของค่าสี ไม่ใช่เฉพาะ #hex ซึ่งเป็นรูปแบบที่บังเอิญเจอครั้งก่อน
-    // สีที่เขียนเป็น rgb() hsl() oklch() ก็ไม่พลิกตามโหมดมืดเหมือนกันทุกประการ
-    const COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/;
-    if (!inRoot && COLOUR.test(code) && !/@font-face|url\(/.test(code)) {
-      fail("css-hardcoded-color", "nextjs/styles/globals.css", i + 1, `ค่าสีตายตัวนอกบล็อกตัวแปร: ${code.trim()}`);
+  // 🔴 เดิมใช้ตัวแปรสวิตช์ตัวเดียว (inRoot) ซึ่งเดาผิดได้สองทาง
+  //    เปิดค้าง: คำว่า :root ในคอมเมนต์เปิดโหมดยกเว้นไว้ทั้งไฟล์ที่เหลือ
+  //    ปิดช้า: selector อื่นที่อยู่ใน @media (prefers-color-scheme: dark)
+  //            ก้อนเดียวกัน ถูกยกเว้นไปด้วยทั้งหมด
+  //    ตอนนี้เก็บเป็น "กองซ้อนของหัวบล็อก" แล้วถามว่าบล็อกชั้นในสุดคือ :root หรือเปล่า
+  //    ซึ่งเป็นสิ่งที่เบราว์เซอร์มองเห็นจริง ไม่ใช่การเดาจากลำดับบรรทัด
+  const lines = css.split("\n");
+
+  // ตัดคอมเมนต์ทิ้งก่อนทั้งไฟล์ โดยคงจำนวนบรรทัดไว้เท่าเดิม เลขบรรทัดจะได้ไม่เพี้ยน
+  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " ")).split("\n");
+
+  const stack = [];
+  let pending = "";
+
+  stripped.forEach((code, i) => {
+    let head = pending;
+    for (const ch of code) {
+      if (ch === "{") {
+        stack.push(head.trim());
+        head = "";
+      } else if (ch === "}") {
+        stack.pop();
+        head = "";
+      } else {
+        head += ch;
+      }
     }
-    void before;
+    pending = head;
+
+    const innermost = stack.length ? stack[stack.length - 1] : "";
+    const declaringVariables = /(^|[\s,}])(:root|html)\b/.test(innermost);
+    if (declaringVariables) return;
+
+    if (COLOUR.test(code) && !/@font-face|url\(/.test(code)) {
+      fail("css-hardcoded-color", "nextjs/styles/globals.css", i + 1, `ค่าสีตายตัวนอกบล็อกตัวแปร: ${lines[i].trim()}`);
+    }
   });
 }
 

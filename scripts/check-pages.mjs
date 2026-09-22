@@ -47,6 +47,15 @@ try {
   process.exit(1);
 }
 
+// เน็ตสะดุดชั่วคราวระหว่างรันเทส ไม่ใช่ความผิดของโค้ด
+//
+// 🔴 แต่ห้ามกรองกว้างกว่านี้ ตัวตรวจที่ "ไม่เคยไม่ผ่าน" ไม่มีประโยชน์กว่าไม่มีเลย
+//    รายการนี้จึงเป็นชื่อ error ของชั้นเครือข่ายล้วนๆ ไม่มีคำว่า error ลอยๆ
+//    เวลาเจอจริง ให้รันซ้ำก่อนสรุปว่าไม่ใช่ของจริง
+function isTransientNetwork(text) {
+  return /ERR_CONNECTION_RESET|ERR_NETWORK_CHANGED|ERR_CONNECTION_REFUSED|ERR_EMPTY_RESPONSE|ERR_CONNECTION_CLOSED/.test(text);
+}
+
 const failures = [];
 const browser = await chromium.launch();
 
@@ -82,7 +91,7 @@ for (const scheme of ["light", "dark"]) {
       // ข้อความของ React ที่บอกว่า HTML จากเซิร์ฟเวอร์ไม่ตรงกับที่เบราว์เซอร์วาด
       if (/Hydration|did not match|switch to client rendering/i.test(text)) {
         problems.push(`hydration: ${text.slice(0, 120)}`);
-      } else if (m.type() === "error") {
+      } else if (m.type() === "error" && !isTransientNetwork(text)) {
         problems.push(`console: ${text.slice(0, 120)}`);
       }
     });

@@ -1,3 +1,4 @@
+import NextApp from "next/app";
 import Head from "next/head";
 import { Toaster } from "sonner";
 
@@ -52,6 +53,12 @@ export default function App({ Component, pageProps, initialLanguage }) {
         //    ทางที่ถูกคือป้อนตัวแปรของมันด้วยสีของเรา ซึ่งเป็นวิธีที่ไลบรารีออกแบบไว้
         //    กว่าจะรู้ต้องเปิดหน้าจริงแล้วไล่ดูว่ากฎไหนชนะ อ่านจากไฟล์ไม่มีทางเห็น
         style={{
+          // 🔴 ความกว้างของ toast ต้องไม่เกินจอ
+          //    ค่าเริ่มต้นของ sonner คือ 356px + ระยะขอบ = 380px ซึ่งกว้างกว่าจอ 320px
+          //    ผลคือทั้งหน้าเลื่อนซ้ายขวาได้ทุกครั้งที่บันทึกสำเร็จ
+          //    ไม่เคยเห็นเพราะการวัดทุกรอบวัดที่ 390px ขึ้นไป และวัดตอนหน้าอยู่นิ่ง
+          //    ซึ่งเป็นตอนที่ไม่มี toast อยู่บนจอ
+          "--width": "min(356px, calc(100vw - 32px))",
           "--normal-bg": "var(--surface)",
           "--normal-text": "var(--ink)",
           "--normal-border": "var(--line-strong)",
@@ -80,8 +87,21 @@ export default function App({ Component, pageProps, initialLanguage }) {
 //    ซึ่งเป็นสิ่งที่เราต้องการพอดี: หน้า login/register/forgot ต้องถูกวาดใหม่
 //    ทุกครั้งตามภาษาของคนที่เปิด ไม่ใช่ถูกอบไว้เป็นภาษาไทยตั้งแต่ตอน build
 //    แล้วค่อยเปลี่ยนเป็นอังกฤษให้ผู้ใช้เห็นหลังโหลดเสร็จ
-App.getInitialProps = async ({ ctx }) => {
+//
+// 🔴 ต้องเรียก NextApp.getInitialProps(appContext) แล้วรวมผลกลับไปด้วยเสมอ
+//    เพราะตัวนั้นคือสิ่งที่ "สร้าง pageProps" ให้ ถ้าเขียน getInitialProps เองแล้วไม่เรียก
+//    pageProps จะหายไปทั้งก้อน และหน้าที่พึ่งมันมากที่สุดคือหน้า error ของ Next
+//    ซึ่งรับ statusCode ผ่าน pageProps
+//
+//    เคยพลาดมาแล้ว: เขียนตัวนี้เพื่อแก้เรื่องภาษา แล้วทุก URL ที่ไม่มีอยู่จริง
+//    กลายเป็นข้อความว่า "Application error: a client-side exception has occurred
+//    (see the browser console for more information)" ภาษาอังกฤษล้วน ไม่มีหัวเว็บ
+//    ไม่มีลิงก์กลับ และบอกให้ผู้ใช้ไปเปิด console
+//    ไม่มีเครื่องมือตัวไหนในโปรเจกต์เห็น เพราะไม่เคยมีใครขอ URL ที่ไม่มีอยู่จริง
+App.getInitialProps = async (appContext) => {
+  const appProps = await NextApp.getInitialProps(appContext);
+  const { ctx } = appContext;
   const raw = ctx?.req?.headers?.cookie || (typeof document !== "undefined" ? document.cookie : "");
   const match = String(raw).match(new RegExp(`${STORAGE_KEY}=([^;]+)`));
-  return { initialLanguage: match ? match[1] : null };
+  return { ...appProps, initialLanguage: match ? match[1] : null };
 };

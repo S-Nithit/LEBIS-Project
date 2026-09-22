@@ -194,10 +194,28 @@
 
   /* วงแหวนโฟกัส — ใช้อำพันเข้มเพราะอำพันดิบได้แค่ 2.5:1 บนพื้นขาว
      WCAG 2.4.11 ต้องการ 3:1 สำหรับตัวบอกโฟกัส */
+  /* 🔴 :focus-visible ไม่มีใน Safari ต่ำกว่า 15.4
+        เบราว์เซอร์ที่ไม่รู้จักจะทิ้งกฎทั้งก้อน แล้วช่องกรอกจะไม่มีวงแหวนโฟกัสเลย
+        (วัดจากของจริง: จาก 2px solid กลายเป็น 3px none)
+        จึงต้องเขียน :focus ไว้ก่อนเป็นฐาน แล้วให้ :focus-visible ทับ
+        เบราว์เซอร์ใหม่จะใช้ :focus-visible · เบราว์เซอร์เก่าจะเหลือ :focus ซึ่งยังเห็น
+        ห้ามรวมสองตัวนี้ไว้ใน selector เดียวกันด้วยจุลภาค เพราะถ้าตัวหนึ่งไม่รู้จัก
+        ทั้งกฎจะถูกทิ้งทั้งก้อน ซึ่งคือปัญหาเดิมเป๊ะๆ */
+  :focus {
+    outline: 2px solid var(--amber-text);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
   :focus-visible {
     outline: 2px solid var(--amber-text);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+
+  /* เบราว์เซอร์ใหม่: กดเมาส์แล้วไม่ต้องขึ้นวงแหวน ขึ้นเฉพาะตอนใช้คีย์บอร์ด */
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 
   /* แถบหัวเว็บเป็นพื้นหมึกเข้มทั้งสองโหมด วงแหวนสีเดียวกับที่ใช้บนพื้นขาว
@@ -535,7 +553,13 @@
   }
 
   .form-error {
-    border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+    /* 🔴 แยก border กับ border-color ออกจากกัน
+          ถ้าเขียนเป็น shorthand เส้นเดียวแล้วเบราว์เซอร์ไม่รู้จัก color-mix()
+          ทั้งบรรทัดถูกทิ้ง กลายเป็น border-width: 0 · border-style: none
+          กล่องที่มีหน้าที่บอกว่า "พังแล้วและจะอยู่ตรงนี้จนกว่าจะแก้" จะไม่มีกล่อง
+          เหลือแค่ตัวหนังสือสีแดงลอยอยู่ (Chrome ต่ำกว่า 111 · Safari ต่ำกว่า 16.2) */
+    border: 1px solid var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 35%, transparent);
     background: color-mix(in srgb, var(--danger) 7%, var(--surface));
     color: var(--danger);
     border-radius: var(--radius-badge);
