@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/FormField";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { StatusBadge } from "@/components/StatusBadge";
 import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
 import { isDeadToken, useAuth } from "@/lib/useAuth";
 import { planFor } from "@/lib/plan";
@@ -70,7 +71,13 @@ export default function Account() {
   const draft = editing ? drafts[editing] ?? "" : "";
   const setDraft = (value) => setDrafts((current) => ({ ...current, [editing]: value }));
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  // 🔴 ต้องจำว่าข้อความนี้เป็นของช่องไหน และตอนนั้นกำลังจะบันทึกค่าอะไร
+  //    เดิมเก็บแค่ข้อความ แล้ว onRetry ผูกกับ handleSave ซึ่งอ่าน editing "ปัจจุบัน"
+  //    ผลคือ: บันทึกชื่อร้านบนเน็ตช้า ระหว่างรอไปกดแก้ไขชื่อ พอคำขอเก่าล้มเหลว
+  //    กล่องแดงไปโผล่ในฟอร์มของ "ชื่อผู้ใช้งาน" แล้วปุ่มลองใหม่ส่ง name ไปแทน
+  //    เจ้าของร้านได้ข้อความว่าสำเร็จ ส่วนชื่อร้านที่เขาแก้หายไปโดยไม่มีร่องรอย
+  //    เป็นข้อเดียวกับที่เพิ่งแก้ให้เส้นทางสำเร็จ แต่ไม่ได้แก้ให้เส้นทางล้มเหลว
+  const [saveError, setSaveError] = useState(null); // { field, message, retry }
   const slow = useSlowRequest(saving);
   const [fieldError, setFieldError] = useState(""); // ผิดที่ช่อง ไม่ใช่ผิดทั้งฟอร์ม
   // จำไว้ว่าการย้อนกลับครั้งล่าสุดคือย้อนอะไรเป็นอะไร ปุ่ม "ลองอีกครั้ง" จะได้ทำซ้ำได้
@@ -101,7 +108,7 @@ export default function Account() {
       ...current,
       [field]: current[field] ?? FIELDS[field].value ?? "",
     }));
-    setSaveError("");
+    setSaveError(null);
     setFieldError("");
   }
 
@@ -117,7 +124,7 @@ export default function Account() {
       delete next[field];
       return next;
     });
-    setSaveError("");
+    setSaveError(null);
     setFieldError("");
     // คืนโฟกัสให้ปุ่มที่กดเข้ามา ไม่งั้นโฟกัสจะตกไปที่ body
     // คนที่ใช้คีย์บอร์ดจะต้องไล่ Tab ใหม่ตั้งแต่ต้นหน้า
@@ -129,7 +136,7 @@ export default function Account() {
   // ถ้าคืนค่าไม่สำเร็จ ต้องบอกด้วย ห้ามเงียบ เพราะผู้ใช้กดย้อนกลับแล้วจะเชื่อว่า
   // มันย้อนแล้ว ถ้าจริงๆ ไม่ได้ย้อน เขาจะเดินจากไปโดยที่ข้อมูลผิดค้างอยู่
   async function undoSave(field, previous) {
-    setSaveError("");
+    setSaveError(null);
     setLastUndo({ field, previous });
     setSaving(true);
     try {
@@ -143,7 +150,48 @@ export default function Account() {
         logout();
         return;
       }
-      setSaveError(errorMessage(error, t));
+      // ผูกปุ่มลองใหม่กับ "การย้อนครั้งนี้" ไม่ใช่กับช่องที่เปิดอยู่ตอนนั้น
+      setSaveError({
+        field,
+        message: errorMessage(error, t),
+        retry: () => undoSave(field, previous),
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ลองบันทึกซ้ำด้วยช่องและค่าเดิม โดยไม่สนว่าตอนนี้ผู้ใช้เปิดช่องไหนอยู่
+  async function retrySave(field, value) {
+    setSaving(true);
+    setSaveError(null);
+    abortRef.current = new AbortController();
+    try {
+      await apiFetch("/api/auth/me", {
+        method: "PATCH",
+        body: { [field]: value },
+        signal: abortRef.current.signal,
+      });
+      applyUser({ [field]: value });
+      toast.success(`${t("account.saved")} · ${FIELDS[field].label}`, { id: `lebis-saved-${field}` });
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[field];
+        return next;
+      });
+      setEditing((current) => (current === field ? null : current));
+      reload();
+    } catch (error) {
+      if (isDeadToken(error)) {
+        logout();
+        return;
+      }
+      if (error?.code === "cancelled") return;
+      setSaveError({
+        field,
+        message: errorMessage(error, t),
+        retry: () => retrySave(field, value),
+      });
     } finally {
       setSaving(false);
     }
@@ -162,17 +210,21 @@ export default function Account() {
       return;
     }
 
+    // 🔴 จำไว้ตั้งแต่ตอนเริ่มว่า "กำลังบันทึกช่องไหน เป็นค่าอะไร"
+    //    ถ้าอ่านจาก editing ตอนที่คำขอกลับมา มันอาจเป็นคนละช่องไปแล้ว
+    //    เพราะบนเน็ตช้าผู้ใช้ไปกดแก้ช่องอื่นระหว่างรอได้
+    const attempted = editing;
+    const value = draft.trim() === "" ? null : draft.trim();
+
     setSaving(true);
-    setSaveError("");
+    setSaveError(null);
     setFieldError("");
     abortRef.current = new AbortController();
-
-    const value = draft.trim() === "" ? null : draft.trim();
 
     try {
       await apiFetch("/api/auth/me", {
         method: "PATCH",
-        body: { [editing]: value },
+        body: { [attempted]: value },
         // 🔴 หน้านี้เป็นหน้าเดียวที่เขียนลงฐานข้อมูล และเป็นหน้าเดียวที่เคยไม่มี
         //    ตัวยกเลิก ผลคือปุ่ม "ยกเลิก" ข้างปุ่มบันทึกเป็นปุ่มหลอก — กดแล้วแถว
         //    กลับไปเป็นค่าเดิมเหมือนยกเลิกสำเร็จ แต่คำขอยังวิ่งอยู่ อีก 3 วินาที
@@ -185,13 +237,13 @@ export default function Account() {
       //    เพราะถ้าการดึงรอบนั้นล้มเหลว (เน็ตสะดุดพอดี) หน้าจะขึ้นว่า
       //    "บันทึกเรียบร้อยแล้ว" ทั้งที่แถวยังเป็นชื่อเดิม และไม่มีกล่องแดงที่ไหนเลย
       //    เจ้าของร้านจะกดบันทึกซ้ำเพราะคิดว่าไม่ติด
-      applyUser({ [editing]: value });
+      applyUser({ [attempted]: value });
 
       // ให้ย้อนกลับได้ทันที ไม่ใช่แค่บอกว่าสำเร็จแล้วจบ
       //
       // เจ้าของร้านแก้ชื่อร้านผิด แล้วจำชื่อเดิมไม่ได้ว่าสะกดยังไง คือเรื่องที่เกิดจริง
       // ปุ่มนี้ทำให้ "กดผิด" ไม่ใช่เรื่องที่ต้องเสียเวลาแก้ ระบบจำค่าเดิมไว้ให้แล้ว
-      const saved = editing;
+      const saved = attempted;
       const previous = FIELDS[saved].value ?? null;
       const canUndo = previous !== value;
       // 🔴 ข้อความต้องบอกว่าบันทึก "อะไร" และแต่ละช่องต้องมี id ของตัวเอง
@@ -240,7 +292,12 @@ export default function Account() {
       // เขาเป็นคนสั่งเอง และฟอร์มก็ปิดไปแล้ว การขึ้นกล่องแดงจะอ่านเหมือนระบบพัง
       if (error?.code === "cancelled") return;
       // ขึ้นในหน้าเหมือนหน้าอื่นของระบบ ไม่ใช่ข้อความแจ้งเตือนที่หายเอง
-      setSaveError(errorMessage(error, t));
+      // ปุ่มลองใหม่ต้องส่ง "ค่าที่พยายามบันทึกไปเมื่อกี้" ไม่ใช่ค่าของช่องที่เปิดอยู่ตอนนี้
+      setSaveError({
+        field: attempted,
+        message: errorMessage(error, t),
+        retry: () => retrySave(attempted, value),
+      });
     } finally {
       setSaving(false);
     }
@@ -309,7 +366,7 @@ export default function Account() {
               // ที่เจ้าของร้านกำลังพิมพ์แก้ ซึ่งอ่านเหมือนระบบยังพังทั้งที่เขาแก้อยู่แล้ว
               onClearError={() => {
                 setFieldError("");
-                setSaveError("");
+                setSaveError(null);
               }}
               maxLength={120}
               autoComplete={field === "name" ? "name" : "organization"}
@@ -334,15 +391,21 @@ export default function Account() {
               </p>
             ) : null}
 
-            {saveError ? (
+            {saveError && saveError.field === field ? (
               <div className="w-full">
-                <FormError message={saveError} onRetry={handleSave} retrying={saving} />
+                <FormError
+                  message={saveError.message}
+                  onRetry={saveError.retry}
+                  retrying={saving}
+                />
               </div>
             ) : null}
           </form>
         ) : (
-          <span className="flex flex-wrap items-center gap-3">
-            <span className="t-body break-words font-medium">{value || empty}</span>
+          // ปุ่มแก้ไขของทุกแถวต้องอยู่ชิดขวาเท่ากัน ไม่ใช่ตามหลังค่าที่ยาวไม่เท่ากัน
+          // สองปุ่มที่ทำสิ่งเดียวกันในรายการที่กวาดสายตาอ่าน ควรอยู่แนวเดียวกัน
+          <span className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+            <span className="t-body min-w-0 break-words font-medium">{value || empty}</span>
             <Button
               ref={(node) => { editButtonRefs.current[field] = node; }}
               size="sm"
@@ -392,11 +455,29 @@ export default function Account() {
                ไม่มีกล่อง ไม่มีข้อความ และค่าที่ผิดยังอยู่ทั้งบนจอและในฐานข้อมูล
                สคริปต์ตรวจจับไม่ได้ เพราะมันมองหาการเรียกข้อความแจ้งเตือนแบบผิดพลาด
                ส่วนโค้ดนี้ไม่ได้เรียกอะไรเลย มันแค่เขียนค่าลงที่ที่ไม่มีใครอ่าน */}
-        {!editing && saveError ? (
+        {/* 🔴 การย้อนกลับเกิดตอนที่ไม่มีฟอร์มอยู่บนจอแล้ว
+               เดิมข้อความ "กำลังบันทึก" กับ "ช้ากว่าปกติ" อยู่ในฟอร์มของแถวทั้งคู่
+               ผลคือกดย้อนกลับแล้วไม่มีอะไรบนจอเลยตลอดเวลาที่รอ — วัดได้ 7.5 วินาที
+               ที่ไม่มีทั้งข้อความแจ้งเตือน ไม่มี role=status ไม่มี aria-busy
+               และข้อความแจ้งเตือนที่มีปุ่มย้อนกลับก็หายไปตอนกด เพราะการกดคือการปิดมัน
+               ผู้ใช้จึงไม่มีทางรู้ว่าที่กดไปนั้นติดหรือไม่ติด */}
+        {saving && !editing ? (
+          <p role="status" className="t-caption mb-5">
+            {slow ? t("state.slow") : t("account.undoing")}
+          </p>
+        ) : null}
+
+        {saveError && saveError.field !== editing ? (
           <div className="mb-5">
+            {/* บอกด้วยว่าเป็นของช่องไหน เพราะตอนนี้ผู้ใช้ไปอยู่ที่ช่องอื่นแล้ว
+                ถ้าไม่บอก เขาจะอ่านว่าช่องที่กำลังแก้อยู่ตอนนี้เป็นตัวที่พัง */}
             <FormError
-              message={saveError}
-              onRetry={lastUndo ? () => undoSave(lastUndo.field, lastUndo.previous) : undefined}
+              message={
+                saveError.field && FIELDS[saveError.field]
+                  ? `${FIELDS[saveError.field].label} · ${saveError.message}`
+                  : saveError.message
+              }
+              onRetry={saveError.retry}
               retrying={saving}
             />
           </div>
@@ -436,7 +517,15 @@ export default function Account() {
               อยู่แล้ว ตรงนี้จึงไม่ซ้ำป้ายอีก แต่บอกว่ามันแปลว่าอะไร */}
           <Card>
             <CardContent className="p-5">
-              <h2 className="t-section">{t("account.planTitle")}</h2>
+              {/* 🔴 ป้ายแพ็กเกจบนแถบหัวเว็บเป็น hidden md:flex — บนมือถือจึงไม่มีเลย
+                  การ์ดนี้เลยพูดถึงสิทธิ์ 4 ข้อโดยไม่เคยบอกว่าคนอ่านมีสิทธิ์นั้นหรือเปล่า
+                  ที่เดียวที่บอกคือบรรทัดท้ายหน้า ซึ่งต้องเลื่อนลงไป 966px */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="t-section">{t("account.planTitle")}</h2>
+                <StatusBadge tone={planFor(user.role, t).tone}>
+                  {planFor(user.role, t).label}
+                </StatusBadge>
+              </div>
               <p className="t-caption mt-2">
                 {t(planFor(user.role, t).copyKey)}
               </p>

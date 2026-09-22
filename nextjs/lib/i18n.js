@@ -32,6 +32,9 @@ const TEXT = {
     "page.account": "บัญชีของคุณ · LEBIS",
 
     "nav.logout": "ออกจากระบบ",
+    "auth.alreadySignedIn": "เครื่องนี้เข้าสู่ระบบค้างไว้ด้วย {email} · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
+    "auth.alreadySignedInUnknown": "เครื่องนี้มีบัญชีเข้าสู่ระบบค้างไว้ · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
+    "auth.goAccount": "ไปหน้าบัญชี",
     "nav.language": "เลือกภาษา",
     "nav.helpSignedIn": "ช่วยเหลือเรื่องการเข้าสู่ระบบ",
 
@@ -141,6 +144,7 @@ const TEXT = {
     "account.saving": "กำลังบันทึก...",
     "account.cancel": "ยกเลิก",
     "account.saved": "บันทึกเรียบร้อยแล้ว",
+    "account.undoing": "กำลังย้อนกลับเป็นค่าเดิม...",
     "account.undone": "ย้อนกลับเป็นค่าเดิมแล้ว",
     "account.planTitle": "แพ็กเกจของคุณให้อะไรบ้าง",
     "account.planFree":
@@ -192,6 +196,9 @@ const TEXT = {
     "page.account": "Your account · LEBIS",
 
     "nav.logout": "Sign out",
+    "auth.alreadySignedIn": "This device is still signed in as {email}. Fill in the form below to use a different account.",
+    "auth.alreadySignedInUnknown": "This device is still signed in. Fill in the form below to use a different account.",
+    "auth.goAccount": "Go to account",
     "nav.language": "Choose language",
     "nav.helpSignedIn": "Help with signing in",
 
@@ -296,6 +303,7 @@ const TEXT = {
     "account.saving": "Saving...",
     "account.cancel": "Cancel",
     "account.saved": "Saved.",
+    "account.undoing": "Reverting to the previous value…",
     "account.undone": "Reverted to the previous value.",
     "account.planTitle": "What your plan includes",
     "account.planFree":

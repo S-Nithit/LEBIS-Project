@@ -41,15 +41,30 @@ export default function Login() {
   // ตัวหยุดคำขอที่ผู้ใช้กดเอง — คนละเรื่องกับตัวตัดเวลา 15 วินาทีใน lib/api.js
   // ตัวนั้นกันหน้าค้างตลอดกาล ตัวนี้คืนอำนาจให้ผู้ใช้ตัดสินใจว่าจะไม่รอแล้ว
   const abortRef = useRef(null);
+  // ข้อความ "ยกเลิกแล้ว" เป็นการบอกให้รู้ ไม่ใช่การบอกว่าพัง จึงไม่ใช้กล่องแดง
+  const [cancelled, setCancelled] = useState("");
 
-  // ถ้ายังล็อกอินอยู่ ไม่ควรเห็นหน้านี้
+  // มี token อยู่แล้ว = มีคนเข้าสู่ระบบค้างไว้บนเครื่องนี้
   //
-  // 🔴 เคยพลาด: เข้าสู่ระบบเสร็จแล้วกดปุ่มย้อนกลับของเบราว์เซอร์ จะเด้งมาหน้านี้
-  //    ทั้งที่ token ยังอยู่ครบ เจ้าของร้านจะคิดว่าระบบเตะเขาออกแล้วกรอกใหม่
-  //    ทั้งที่เขายังอยู่ในระบบตลอดเวลา
+  // 🔴 ห้ามเด้งไป /account ดื้อๆ
+  //    เคยทำแบบนั้นเพื่อแก้เรื่องกดปุ่มย้อนกลับแล้วมาเจอหน้านี้ทั้งที่ยังล็อกอินอยู่
+  //    แต่ผลคือ "ปิดประตูทั้งบาน" — เครื่องกลางที่หน้าร้านมีพนักงานหลายคนใช้
+  //    คนที่สองจะเข้าหน้าเข้าสู่ระบบไม่ได้เลย ต้องรู้เองว่าต้องไปกดออกจากระบบ
+  //    ของบัญชีคนแรกก่อน ซึ่งไม่มีอะไรบนจอบอก
+  //    และถ้า token หมดอายุ จะเห็นหน้าเด้ง /login -> /account -> /login
+  //
+  //    ทางที่ถูกคือบอกให้รู้ แล้วให้เลือกเอง
+  const [signedInAs, setSignedInAs] = useState("");
   useEffect(() => {
-    if (getToken()) router.replace("/account");
-  }, [router]);
+    if (!getToken()) return;
+    // ถ้าไม่ได้ติ๊ก "จำฉันไว้" ไว้ เราก็ไม่รู้ว่าเป็นอีเมลอะไร
+    // ห้ามโชว์เครื่องหมายคำถามให้ผู้ใช้อ่าน ให้ใช้ข้อความที่ไม่ต้องรู้อีเมลแทน
+    try {
+      setSignedInAs(localStorage.getItem("lebis_last_email") || "unknown");
+    } catch (error) {
+      setSignedInAs("unknown");
+    }
+  }, []);
   function cancelRequest() {
     abortRef.current?.abort();
   }
@@ -130,6 +145,7 @@ export default function Login() {
     }
 
     setLoading(true);
+    setCancelled("");
     abortRef.current = new AbortController();
 
     try {
@@ -157,6 +173,14 @@ export default function Login() {
       router.replace("/account");
     } catch (error) {
       // errorMessage() แปลรหัสจาก backend เป็นภาษาที่ผู้ใช้เลือกอยู่
+      // ผู้ใช้กดยกเลิกเอง ไม่ใช่ความผิดพลาด
+      // กล่องแดงที่แย่งโฟกัสและเลื่อนหน้าจอมาหาตัวเอง อ่านว่า "ระบบพัง"
+      // ทั้งที่ข้อความข้างในเขียนว่า "ยกเลิกแล้ว" — ภาชนะขัดกับเนื้อความ
+      // (หน้าบัญชีทำถูกแล้ว อีกสองหน้ายังไม่ได้ทำตาม)
+      if (error?.code === "cancelled") {
+        setCancelled(t("error.cancelled"));
+        return;
+      }
       const message = errorMessage(error, t);
 
       // ทุกข้อผิดพลาดจาก backend ขึ้นเป็นข้อความระดับฟอร์ม ไม่แปะช่องใดช่องหนึ่ง
@@ -202,6 +226,26 @@ export default function Login() {
       >
         {/* noValidate = ปิดกล่องเตือนของเบราว์เซอร์ เพราะมันขึ้นเป็นภาษาของเบราว์เซอร์
             ไม่ใช่ภาษาที่ผู้ใช้เลือกในเว็บเรา เราตรวจเองและแสดงเองทั้งหมด */}
+        {/* มีคนเข้าสู่ระบบค้างไว้บนเครื่องนี้ — บอกว่าเป็นใคร แล้วให้เลือกเอง
+            ว่าจะกลับเข้าบัญชีนั้น หรือเข้าด้วยบัญชีอื่น
+            เครื่องกลางที่หน้าร้านมีพนักงานหลายคนใช้ การปิดหน้านี้ทิ้งเลย
+            ทำให้คนที่สองเข้าระบบไม่ได้โดยไม่มีอะไรบอกว่าต้องทำยังไง */}
+        {signedInAs ? (
+          <div
+            role="status"
+            className="mb-5 flex flex-col gap-3 rounded-card border border-line bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p className="t-caption break-words">
+              {signedInAs === "unknown"
+                ? t("auth.alreadySignedInUnknown")
+                : t("auth.alreadySignedIn").replace("{email}", signedInAs)}
+            </p>
+            <Button asChild variant="secondary" size="sm" className="shrink-0">
+              <Link href="/account">{t("auth.goAccount")}</Link>
+            </Button>
+          </div>
+        ) : null}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
           <FormField
             id="email"
@@ -265,6 +309,13 @@ export default function Login() {
                    เครื่องกลางที่หน้าร้าน ไม่ใช่อ่านหลังจากตัดสินใจไปแล้ว */}
             <p className="t-caption mt-2">{t("login.rememberHint")}</p>
           </div>
+
+          {/* ข้อความบอกให้รู้ ไม่ใช่กล่องแดง — ไม่แย่งโฟกัส ไม่เลื่อนหน้าจอ */}
+          {cancelled ? (
+            <p role="status" className="t-caption text-center">
+              {cancelled}
+            </p>
+          ) : null}
 
           <FormError message={formError} onRetry={handleSubmit} retrying={loading} />
 
