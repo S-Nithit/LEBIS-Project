@@ -37,6 +37,7 @@ const TEXT = {
     "auth.alreadySignedInUnknown": "เครื่องนี้มีบัญชีเข้าสู่ระบบค้างไว้ · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
     "auth.goAccount": "ไปหน้าบัญชี",
     "nav.language": "เลือกภาษา",
+    "nav.skipToContent": "ข้ามไปที่เนื้อหา",
     "nav.helpSignedIn": "ช่วยเหลือเรื่องการเข้าสู่ระบบ",
 
     "role.free": "ฟรี",
@@ -147,6 +148,7 @@ const TEXT = {
     "account.saved": "บันทึกเรียบร้อยแล้ว",
     "account.undoing": "กำลังย้อนกลับเป็นค่าเดิม...",
     "account.undone": "ย้อนกลับเป็นค่าเดิมแล้ว",
+    "account.undoCancelled": "ยกเลิกการย้อนกลับแล้ว ค่าที่บันทึกไว้ยังเป็นค่าใหม่",
     "account.planTitle": "แพ็กเกจของคุณให้อะไรบ้าง",
     "account.planFree":
       "บันทึกอุปกรณ์ได้สูงสุด 50 ชิ้น ดูรายงานย้อนหลังได้ 7 วัน และยังไม่รวมการแจ้งเตือนผ่าน LINE กับการส่งออกไฟล์",
@@ -202,6 +204,7 @@ const TEXT = {
     "auth.alreadySignedInUnknown": "This device is still signed in. Fill in the form below to use a different account.",
     "auth.goAccount": "Go to account",
     "nav.language": "Choose language",
+    "nav.skipToContent": "Skip to content",
     "nav.helpSignedIn": "Help with signing in",
 
     "role.free": "Free",
@@ -307,6 +310,7 @@ const TEXT = {
     "account.saved": "Saved.",
     "account.undoing": "Reverting to the previous value…",
     "account.undone": "Reverted to the previous value.",
+    "account.undoCancelled": "Undo cancelled — the saved value is still the new one.",
     "account.planTitle": "What your plan includes",
     "account.planFree":
       "Up to 50 items and 7 days of report history. LINE reminders and CSV export are not included.",

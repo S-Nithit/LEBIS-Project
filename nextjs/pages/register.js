@@ -216,6 +216,15 @@ export default function Register() {
             >
               {t("register.goLogin")}
             </Link>
+            {" · "}
+            {/* ช่วยเหลือต้องไปถึงได้จากทุกประตู ไม่ใช่เฉพาะหน้าเข้าสู่ระบบ
+                คนที่ติดตรงนี้ (อีเมลซ้ำ เข้าไม่ได้) ต้องกระโดดสองต่อกว่าจะเจอ */}
+            <Link
+              href="/forgot-password"
+              className="inline-flex min-h-[44px] items-center font-medium text-ink underline underline-offset-4 hover:no-underline"
+            >
+              {t("nav.helpSignedIn")}
+            </Link>
           </p>
         }
       >

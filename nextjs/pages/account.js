@@ -8,7 +8,7 @@
 // เมื่อหน้า workspace ของ Neo เสร็จแล้ว ให้เปลี่ยนปลายทางหลัง login
 // ใน pages/login.js กับ pages/register.js ไปที่หน้านั้นแทน
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import { toast } from "sonner";
 
@@ -22,7 +22,7 @@ import { FormField } from "@/components/FormField";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { StatusBadge } from "@/components/StatusBadge";
 import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
-import { isDeadToken, useAuth } from "@/lib/useAuth";
+import { isDeadToken, rememberSignOutReason, useAuth } from "@/lib/useAuth";
 import { planFor } from "@/lib/plan";
 import { useLanguage } from "@/lib/useLanguage";
 import { useSlowRequest } from "@/lib/useSlowRequest";
@@ -67,7 +67,36 @@ export default function Account() {
   // 🔴 เก็บร่างแยกรายช่อง ไม่ใช่ตัวเดียวใช้ร่วมกัน
   //    ปุ่มแก้ไขสองปุ่มห่างกัน 96px บนจอมือถือ กดพลาดง่ายมาก
   //    เดิมใช้ร่างตัวเดียว พอกดอีกแถว สิ่งที่พิมพ์ค้างไว้หายทันทีโดยไม่เตือนอะไรเลย
+  // 🔴 ร่างต้องรอดจากการออกจากหน้าและการรีเฟรช ไม่ใช่รอดแค่การสลับแถว
+  //    ไฟล์นี้ใช้คอมเมนต์หลายสิบบรรทัดปกป้องร่างจากการกดอีกแถวและจากการกด Esc
+  //    แล้วปล่อยให้มันหายไปเพราะแตะลิงก์ช่วยเหลือที่ท้ายหน้า หรือรีเฟรช
+  //    เจ้าของร้านกำลังพิมพ์ชื่อร้านอยู่ ลูกค้าเรียก แตะอะไรสักอย่าง แล้วต้องพิมพ์ใหม่
+  //
+  //    ใช้ sessionStorage ไม่ใช่ localStorage เพราะมันหายเมื่อปิดแท็บ
+  //    เครื่องที่หน้าร้านใช้กันหลายคน ร่างที่พิมพ์ค้างไม่ควรอยู่ข้ามวัน
+  //    และ clearSession() ล้างให้อีกชั้นตอนออกจากระบบ
+  const DRAFTS_KEY = "lebis_account_drafts";
   const [drafts, setDrafts] = useState({});
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(DRAFTS_KEY);
+      if (saved) setDrafts(JSON.parse(saved));
+    } catch (error) {
+      // อ่านไม่ได้ก็เริ่มจากว่าง
+    }
+    // ตั้งใจให้ทำครั้งเดียวตอน mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (Object.keys(drafts).length === 0) sessionStorage.removeItem(DRAFTS_KEY);
+      else sessionStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+    } catch (error) {
+      // เขียนไม่ได้ก็ยังใช้งานได้ แค่ร่างไม่รอดการรีเฟรช
+    }
+  }, [drafts]);
   const draft = editing ? drafts[editing] ?? "" : "";
   const setDraft = (value) => setDrafts((current) => ({ ...current, [editing]: value }));
   // 🔴 "กำลังบันทึก" ต้องรู้ว่าช่องไหนกำลังบันทึก เหมือนที่ saveError รู้
@@ -79,6 +108,8 @@ export default function Account() {
   const saving = savingField !== null;
   // แยกให้ออกว่าคำขอที่ค้างอยู่คือการบันทึกหรือการย้อนกลับ ข้อความคนละอัน
   const [undoing, setUndoing] = useState(false);
+  // การย้อนกลับที่ผู้ใช้กดยกเลิกเอง เก็บไว้เพื่อให้เสนอย้อนอีกครั้งได้
+  const [cancelled, setCancelled] = useState(null);
   // 🔴 ต้องจำว่าข้อความนี้เป็นของช่องไหน และตอนนั้นกำลังจะบันทึกค่าอะไร
   //    เดิมเก็บแค่ข้อความ แล้ว onRetry ผูกกับ handleSave ซึ่งอ่าน editing "ปัจจุบัน"
   //    ผลคือ: บันทึกชื่อร้านบนเน็ตช้า ระหว่างรอไปกดแก้ไขชื่อ พอคำขอเก่าล้มเหลว
@@ -109,12 +140,19 @@ export default function Account() {
 
   function startEditing(field) {
     setEditing(field);
+    // 🔴 ล้างกล่องผิดพลาดเฉพาะ "ของช่องนี้" เท่านั้น
+    //    เดิมล้างทิ้งหมดทุกครั้งที่เปิดแถวไหนก็ได้ ผลคือ: บันทึกชื่อร้านไม่สำเร็จ
+    //    แล้วแตะแก้ไขชื่อ -> กล่องแดงกับปุ่มลองใหม่หายเกลี้ยง แถวยังโชว์ค่าเก่า
+    //    และไม่มีอะไรเหลือบอกว่าการบันทึกไม่เคยสำเร็จ
+    //    ที่แย่กว่านั้นคือ การ "เปิดแถวเดิมเพื่อลองใหม่" ซึ่งเป็นท่าที่ธรรมชาติที่สุด
+    //    ก็เรียกบรรทัดนี้เหมือนกัน — ท่ากู้คืนกับท่าลบหลักฐานเป็นท่าเดียวกัน
+    //    เป็นข้อเดียวกับที่แก้ให้ปุ่มยกเลิกไปแล้ว (failedHere) แต่ตรงนี้ไม่ได้แก้
     // ถ้าเคยพิมพ์ค้างไว้ที่ช่องนี้ ให้กลับมาเจอของเดิม ไม่ใช่เริ่มใหม่
     setDrafts((current) => ({
       ...current,
       [field]: current[field] ?? FIELDS[field].value ?? "",
     }));
-    setSaveError(null);
+    setSaveError((current) => (current && current.field === field ? null : current));
     setFieldError("");
   }
 
@@ -152,6 +190,7 @@ export default function Account() {
   // มันย้อนแล้ว ถ้าจริงๆ ไม่ได้ย้อน เขาจะเดินจากไปโดยที่ข้อมูลผิดค้างอยู่
   async function undoSave(field, previous) {
     setSaveError(null);
+    setCancelled(null);
     setSavingField(field);
     setUndoing(true);
     // 🔴 การย้อนกลับเคยเป็นคำขอเดียวในระบบที่ไม่มีทางออก
@@ -170,10 +209,18 @@ export default function Account() {
       reload();
     } catch (error) {
       if (isDeadToken(error)) {
+        rememberSignOutReason(error.code);
         logout();
         return;
       }
-      if (error?.code === "cancelled") return;
+      // ผู้ใช้กดยกเลิกเอง — ไม่ใช่กล่องแดง แต่ต้องเหลืออะไรไว้บนจอ
+      // 🔴 เดิมเงียบสนิท: กดย้อนกลับ -> รอ -> กดยกเลิก -> ทุกอย่างหายหมด
+      //    และค่าที่เพิ่งขอให้ย้อนก็ยังอยู่ ผู้ใช้ไม่มีทางรู้ว่าตกลงย้อนหรือไม่ย้อน
+      //    หน้า login กับ register มีข้อความ "ยกเลิกแล้ว" อยู่แล้ว หน้านี้ไม่มี
+      if (error?.code === "cancelled") {
+        setCancelled({ field, previous });
+        return;
+      }
       // ผูกปุ่มลองใหม่กับ "การย้อนครั้งนี้" ไม่ใช่กับช่องที่เปิดอยู่ตอนนั้น
       setSaveError({
         field,
@@ -208,6 +255,7 @@ export default function Account() {
       reload();
     } catch (error) {
       if (isDeadToken(error)) {
+        rememberSignOutReason(error.code);
         logout();
         return;
       }
@@ -310,6 +358,7 @@ export default function Account() {
       //    ซ้ำไปเรื่อยๆ ไม่มีวันสำเร็จ และทางออกที่ใช้ได้จริงกลับเขียนว่า "ออกจากระบบ"
       //    ทั้งที่ระบบพาเขาออกไปแล้ว
       if (isDeadToken(error)) {
+        rememberSignOutReason(error.code);
         logout();
         return;
       }
@@ -428,7 +477,7 @@ export default function Account() {
                 <FormError
                   message={saveError.message}
                   onRetry={saveError.retry}
-                  retrying={saving}
+                  retrying={savingField === saveError.field}
                 />
               </div>
             ) : null}
@@ -516,6 +565,19 @@ export default function Account() {
           </div>
         ) : null}
 
+        {cancelled ? (
+          <p role="status" className="t-caption mb-5">
+            {t("account.undoCancelled")}{" "}
+            <button
+              type="button"
+              onClick={() => undoSave(cancelled.field, cancelled.previous)}
+              className="inline-flex min-h-[44px] items-center font-medium underline underline-offset-4"
+            >
+              {t("action.undo")}
+            </button>
+          </p>
+        ) : null}
+
         {saveError && saveError.field !== editing ? (
           <div className="mb-5">
             {/* บอกด้วยว่าเป็นของช่องไหน เพราะตอนนี้ผู้ใช้ไปอยู่ที่ช่องอื่นแล้ว
@@ -527,7 +589,7 @@ export default function Account() {
                   : saveError.message
               }
               onRetry={saveError.retry}
-              retrying={saving}
+              retrying={savingField === saveError.field}
               // ไม่แย่งโฟกัส กล่องนี้โผล่ตอนผู้ใช้ไปทำอย่างอื่นอยู่แล้ว
               stealFocus={false}
             />

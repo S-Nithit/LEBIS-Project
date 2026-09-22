@@ -36,6 +36,16 @@ export default function NotFound() {
             </Link>
           </Button>
         </div>
+
+        {/* ช่วยเหลืออยู่ห่างจากทุกหน้าหนึ่งก้าวเสมอ รวมถึงหน้าที่คนมาถึงเพราะพิมพ์ผิด */}
+        <p className="t-caption mt-4">
+          <Link
+            href="/forgot-password"
+            className="inline-flex min-h-[44px] items-center underline underline-offset-4 hover:no-underline"
+          >
+            {t("nav.helpSignedIn")}
+          </Link>
+        </p>
       </AuthLayout>
     </>
   );
