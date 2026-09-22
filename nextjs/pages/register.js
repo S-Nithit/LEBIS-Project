@@ -44,6 +44,13 @@ export default function Register() {
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
   const slow = useSlowRequest(loading);
+
+  // ตัวหยุดคำขอที่ผู้ใช้กดเอง — คนละเรื่องกับตัวตัดเวลา 15 วินาทีใน lib/api.js
+  // ตัวนั้นกันหน้าค้างตลอดกาล ตัวนี้คืนอำนาจให้ผู้ใช้ตัดสินใจว่าจะไม่รอแล้ว
+  const abortRef = useRef(null);
+  function cancelRequest() {
+    abortRef.current?.abort();
+  }
   const emailRef = useRef(null);
 
   // โฟกัสช่องแรกให้เฉพาะเครื่องที่มีเมาส์ (คอมพิวเตอร์) — กฎเดียวกับหน้าเข้าสู่ระบบ
@@ -103,9 +110,11 @@ export default function Register() {
     }
 
     setLoading(true);
+    abortRef.current = new AbortController();
 
     try {
       const data = await apiFetch("/api/auth/register", {
+        signal: abortRef.current.signal,
         method: "POST",
         body: {
           email: email.trim(),
@@ -185,7 +194,17 @@ export default function Register() {
             hint={t("register.emailHint")}
             error={errors.email}
             onClearError={clearError}
+            // คำใบ้สำหรับแป้นพิมพ์บนมือถือ — เจ้าของร้านกรอกด้วยนิ้วโป้งข้างเดียว
+            // inputMode="email" ทำให้แป้นมีปุ่ม @ กับ . โดยไม่ต้องสลับหน้าแป้น
+            // autoCapitalize/spellCheck ปิด เพราะ iOS ชอบขึ้นตัวใหญ่ตัวแรกของอีเมล
+            // แล้วคนไม่ทันสังเกต ต้องมาแก้ทีหลังทั้งที่พิมพ์ถูกแล้ว
+            // enterKeyHint บอกว่าปุ่มมุมขวาล่างของแป้นควรเขียนว่าอะไร
             type="email"
+            inputMode="email"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="next"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="you@example.com"
@@ -232,6 +251,7 @@ export default function Register() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="new-password"
+              enterKeyHint="next"
               required
             />
 
@@ -245,6 +265,7 @@ export default function Register() {
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               autoComplete="new-password"
+              enterKeyHint="go"
               required
             />
           </div>
@@ -271,9 +292,19 @@ export default function Register() {
           {/* หลัง 6 วินาที บอกเพิ่มว่ายังรออยู่ ไม่ใช่ปล่อยให้คำเดิมคำเดียวนิ่ง 15 วินาที
               คนที่มีลูกค้ายืนรอจะคิดว่าเครื่องค้างแล้วกดรีเฟรช ซึ่งทำให้ที่พิมพ์ไว้หายหมด */}
           {slow ? (
-            <p role="status" className="t-caption mt-2 text-center">
-              {t("state.slow")}
-            </p>
+            <div role="status" className="mt-2 flex flex-col items-center gap-1">
+              <p className="t-caption text-center">{t("state.slow")}</p>
+              {/* ต้องมีทางออก ไม่ใช่มีแต่ข้อความบอกให้รออีก
+                  ของเดิมรอได้สูงสุด 15 วินาที โดยทางเดียวที่หยุดได้คือรีเฟรช
+                  ซึ่งทำให้รหัสที่พิมพ์ไว้หายหมด แล้วต้องเริ่มใหม่ทั้งหมด */}
+              <button
+                type="button"
+                onClick={cancelRequest}
+                className="inline-flex min-h-[44px] items-center font-medium underline underline-offset-4"
+              >
+                {t("action.cancelRequest")}
+              </button>
+            </div>
           ) : null}
         </form>
       </AuthLayout>

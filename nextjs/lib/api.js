@@ -107,8 +107,24 @@ export function fieldToInputId(field) {
 // ถ้าไม่สำเร็จจะ throw ApiError -> ฝั่งหน้าเว็บใช้ try/catch รับ
 // ---------------------------------------------------------------------------
 
+// รวมสัญญาณหยุดหลายตัวเป็นตัวเดียว (ตัวตัดเวลา + ปุ่มยกเลิกของผู้ใช้)
+// AbortSignal.any มีเฉพาะเบราว์เซอร์ใหม่ จึงต้องมีทางถอยเหมือนกับ AbortSignal.timeout
+function combineSignals(a, b) {
+  const list = [a, b].filter(Boolean);
+  if (list.length === 0) return undefined;
+  if (list.length === 1) return list[0];
+  if (typeof AbortSignal !== "undefined" && AbortSignal.any) return AbortSignal.any(list);
+  // เบราว์เซอร์เก่า: ทำเองด้วยมือ
+  const controller = new AbortController();
+  for (const item of list) {
+    if (item.aborted) controller.abort();
+    else item.addEventListener("abort", () => controller.abort(), { once: true });
+  }
+  return controller.signal;
+}
+
 export async function apiFetch(path, options = {}) {
-  const { method = "GET", body, headers = {} } = options;
+  const { method = "GET", body, headers = {}, signal } = options;
 
   const finalHeaders = { ...headers };
   if (body !== undefined) finalHeaders["Content-Type"] = "application/json";
@@ -133,11 +149,17 @@ export async function apiFetch(path, options = {}) {
       //    วัดจริง: เข้าสู่ระบบด้วยรหัสที่ถูกต้อง พังใน 2568ms โดยไม่มี error ใน console เลย
       //
       //    ไม่มีตัวตัดเวลา ดีกว่าไม่มีระบบให้ใช้
-      signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout
-        ? AbortSignal.timeout(15000)
-        : undefined,
+      //    และถ้าหน้าเว็บส่ง signal ของตัวเองมา (ปุ่มยกเลิก) ให้รวมกับตัวตัดเวลา
+      //    อันไหนมาก่อนก็หยุดด้วยอันนั้น
+      signal: combineSignals(
+        typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined,
+        signal
+      ),
     });
   } catch (networkError) {
+    // ผู้ใช้กดยกเลิกเอง ไม่ใช่ความผิดพลาด ต้องแยกออกจาก "เน็ตหลุด"
+    // ไม่งั้นกดยกเลิกแล้วจะได้กล่องแดงบอกว่าให้ไปตรวจสัญญาณอินเทอร์เน็ต
+    if (signal?.aborted) throw new ApiError("cancelled", { fallback: "cancelled" });
     // เน็ตหลุด หรือเซิร์ฟเวอร์ไม่ตอบ — เกิดบ่อยมากเวลาใช้มือถือหน้าร้าน
     throw new ApiError("network", { fallback: "network error" });
   }

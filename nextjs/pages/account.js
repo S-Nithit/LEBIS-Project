@@ -71,8 +71,18 @@ export default function Account() {
   const editButtonRefs = useRef({});
 
   const FIELDS = {
-    name: { label: t("account.name"), empty: t("account.noName"), value: user?.name },
-    shop_name: { label: t("account.shop"), empty: t("account.noShop"), value: user?.shop_name },
+    name: {
+      label: t("account.name"),
+      editLabel: t("account.editName"),
+      empty: t("account.noName"),
+      value: user?.name,
+    },
+    shop_name: {
+      label: t("account.shop"),
+      editLabel: t("account.editShop"),
+      empty: t("account.noShop"),
+      value: user?.shop_name,
+    },
   };
 
   function startEditing(field) {
@@ -92,6 +102,25 @@ export default function Account() {
     // คืนโฟกัสให้ปุ่มที่กดเข้ามา ไม่งั้นโฟกัสจะตกไปที่ body
     // คนที่ใช้คีย์บอร์ดจะต้องไล่ Tab ใหม่ตั้งแต่ต้นหน้า
     requestAnimationFrame(() => editButtonRefs.current[field]?.focus());
+  }
+
+  // คืนค่าเดิมหลังบันทึกไปแล้ว
+  //
+  // ถ้าคืนค่าไม่สำเร็จ ต้องบอกด้วย ห้ามเงียบ เพราะผู้ใช้กดย้อนกลับแล้วจะเชื่อว่า
+  // มันย้อนแล้ว ถ้าจริงๆ ไม่ได้ย้อน เขาจะเดินจากไปโดยที่ข้อมูลผิดค้างอยู่
+  async function undoSave(field, previous) {
+    try {
+      await apiFetch("/api/auth/me", { method: "PATCH", body: { [field]: previous } });
+      applyUser({ [field]: previous });
+      toast.success(t("account.undone"));
+      reload();
+    } catch (error) {
+      if (isDeadToken(error)) {
+        logout();
+        return;
+      }
+      setSaveError(errorMessage(error, t));
+    }
   }
 
   async function handleSave(event) {
@@ -123,8 +152,22 @@ export default function Account() {
       //    เจ้าของร้านจะกดบันทึกซ้ำเพราะคิดว่าไม่ติด
       applyUser({ [editing]: value });
 
-      toast.success(t("account.saved"));
+      // ให้ย้อนกลับได้ทันที ไม่ใช่แค่บอกว่าสำเร็จแล้วจบ
+      //
+      // เจ้าของร้านแก้ชื่อร้านผิด แล้วจำชื่อเดิมไม่ได้ว่าสะกดยังไง คือเรื่องที่เกิดจริง
+      // ปุ่มนี้ทำให้ "กดผิด" ไม่ใช่เรื่องที่ต้องเสียเวลาแก้ ระบบจำค่าเดิมไว้ให้แล้ว
       const saved = editing;
+      const previous = FIELDS[saved].value ?? null;
+      const canUndo = previous !== value;
+      toast.success(t("account.saved"), {
+        // ข้อความที่มีปุ่มให้กด ต้องอยู่นานกว่าข้อความที่แค่บอกให้รู้
+        // 4 วินาทีเป็นเวลาที่อ่านคำว่า "บันทึกแล้ว" ทัน แต่ไม่ทันคิดว่า "เอ๊ะ ผิดนี่"
+        // แล้วมองหาปุ่มย้อนกลับ ซึ่งคือช่วงเวลาที่ปุ่มนี้มีไว้เพื่อ
+        duration: canUndo ? 10000 : 4000,
+        action: canUndo
+          ? { label: t("action.undo"), onClick: () => undoSave(saved, previous) }
+          : undefined,
+      });
       setEditing(null);
       // คืนโฟกัสให้ปุ่มแก้ไขของแถวที่เพิ่งบันทึก เหมือนตอนกดยกเลิก
       requestAnimationFrame(() => editButtonRefs.current[saved]?.focus());
@@ -179,7 +222,7 @@ export default function Account() {
   //    component ที่ประกาศข้างใน component อื่น จะถูกนับเป็นชนิดใหม่ทุกครั้งที่วาดใหม่
   //    React จะถอดของเก่าทิ้งแล้วสร้างใหม่ทั้งก้อน = โฟกัสหลุดทุกตัวอักษรที่พิมพ์
   function editableRow(field) {
-    const { label, empty, value } = FIELDS[field];
+    const { label, editLabel, empty, value } = FIELDS[field];
     const isEditing = editing === field;
 
     return (
@@ -246,13 +289,13 @@ export default function Account() {
               ref={(node) => { editButtonRefs.current[field] = node; }}
               size="sm"
               variant="secondary"
-              /* ป้ายที่เห็นคือ "แก้ไข" สั้นๆ เพราะมันอยู่ติดกับค่าอยู่แล้ว
-                 แต่ชื่อที่โปรแกรมอ่านหน้าจออ่าน ต้องบอกว่าแก้ไขอะไร
-                 ไม่งั้นคนที่ไล่ฟังทีละปุ่มจะได้ยินว่า "แก้ไข, แก้ไข" แล้วต้องเดาเอง */
-              aria-label={`${t("account.edit")} ${label}`}
+              /* ป้ายบอกว่าแก้ไข "อะไร" ทั้งบนจอและในเสียงที่โปรแกรมอ่านหน้าจออ่าน
+                 เดิมทั้งสองปุ่มเขียนว่า "แก้ไข" เฉยๆ แล้วใส่ aria-label เพิ่มให้เฉพาะ
+                 คนที่ใช้เสียง ซึ่งแปลว่าคนที่ "อ่าน" ยังต้องเดาอยู่ดีว่าปุ่มไหนของอะไร
+                 ทางที่ถูกคือเขียนให้ชัดตั้งแต่บนจอ แล้วทุกคนได้ข้อมูลเท่ากัน */
               onClick={() => startEditing(field)}
             >
-              {t("account.edit")}
+              {editLabel}
             </Button>
           </span>
         )}
