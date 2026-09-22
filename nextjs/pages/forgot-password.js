@@ -57,7 +57,20 @@ export default function ForgotPassword() {
         </p>
 
         {/* คำปลอบใจอยู่ติดกับปุ่ม ไม่ใช่เป็นบรรทัดจางๆ ใต้หัวข้อหน้าที่สายตาข้ามไป */}
-        <p className="t-caption mt-3">{t("help.body")}</p>
+        <p className="t-caption mt-3">
+          {t("help.body")}
+          {SUPPORT_CONTACT ? null : (
+            <>
+              {" "}
+              <Link
+                href="/register"
+                className="inline-flex min-h-[44px] items-center font-medium text-ink underline underline-offset-4 hover:no-underline"
+              >
+                {t("help.register")}
+              </Link>
+            </>
+          )}
+        </p>
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           {/* ปุ่มติดต่อจะขึ้นก็ต่อเมื่อมีช่องทางจริงใน lib/config.js
@@ -75,13 +88,13 @@ export default function ForgotPassword() {
                  พร้อมกันแล้วให้ผู้ใช้เดาเอาเองว่าอันไหนจริง
                  (ส่วนเรื่องปุ่มหลักมีได้กี่ปุ่ม ดู docs/brand.md หัวข้อ 5
                   ซึ่งนับต่อ "ส่วน" ของหน้า ไม่ใช่ต่อหน้า) */}
-          {SUPPORT_CONTACT ? null : (
-            <Button asChild className="w-full sm:w-auto">
-              <Link href="/register">{t("help.register")}</Link>
-            </Button>
-          )}
-
-          <Button asChild variant="secondary" className="w-full sm:w-auto">
+          {/* 🔴 ปุ่มหลักคือ "กลับไปหน้าเข้าสู่ระบบ" ไม่ใช่ "สมัครบัญชีใหม่"
+                 หน้านี้เขียนไว้เองที่หัวไฟล์ว่าจงใจเอาวิธีที่แก้เองได้ขึ้นก่อน
+                 เพื่อไม่ให้คนอ่านหมดหวังตั้งแต่บรรทัดแรก — และวิธีทั้งสองข้อนั้น
+                 ทำที่หน้าเข้าสู่ระบบ การทำให้ทางเลือกสุดท้ายเป็นปุ่มที่ดังที่สุด
+                 คือการกลับลำดับที่หน้านี้เพิ่งเถียงไว้เอง
+                 และสำหรับร้านให้เช่า "สมัครบัญชีใหม่" แปลว่าร้านใบที่สองที่ไม่มีของเลย */}
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/login">{t("help.back")}</Link>
           </Button>
         </div>

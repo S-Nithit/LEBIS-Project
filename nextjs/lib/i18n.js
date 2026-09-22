@@ -29,6 +29,7 @@ const TEXT = {
     "notFound.title": "ไม่พบหน้าที่คุณเปิด",
     "notFound.body": "ลิงก์อาจพิมพ์ผิด หรือเป็นลิงก์เก่าที่ย้ายไปแล้ว ข้อมูลร้านของคุณยังอยู่ครบ",
     "notFound.goLogin": "ไปหน้าเข้าสู่ระบบ",
+    "notFound.goAccount": "กลับไปหน้าบัญชีของคุณ",
     "page.account": "บัญชีของคุณ · LEBIS",
 
     "nav.logout": "ออกจากระบบ",
@@ -193,6 +194,7 @@ const TEXT = {
     "notFound.title": "We could not find that page",
     "notFound.body": "The link may have a typo, or it may be an old one that has moved. Nothing in your shop's records is affected.",
     "notFound.goLogin": "Go to sign in",
+    "notFound.goAccount": "Back to your account",
     "page.account": "Your account · LEBIS",
 
     "nav.logout": "Sign out",

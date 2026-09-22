@@ -11,8 +11,15 @@
 // รัน:  node scripts/check-pages.mjs            (ต้องรัน docker compose up ไว้ก่อน)
 //       node scripts/check-pages.mjs http://localhost:3000
 //
-// ต้องมี playwright: npx playwright install chromium
-// ถ้ายังไม่ได้ติดตั้ง สคริปต์จะบอกแล้วออกด้วยรหัส 0 (ไม่บล็อกคนที่ยังไม่ได้ลง)
+// ต้องมี playwright:  cd nextjs && npm i && npx playwright install chromium
+// ถ้ายังไม่ได้ติดตั้ง สคริปต์จะ "ไม่ผ่าน" (ออกด้วยรหัส 1) ไม่ใช่ข้ามเงียบๆ
+// เพราะตัวตรวจที่ขึ้นเครื่องหมายถูกโดยไม่เคยเปิดเบราว์เซอร์ แย่กว่าไม่มีตัวตรวจ
+// จะข้ามจริงๆ ต้องสั่ง SKIP_PAGE_CHECK=1
+
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const BASE = process.argv.find((a) => a.startsWith("http")) || "http://localhost:3000";
 
@@ -24,14 +31,29 @@ const PRIVATE_ROUTES = ["/account", "/template"];
 //    เบราว์เซอร์ที่ใช้เทสเริ่มจากศูนย์เสมอ ส่วนคนใช้จริงพกของเก่ามาด้วย
 //    บั๊กภาษากระพริบซ่อนตัวอยู่ตรงนี้ได้ทั้งรอบ เพราะไม่มีใครเทสในสภาพ "เคยมาแล้ว"
 const PERSONAS = [
-  { name: "มาครั้งแรก", cookies: [], storage: {} },
-  { name: "เคยเลือกภาษาอังกฤษ", cookies: [{ name: "lebis_language", value: "en" }], storage: {} },
-  { name: "ของเก่าอยู่ใน localStorage อย่างเดียว", cookies: [], storage: { lebis_language: "en", lebis_last_email: "old@example.com" } },
+  { name: "มาครั้งแรก", cookies: [], storage: {}, expectLang: "th" },
+  { name: "เคยเลือกภาษาอังกฤษ", cookies: [{ name: "lebis_language", value: "en" }], storage: {}, expectLang: "en" },
+  // คนที่มีแต่ของเก่าใน localStorage ยังไม่มีคุกกี้ เซิร์ฟเวอร์จึงวาดภาษาเริ่มต้นมา
+  // ซึ่งถูกต้องแล้ว — ที่ผิดคือถ้ามันเปลี่ยนภาษาให้เห็นหลังโหลด ซึ่งกฎข้างบนจับอยู่
+  { name: "ของเก่าอยู่ใน localStorage อย่างเดียว", cookies: [], storage: { lebis_language: "en", lebis_last_email: "old@example.com" }, expectLang: "th" },
 ];
 
+// 🔴 playwright ถูกประกาศไว้ใน nextjs/package.json แต่สคริปต์นี้อยู่ที่รากโปรเจกต์
+//    Node หาแพ็กเกจจาก "ตำแหน่งของไฟล์ที่ import" ไม่ใช่จากที่ที่รันคำสั่ง
+//    import("playwright") เฉยๆ จึงไปหาที่ <root>/node_modules ซึ่งไม่มีอยู่จริง
+//    และล้มเหลวตลอดแม้จะ npm i ใน nextjs/ ไปแล้วก็ตาม
+//    ต้องบอกให้ชัดว่าให้หาจาก nextjs/ ซึ่งเป็นที่ที่มันถูกประกาศไว้
 let chromium;
 try {
-  ({ chromium } = await import("playwright"));
+  const { createRequire } = await import("node:module");
+  const { pathToFileURL } = await import("node:url");
+  const requireFromWeb = createRequire(join(ROOT_DIR, "nextjs", "package.json"));
+  const resolved = requireFromWeb.resolve("playwright");
+  // playwright เป็นแพ็กเกจแบบ CommonJS การ import จาก ESM จะได้ของมาใน .default
+  // ไม่ใช่เป็น named export ตรงๆ ต้องรองรับทั้งสองแบบ
+  const mod = await import(pathToFileURL(resolved).href);
+  chromium = mod.chromium || mod.default?.chromium;
+  if (!chromium) throw new Error("playwright ไม่มี chromium");
 } catch {
   // 🔴 ข้ามแบบเงียบๆ แล้วออกด้วยรหัส 0 = ทุกคนที่ยังไม่ได้ติดตั้งจะเห็นเครื่องหมายถูก
   //    จากการตรวจที่ไม่เคยเปิดเบราว์เซอร์เลย ซึ่งแย่กว่าไม่มีการตรวจ
@@ -42,7 +64,7 @@ try {
     process.exit(0);
   }
   console.error("❌ ยังไม่ได้ติดตั้ง playwright จึงตรวจหน้าจริงไม่ได้");
-  console.error("   ติดตั้ง:  cd nextjs && npm i -D playwright && npx playwright install chromium");
+  console.error("   ติดตั้ง:  cd nextjs && npm i && npx playwright install chromium");
   console.error("   ถ้าตั้งใจจะข้ามจริงๆ:  SKIP_PAGE_CHECK=1 node scripts/check-pages.mjs");
   process.exit(1);
 }
@@ -135,8 +157,13 @@ for (const scheme of ["light", "dark"]) {
     }
 
     // ภาษาที่หน้าประกาศตัวเอง ต้องตรงกับภาษาที่วาดจริงตั้งแต่ต้น
+    // 🔴 ยอมรับทั้ง th และ en = ไม่ได้พิสูจน์อะไรเลย
+    //    คนที่เลือกอังกฤษไว้แล้วได้หน้าภาษาไทย ก็ผ่านการตรวจนี้
+    //    ซึ่งคือบั๊กที่สคริปต์นี้ถูกเพิ่มแบบผู้ใช้เข้ามาเพื่อจับโดยเฉพาะ
     const langs = await page.evaluate(() => document.documentElement.lang);
-    if (!["th", "en"].includes(langs)) {
+    if (persona.expectLang && langs !== persona.expectLang) {
+      failures.push(`${label} <html lang> เป็น "${langs}" แต่ผู้ใช้แบบนี้ควรได้ "${persona.expectLang}"`);
+    } else if (!["th", "en"].includes(langs)) {
       failures.push(`${label} <html lang> เป็น "${langs}" ซึ่งไม่ใช่ภาษาที่ระบบมี`);
     }
 
@@ -192,20 +219,25 @@ for (const scheme of ["light", "dark"]) {
     let last = null;
     for (let i = 0; i < 25; i += 1) {
       const text = await page.evaluate(() => document.querySelector("main")?.innerText || null).catch(() => null);
-      if (text) {
-        if (first === null) first = text;
-        last = text;
+      // ข้ามภาพที่ยังเป็นโครงรออยู่ เริ่มนับจากตอนที่ข้อมูลจริงขึ้นแล้ว
+      if (text && !/กำลังโหลด|Loading/i.test(text)) {
+        const squashed = text.replace(/\s+/g, "").toLowerCase();
+        if (first === null) first = squashed;
+        last = squashed;
       }
       await page.waitForTimeout(100);
     }
-    // หน้าเหล่านี้ขึ้นโครงรอก่อนแล้วค่อยมีข้อมูล จึงเทียบเฉพาะ "หลังมีข้อมูลแล้ว"
-    // สิ่งที่ห้ามคือข้อความที่ผู้ใช้อ่านได้แล้วเปลี่ยนความหมาย ไม่ใช่โครงรอหายไป
+    // 🔴 เคยเก็บตัวอย่างไว้ 2.5 วินาทีแล้วทิ้ง (void first; void last;)
+    //    ซึ่งแปลว่าสองหน้าที่ "วาดจากเซิร์ฟเวอร์แล้วเขียนทับด้วยข้อมูลฝั่งเบราว์เซอร์"
+    //    คือสองหน้าที่ตรวจเรื่องนี้ไม่เคยถูกตรวจเลย ทั้งที่เป็นเหตุผลที่สคริปต์นี้มีอยู่
+    //    หน้าเหล่านี้ขึ้นโครงรอก่อน จึงเริ่มนับจากภาพแรกที่ "ไม่ใช่โครงรอ" แทนที่จะทิ้งทั้งหมด
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth
     );
     if (overflow > 0) failures.push(`${label} ล้นออกนอกจอ ${overflow}px`);
-    void first;
-    void last;
+    if (first !== null && last !== null && first !== last) {
+      failures.push(`${label} เนื้อหาเปลี่ยนเองหลังข้อมูลขึ้นแล้ว — ผู้ใช้จะเห็นข้อความเปลี่ยนต่อหน้า`);
+    }
     for (const problem of problems) failures.push(`${label} ${problem}`);
   }
   await context.close();

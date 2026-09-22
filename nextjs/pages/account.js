@@ -70,7 +70,15 @@ export default function Account() {
   const [drafts, setDrafts] = useState({});
   const draft = editing ? drafts[editing] ?? "" : "";
   const setDraft = (value) => setDrafts((current) => ({ ...current, [editing]: value }));
-  const [saving, setSaving] = useState(false);
+  // 🔴 "กำลังบันทึก" ต้องรู้ว่าช่องไหนกำลังบันทึก เหมือนที่ saveError รู้
+  //    เดิมเป็น boolean ระดับหน้า ผลคือ: บันทึกชื่อร้านบนเน็ตช้า แล้วกดแก้ไขชื่อ
+  //    ระหว่างรอ ปุ่มบันทึกของแถว "ชื่อ" จะกดไม่ได้และเขียนว่า "กำลังบันทึก..."
+  //    เพราะคำขอของอีกแถวหนึ่ง และไม่มีข้อความไหนบนจอบอกว่าเกิดอะไรขึ้น
+  //    อาการนี้แย่กว่าข้อความไปผิดแถว เพราะมันบล็อกไม่ให้พิมพ์ต่อด้วย
+  const [savingField, setSavingField] = useState(null); // null | ชื่อช่อง | "undo"
+  const saving = savingField !== null;
+  // แยกให้ออกว่าคำขอที่ค้างอยู่คือการบันทึกหรือการย้อนกลับ ข้อความคนละอัน
+  const [undoing, setUndoing] = useState(false);
   // 🔴 ต้องจำว่าข้อความนี้เป็นของช่องไหน และตอนนั้นกำลังจะบันทึกค่าอะไร
   //    เดิมเก็บแค่ข้อความ แล้ว onRetry ผูกกับ handleSave ซึ่งอ่าน editing "ปัจจุบัน"
   //    ผลคือ: บันทึกชื่อร้านบนเน็ตช้า ระหว่างรอไปกดแก้ไขชื่อ พอคำขอเก่าล้มเหลว
@@ -80,8 +88,6 @@ export default function Account() {
   const [saveError, setSaveError] = useState(null); // { field, message, retry }
   const slow = useSlowRequest(saving);
   const [fieldError, setFieldError] = useState(""); // ผิดที่ช่อง ไม่ใช่ผิดทั้งฟอร์ม
-  // จำไว้ว่าการย้อนกลับครั้งล่าสุดคือย้อนอะไรเป็นอะไร ปุ่ม "ลองอีกครั้ง" จะได้ทำซ้ำได้
-  const [lastUndo, setLastUndo] = useState(null);
   // ตัวหยุดคำขอที่ผู้ใช้กดเอง เหมือนหน้า login/register
   const abortRef = useRef(null);
   const editButtonRefs = useRef({});
@@ -116,15 +122,24 @@ export default function Account() {
     const field = editing;
     // ถ้ากำลังบันทึกอยู่ ต้องหยุดคำขอนั้นจริงๆ ไม่ใช่แค่ปิดฟอร์มแล้วปล่อยให้มันวิ่งต่อ
     abortRef.current?.abort();
-    // ยกเลิกต้องทิ้งสิ่งที่พิมพ์ค้างไว้จริงๆ ไม่งั้นกดแก้ไขอีกครั้งจะเจอของเดิม
+
+    // 🔴 ถ้าการบันทึกของช่องนี้ "เพิ่งล้มเหลว" ห้ามลบร่างกับกล่องผิดพลาดทิ้ง
+    //    วัดจริง: บันทึกไม่สำเร็จ -> กด Esc -> กล่องหาย ค่าที่พิมพ์หาย แถวโชว์ค่าเก่า
+    //    และไม่มีอะไรบอกว่าการบันทึกไม่เคยสำเร็จ ผู้ใช้เดินจากไปโดยเชื่อว่าเรียบร้อย
+    //    brand.md หัวข้อ 6 เขียนว่าความล้มเหลวต้องอยู่จนกว่าผู้ใช้จะแก้
+    //    การกด Esc ไม่ใช่การแก้ — มันคือการปิดฟอร์ม
+    const failedHere = saveError?.field === field;
+
     setEditing(null);
-    // กดยกเลิก = ตั้งใจทิ้งร่างของช่องนั้นจริงๆ (ต่างจากการไปกดอีกแถว ซึ่งไม่ได้ตั้งใจทิ้ง)
-    setDrafts((current) => {
-      const next = { ...current };
-      delete next[field];
-      return next;
-    });
-    setSaveError(null);
+    if (!failedHere) {
+      // กดยกเลิกตามปกติ = ตั้งใจทิ้งร่างของช่องนั้นจริงๆ
+      setDrafts((current) => {
+        const next = { ...current };
+        delete next[field];
+        return next;
+      });
+      setSaveError(null);
+    }
     setFieldError("");
     // คืนโฟกัสให้ปุ่มที่กดเข้ามา ไม่งั้นโฟกัสจะตกไปที่ body
     // คนที่ใช้คีย์บอร์ดจะต้องไล่ Tab ใหม่ตั้งแต่ต้นหน้า
@@ -137,12 +152,20 @@ export default function Account() {
   // มันย้อนแล้ว ถ้าจริงๆ ไม่ได้ย้อน เขาจะเดินจากไปโดยที่ข้อมูลผิดค้างอยู่
   async function undoSave(field, previous) {
     setSaveError(null);
-    setLastUndo({ field, previous });
-    setSaving(true);
+    setSavingField(field);
+    setUndoing(true);
+    // 🔴 การย้อนกลับเคยเป็นคำขอเดียวในระบบที่ไม่มีทางออก
+    //    ทั้งหน้า login หน้าสมัคร และการบันทึก มีปุ่มยกเลิกให้หลัง 6 วินาที
+    //    ส่วนการย้อนกลับรอได้ถึง 15 วินาทีโดยไม่มีอะไรให้กด — ในจังหวะที่เจ้าของร้าน
+    //    เพิ่งรู้ตัวว่าบันทึกผิด และข้อความที่มีปุ่มย้อนกลับก็หายไปแล้ว
+    abortRef.current = new AbortController();
     try {
-      await apiFetch("/api/auth/me", { method: "PATCH", body: { [field]: previous } });
+      await apiFetch("/api/auth/me", {
+        method: "PATCH",
+        body: { [field]: previous },
+        signal: abortRef.current.signal,
+      });
       applyUser({ [field]: previous });
-      setLastUndo(null);
       toast.success(t("account.undone"));
       reload();
     } catch (error) {
@@ -150,6 +173,7 @@ export default function Account() {
         logout();
         return;
       }
+      if (error?.code === "cancelled") return;
       // ผูกปุ่มลองใหม่กับ "การย้อนครั้งนี้" ไม่ใช่กับช่องที่เปิดอยู่ตอนนั้น
       setSaveError({
         field,
@@ -157,13 +181,14 @@ export default function Account() {
         retry: () => undoSave(field, previous),
       });
     } finally {
-      setSaving(false);
+      setSavingField(null);
+      setUndoing(false);
     }
   }
 
   // ลองบันทึกซ้ำด้วยช่องและค่าเดิม โดยไม่สนว่าตอนนี้ผู้ใช้เปิดช่องไหนอยู่
   async function retrySave(field, value) {
-    setSaving(true);
+    setSavingField(field);
     setSaveError(null);
     abortRef.current = new AbortController();
     try {
@@ -193,7 +218,7 @@ export default function Account() {
         retry: () => retrySave(field, value),
       });
     } finally {
-      setSaving(false);
+      setSavingField(null);
     }
   }
 
@@ -216,7 +241,7 @@ export default function Account() {
     const attempted = editing;
     const value = draft.trim() === "" ? null : draft.trim();
 
-    setSaving(true);
+    setSavingField(attempted);
     setSaveError(null);
     setFieldError("");
     abortRef.current = new AbortController();
@@ -299,7 +324,7 @@ export default function Account() {
         retry: () => retrySave(attempted, value),
       });
     } finally {
-      setSaving(false);
+      setSavingField(null);
     }
   }
 
@@ -373,8 +398,15 @@ export default function Account() {
               className="w-full sm:w-64"
               autoFocus
             />
-            <Button type="submit" size="sm" disabled={saving} aria-busy={saving}>
-              {saving ? t("account.saving") : t("account.save")}
+            {/* ดูจาก "ช่องนี้กำลังบันทึกอยู่ไหม" ไม่ใช่ "หน้านี้กำลังบันทึกอะไรอยู่ไหม"
+                ไม่งั้นคำขอของอีกแถวจะทำให้ปุ่มของแถวนี้กดไม่ได้ */}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={savingField === field}
+              aria-busy={savingField === field}
+            >
+              {savingField === field ? t("account.saving") : t("account.save")}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={cancelEditing}>
               {t("account.cancel")}
@@ -385,7 +417,7 @@ export default function Account() {
                    กล่องแดงไปโผล่ห่างจากปุ่มบันทึก 110px คนละฝั่งของแถว "ชื่อร้าน"
                    ผู้ใช้จะไปไล่ดูแถวที่ไม่ได้แตะเลยว่าผิดตรงไหน
                    (docs/brand.md หัวข้อ 6 · คอมเมนต์หัวไฟล์ FormError.js) */}
-            {slow ? (
+            {slow && savingField === field ? (
               <p role="status" className="t-caption w-full">
                 {t("state.slow")}
               </p>
@@ -461,10 +493,27 @@ export default function Account() {
                ที่ไม่มีทั้งข้อความแจ้งเตือน ไม่มี role=status ไม่มี aria-busy
                และข้อความแจ้งเตือนที่มีปุ่มย้อนกลับก็หายไปตอนกด เพราะการกดคือการปิดมัน
                ผู้ใช้จึงไม่มีทางรู้ว่าที่กดไปนั้นติดหรือไม่ติด */}
-        {saving && !editing ? (
-          <p role="status" className="t-caption mb-5">
-            {slow ? t("state.slow") : t("account.undoing")}
-          </p>
+        {savingField && savingField !== editing ? (
+          <div role="status" className="mb-5 flex flex-col items-start gap-1">
+            <p className="t-caption">
+              {slow
+                ? t("state.slow")
+                : `${FIELDS[savingField] ? FIELDS[savingField].label + " · " : ""}${
+                    undoing ? t("account.undoing") : t("account.saving")
+                  }`}
+            </p>
+            {/* ทุกคำขอในระบบต้องมีทางออก ไม่ใช่มีแค่บางหน้า
+                การย้อนกลับเคยเป็นคำขอเดียวที่รอได้ถึง 15 วินาทีโดยไม่มีอะไรให้กด */}
+            {slow ? (
+              <button
+                type="button"
+                onClick={() => abortRef.current?.abort()}
+                className="inline-flex min-h-[44px] items-center font-medium underline underline-offset-4"
+              >
+                {t("action.cancelRequest")}
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         {saveError && saveError.field !== editing ? (
@@ -479,6 +528,8 @@ export default function Account() {
               }
               onRetry={saveError.retry}
               retrying={saving}
+              // ไม่แย่งโฟกัส กล่องนี้โผล่ตอนผู้ใช้ไปทำอย่างอื่นอยู่แล้ว
+              stealFocus={false}
             />
           </div>
         ) : null}
