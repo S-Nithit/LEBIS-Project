@@ -37,6 +37,9 @@ if not JWT_SECRET:
     )
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
+# ผู้ใช้ที่ติ๊ก "จำฉันไว้ในเครื่องนี้" ได้ token อายุ 30 วัน
+# เจ้าของร้านใช้เครื่องเดิมทุกวัน ไม่ควรต้องพิมพ์รหัสใหม่ทุกเช้าโดยมีลูกค้ายืนรอ
+REMEMBER_ME_EXPIRE_HOURS = 24 * 30
 
 # ลำดับของแพ็กเกจ ใช้เทียบว่าสิทธิ์ "ถึง" ที่ต้องการหรือยัง
 # admin ถือว่าสูงกว่า pro เลยเข้าถึงของ pro ได้ด้วย
@@ -75,14 +78,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # JWT
 # ---------------------------------------------------------------------------
 
-def create_access_token(email: str) -> str:
-    """สร้าง JWT ให้ user คนนี้ อายุ 24 ชั่วโมง
+def create_access_token(email: str, remember: bool = False) -> str:
+    """สร้าง JWT ให้ user คนนี้ อายุ 24 ชั่วโมง (หรือ 30 วันถ้าเลือกให้จำไว้)
 
     JWT คือข้อความที่เซ็นด้วย JWT_SECRET — ใครแก้ข้างในแล้วลายเซ็นจะไม่ตรง
     ข้างในเก็บแค่ email (ช่อง sub) กับเวลาหมดอายุ (ช่อง exp)
     ห้ามใส่รหัสผ่านหรือของที่เป็นความลับลงไป เพราะใครก็อ่านข้างในได้
     """
-    expire_at = datetime.now(timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+    hours = REMEMBER_ME_EXPIRE_HOURS if remember else ACCESS_TOKEN_EXPIRE_HOURS
+    expire_at = datetime.now(timezone.utc) + timedelta(hours=hours)
     payload = {"sub": email, "exp": expire_at}
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -154,7 +158,11 @@ def require_role(*roles: str):
         if user["role"] not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"ต้องเป็น {' หรือ '.join(roles)} จึงเข้าถึงส่วนนี้ได้",
+                detail={
+                    "code": "role_required",
+                    "message": f"ต้องเป็น {' หรือ '.join(roles)} จึงเข้าถึงส่วนนี้ได้",
+                    "required": list(roles),
+                },
             )
         return user
 
@@ -174,7 +182,11 @@ def require_tier(tier: str):
         if TIER_ORDER.get(user["role"], -1) < TIER_ORDER[tier]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"ฟีเจอร์นี้ใช้ได้เฉพาะแพ็กเกจ {tier}",
+                detail={
+                    "code": "tier_required",
+                    "message": f"ฟีเจอร์นี้ใช้ได้เฉพาะแพ็กเกจ {tier}",
+                    "required": tier,
+                },
             )
         return user
 

@@ -18,6 +18,14 @@ export function Logo({ size = 28, variant = "light", showWordmark = true, classN
   const strokeColor = variant === "dark" ? "#FFFFFF" : "var(--ink)";
   const wordmarkColor = variant === "dark" ? "#FFFFFF" : "var(--ink)";
 
+  // docs/brand.md หัวข้อ 1 — "ต่ำกว่า 32px ให้ใช้แบบเส้นหนาของ favicon"
+  // เส้น 3.0 ที่ย่อลงมาเหลือ 26px จะบางจนดูเทาๆ และรูของแท็กแทบหายไป
+  // ค่าสองชุดนี้ก็อปตรงจาก public/logo-mark.svg กับ public/favicon.svg
+  // ไม่ได้ปรับเอาเอง โลโก้บนเว็บจะได้เป็นตัวเดียวกับไฟล์โลโก้จริง
+  const small = size < 32;
+  const strokeWidth = small ? "4.2" : "3.0";
+  const holeRadius = small ? 4.4 : 3.4;
+
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <svg
@@ -32,10 +40,10 @@ export function Logo({ size = 28, variant = "light", showWordmark = true, classN
         <path
           d="M27.4 4.5H40.5a3 3 0 0 1 3 3v13.1a3 3 0 0 1-.88 2.12L24.72 40.62a3 3 0 0 1-4.24 0L7.38 27.52a3 3 0 0 1 0-4.24L25.28 5.38a3 3 0 0 1 2.12-.88Z"
           stroke={strokeColor}
-          strokeWidth="3"
+          strokeWidth={strokeWidth}
           strokeLinejoin="round"
         />
-        <circle cx="35.2" cy="12.8" r="3.4" fill="#E09540" />
+        <circle cx="35.2" cy="12.8" r={holeRadius} fill="#E09540" />
       </svg>
 
       {showWordmark ? (

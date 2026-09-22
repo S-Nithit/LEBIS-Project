@@ -7,7 +7,7 @@
 // Next.js จะ rewrite /api/* ไปที่ FastAPI ให้เอง (ดู next.config.mjs)
 // เลยไม่ต้องใส่ URL ของ backend และไม่ต้องตั้ง CORS
 
-const TOKEN_KEY = "token";
+export const TOKEN_KEY = "token";
 
 // ---------------------------------------------------------------------------
 // เก็บ / อ่าน / ลบ token
@@ -39,11 +39,12 @@ export function clearToken() {
 // ---------------------------------------------------------------------------
 
 export class ApiError extends Error {
-  constructor(code, { status = 0, fallback = "" } = {}) {
+  constructor(code, { status = 0, field = null, fallback = "" } = {}) {
     super(fallback || code);
     this.name = "ApiError";
     this.code = code; // เช่น "invalid_credentials" · "network" · "server"
     this.status = status;
+    this.field = field; // ชื่อช่องที่ผิด ถ้า backend บอกมา เช่น "password"
   }
 }
 
@@ -70,7 +71,11 @@ function readErrorCode(data, response) {
 // แปลงรหัสข้อผิดพลาดเป็นประโยคในภาษาที่ผู้ใช้เลือก
 //
 //   import { errorMessage } from "@/lib/api";
-//   catch (error) { toast.error(errorMessage(error, t)); }
+//   catch (error) { setFormError(errorMessage(error, t)); }
+//
+// 🔴 ความล้มเหลวขึ้นในหน้า ตรงจุดที่ล้มเหลว ไม่ใช่ toast (docs/brand.md หัวข้อ 6)
+//    toast หายเองใน 4 วินาที คนที่อ่านภาษาไทยช้ากว่านั้นจะไม่ทันเห็นว่าพังเพราะอะไร
+//    toast มีไว้บอก "สำเร็จแล้ว" เท่านั้น
 //
 // 🔴 หน้าเว็บต้องเรียกตัวนี้เสมอ ห้ามเอา error.message ไปโชว์ตรงๆ
 //    เพราะข้อความดิบอาจเป็นภาษาไทยเสมอ หรือเป็นข้อความของเบราว์เซอร์
@@ -84,6 +89,13 @@ export function errorMessage(error, t) {
   return text === key ? t("error.unknown") : text;
 }
 
+// backend เรียกชื่อช่องแบบ shop_name แต่ id ของ <input> ในหน้าเว็บเป็น shopName
+// ถ้าไม่แปลง ข้อความผิดพลาดจะไปแปะช่องที่ไม่มีอยู่จริง = ผู้ใช้กดส่งแล้วเหมือนหน้าเว็บค้าง
+export function fieldToInputId(field) {
+  if (!field) return field;
+  return field.replace(/_([a-z])/g, (_match, letter) => letter.toUpperCase());
+}
+
 // ---------------------------------------------------------------------------
 // ตัวหลัก: apiFetch
 //
@@ -95,8 +107,24 @@ export function errorMessage(error, t) {
 // ถ้าไม่สำเร็จจะ throw ApiError -> ฝั่งหน้าเว็บใช้ try/catch รับ
 // ---------------------------------------------------------------------------
 
+// รวมสัญญาณหยุดหลายตัวเป็นตัวเดียว (ตัวตัดเวลา + ปุ่มยกเลิกของผู้ใช้)
+// AbortSignal.any มีเฉพาะเบราว์เซอร์ใหม่ จึงต้องมีทางถอยเหมือนกับ AbortSignal.timeout
+function combineSignals(a, b) {
+  const list = [a, b].filter(Boolean);
+  if (list.length === 0) return undefined;
+  if (list.length === 1) return list[0];
+  if (typeof AbortSignal !== "undefined" && AbortSignal.any) return AbortSignal.any(list);
+  // เบราว์เซอร์เก่า: ทำเองด้วยมือ
+  const controller = new AbortController();
+  for (const item of list) {
+    if (item.aborted) controller.abort();
+    else item.addEventListener("abort", () => controller.abort(), { once: true });
+  }
+  return controller.signal;
+}
+
 export async function apiFetch(path, options = {}) {
-  const { method = "GET", body, headers = {} } = options;
+  const { method = "GET", body, headers = {}, signal } = options;
 
   const finalHeaders = { ...headers };
   if (body !== undefined) finalHeaders["Content-Type"] = "application/json";
@@ -110,18 +138,49 @@ export async function apiFetch(path, options = {}) {
       method,
       headers: finalHeaders,
       body: body === undefined ? undefined : JSON.stringify(body),
+      // ตัดการรอที่ 15 วินาที ไม่งั้นสัญญาณอ่อนๆ หน้าร้านจะทำให้ปุ่มค้าง
+      // เป็น "กำลังเข้าสู่ระบบ..." ไปเรื่อยๆ โดยไม่มีอะไรเกิดขึ้น
+      //
+      // 🔴 ต้องเช็กก่อนว่าเบราว์เซอร์รู้จัก AbortSignal.timeout ไหม
+      //    Safari ต่ำกว่า 16 · Chrome ต่ำกว่า 103 · Samsung Internet ต่ำกว่า 21 ไม่มีตัวนี้
+      //    ถ้าเรียกตรงๆ มันจะโยน TypeError ซึ่งตกลงไปใน catch ข้างล่างที่เขียนไว้ว่า
+      //    "เน็ตหลุด" ผลคือ ทุกคำขอในระบบล้มเหลวเหมือนกันหมดตลอดไป และหน้าจอ
+      //    บอกเจ้าของร้านว่าให้ไปตรวจสัญญาณอินเทอร์เน็ตที่ใช้งานได้ปกติอยู่
+      //    วัดจริง: เข้าสู่ระบบด้วยรหัสที่ถูกต้อง พังใน 2568ms โดยไม่มี error ใน console เลย
+      //
+      //    ไม่มีตัวตัดเวลา ดีกว่าไม่มีระบบให้ใช้
+      //    และถ้าหน้าเว็บส่ง signal ของตัวเองมา (ปุ่มยกเลิก) ให้รวมกับตัวตัดเวลา
+      //    อันไหนมาก่อนก็หยุดด้วยอันนั้น
+      signal: combineSignals(
+        typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined,
+        signal
+      ),
     });
   } catch (networkError) {
+    // ผู้ใช้กดยกเลิกเอง ไม่ใช่ความผิดพลาด ต้องแยกออกจาก "เน็ตหลุด"
+    // ไม่งั้นกดยกเลิกแล้วจะได้กล่องแดงบอกว่าให้ไปตรวจสัญญาณอินเทอร์เน็ต
+    if (signal?.aborted) throw new ApiError("cancelled", { fallback: "cancelled" });
     // เน็ตหลุด หรือเซิร์ฟเวอร์ไม่ตอบ — เกิดบ่อยมากเวลาใช้มือถือหน้าร้าน
     throw new ApiError("network", { fallback: "network error" });
   }
 
   // อ่าน body เป็น JSON — บาง response ไม่มี body (เช่น 204) เลยต้องกัน error ไว้
-  const data = await response.json().catch(() => null);
+  // ถ้าอ่าน body ค้าง (หัวข้อความมาแล้วแต่เนื้อไม่มา) ให้ถือว่าเป็นปัญหาเครือข่าย
+  // ไม่งั้นปุ่มจะค้างเป็น "กำลังโหลด..." ไปตลอดโดยไม่มีอะไรบอกผู้ใช้
+  let data;
+  try {
+    data = await response.json();
+  } catch (bodyError) {
+    if (bodyError?.name === "TimeoutError" || bodyError?.name === "AbortError") {
+      throw new ApiError("network", { fallback: "body timeout" });
+    }
+    data = null;
+  }
 
   if (!response.ok) {
     throw new ApiError(readErrorCode(data, response), {
       status: response.status,
+      field: data?.detail?.field ?? null,
       fallback: `HTTP ${response.status}`,
     });
   }

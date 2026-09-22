@@ -3,8 +3,12 @@
 อ่านก่อนเริ่มเขียนหน้าของตัวเอง ใช้เวลาประมาณ 5 นาที
 มาตรฐานทั้งหมดมาจาก [docs/brand.md](brand.md) — ไฟล์นี้คือวิธีเอาไปใช้จริงในโค้ด
 
-หน้าตัวอย่างที่ทำเสร็จแล้วคือ `nextjs/pages/login.js` กับ `nextjs/pages/register.js`
-เปิดคู่กับคู่มือนี้แล้วก็อปโครงไปใช้ได้เลย
+**ต้นฉบับที่ให้ก็อปมีไฟล์เดียวคือ `nextjs/pages/template.js`** เปิดดูของจริงได้ที่
+`/template` ตอนรัน dev
+
+`pages/login.js` กับ `pages/register.js` เป็นหน้าที่ทำเสร็จแล้ว เปิดดูเป็นตัวอย่าง
+ได้ แต่อย่าก็อปโครงจากมัน — สองหน้านั้นเป็นฟอร์มที่ไม่ต้องเข้าสู่ระบบก่อน
+จึงไม่มีสถานะ "โหลดข้อมูลไม่สำเร็จ" ซึ่งหน้าที่คุณกำลังจะเขียนต้องมี
 
 ---
 
@@ -15,58 +19,35 @@
    ถ้าใส่ค่าสีเอง โหมดมืดจะพัง
 2. **ห้ามตั้งขนาดตัวอักษรเอง** ใช้คลาส `t-page-title` `t-section` `t-body` `t-label` `t-caption` `t-eyebrow`
 3. **ข้อความทุกคำต้องผ่าน `t()`** เพราะเว็บนี้มีสองภาษา (ดูหัวข้อ "ข้อความสองภาษา")
-4. **ข้อผิดพลาดต้องบอกใต้ช่องที่ผิดเสมอ** ไม่ใช่บอกผ่าน toast อย่างเดียว
+4. **ข้อผิดพลาดต้องบอกใต้ช่องที่ผิดเสมอ** ห้ามบอกผ่าน toast (brand.md หัวข้อ 6)
    เพราะ toast ไม่ได้บอกว่าช่องไหนผิดและหายไปเอง (ดูหัวข้อ "บอกข้อผิดพลาดให้ถูกวิธี")
 
 ---
 
 ## โครงหน้าที่ถูกต้อง
 
-```jsx
-import { AppShell } from "@/components/AppShell";
-import { PageHeader } from "@/components/PageHeader";
-import { EmptyState } from "@/components/EmptyState";
-import { LoadingState } from "@/components/LoadingState";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/useAuth";
-import { useLanguage } from "@/lib/useLanguage";
+> ⚠️ แม่แบบไม่ได้อยู่ในเอกสารนี้แล้ว — อยู่ที่ **`nextjs/pages/template.js`**
+>
+> ก็อปทั้งไฟล์นั้นไปเริ่มหน้าใหม่ได้เลย และเปิดดูของจริงที่ `/template` ตอนรัน dev
+>
+> ย้ายออกมาเพราะก้อนโค้ดในเอกสารไม่มีใครตรวจให้ว่ารันได้จริง เคยพลาดมาแล้วสองรอบ
+> (รอบแรกลืม import · รอบสองใช้ตัวแปรที่ไม่ได้ประกาศ) ทั้งสองครั้งกว่าจะรู้คือตอน
+> เอาไปใช้แล้วเจอจอขาว ไฟล์จริงถูก build ทุกครั้ง ถ้าพังจะพังตั้งแต่ตอน build
 
-export default function Workspace() {
-  const { user, loading, logout } = useAuth({ redirectTo: "/login" });
-  const { t } = useLanguage();
+หน้าทุกหน้าในระบบมี **4 สถานะ** เสมอ และแม่แบบวางครบทั้งสี่ไว้ให้แล้ว
 
-  if (loading) return null;
+| สถานะ | เงื่อนไข | สิ่งที่วาด |
+|---|---|---|
+| 1 · กำลังโหลดครั้งแรก | `loading && !user` | `<LoadingState />` |
+| 2 · ยังไม่ได้เข้าสู่ระบบ | `!user && !loadError` | `return null` (useAuth พาไปหน้า login แล้ว) |
+| 3 · โหลดไม่สำเร็จ | `!user` | `<FormError onRetry={reload} retrying={loading} />` |
+| 4 · มีข้อมูลแล้ว | นอกนั้น | เนื้อหาจริงของหน้า |
 
-  return (
-    <AppShell user={user} onLogout={logout}>
-      <PageHeader
-        title={t("workspace.title")}
-        description={t("workspace.subtitle")}
-        action={<Button>{t("workspace.addItem")}</Button>}
-      />
+ข้างในสถานะที่ 4 ข้อมูลของหน้าเองก็มีอีก 4 สถานะ (กำลังโหลด / พลาด / ว่าง / มี)
+แม่แบบวางไว้ครบเหมือนกัน
 
-      {/* 3 สถานะที่ทุกหน้าต้องมี: กำลังโหลด / ยังไม่มีข้อมูล / มีข้อมูล */}
-      {itemsLoading ? (
-        <LoadingState />
-      ) : items.length === 0 ? (
-        <EmptyState
-          title={t("workspace.emptyTitle")}
-          description={t("workspace.emptyBody")}
-          action={<Button>{t("workspace.addItem")}</Button>}
-        />
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("workspace.listTitle")}</CardTitle>
-          </CardHeader>
-          <CardContent>{/* ตารางของคุณ */}</CardContent>
-        </Card>
-      )}
-    </AppShell>
-  );
-}
-```
+🔴 สถานะที่ 3 ห้ามข้าม ถ้าข้ามแล้วเน็ตหลุด หน้าจะหมุนค้างเป็น "กำลังโหลด..."
+ตลอดไป ซึ่งเป็นการโกหกผู้ใช้ว่าระบบยังทำงานอยู่ทั้งที่เลิกพยายามไปแล้ว
 
 `AppShell` จัดการแถบหัวเว็บ โลโก้ ชื่อผู้ใช้ ป้ายแพ็กเกจ ปุ่มสลับภาษา
 ปุ่มออกจากระบบ ความกว้างเนื้อหา และระยะขอบบนมือถือให้หมดแล้ว
@@ -81,11 +62,14 @@ export default function Workspace() {
 | `AppShell` | `components/AppShell.js` | ครอบทุกหน้าที่ต้องเข้าสู่ระบบก่อน |
 | `PageHeader` | `components/PageHeader.js` | หัวข้อหน้า + คำอธิบาย + ปุ่มหลักของหน้า |
 | `EmptyState` | `components/EmptyState.js` | ยังไม่มีข้อมูลในหน้านั้น |
-| `LoadingState` | `components/LoadingState.js` | ระหว่างรอข้อมูลจาก API (แถวเปล่ากะพริบ ไม่ใช่วงกลมหมุน) |
+| `LoadingState` | `components/LoadingState.js` | ระหว่างรอข้อมูลจาก API · `rows` กำหนดจำนวนแถว · `label` เปลี่ยนข้อความได้ |
+| `useAuth` | `lib/useAuth.js` | `user` `loading` `loadError` `reload` `logout` — ใช้กับทุกหน้าที่ต้องเข้าสู่ระบบ |
 | `StatusBadge` | `components/StatusBadge.js` | ป้ายสถานะเม็ดเล็ก |
 | `Card` | `components/ui/card.js` | กล่องเนื้อหา พื้นขาว ขอบ 1px มุมมน 20px |
 | `Button` | `components/ui/button.js` | ปุ่มทุกชนิด |
-| `FormField` | `components/FormField.js` | ช่องกรอก 1 ช่อง พร้อมป้ายกำกับ |
+| `FormField` | `components/FormField.js` | ช่องกรอก 1 ช่อง พร้อมป้ายกำกับและข้อความผิดพลาด |
+| `FormError` | `components/FormError.js` | ข้อความผิดพลาดของทั้งฟอร์ม วางติดปุ่มส่ง |
+| `Checkbox` | `components/ui/checkbox.js` | ช่องติ๊ก — อย่าใช้ `<input type="checkbox">` เปล่าๆ |
 | `LanguageToggle` | `components/LanguageToggle.js` | ปุ่มสลับภาษา (อยู่ใน AppShell แล้ว) |
 | `AuthLayout` | `components/AuthLayout.js` | เฉพาะหน้าเข้าสู่ระบบ/สมัครสมาชิก |
 
@@ -94,12 +78,13 @@ export default function Workspace() {
 ### ตัวอย่างที่ใช้บ่อย
 
 ```jsx
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: import ของ Logo กับ Button
 <Logo />                                   {/* โลโก้บนพื้นอ่อน */}
 <Logo variant="dark" size={26} />          {/* โลโก้บนแถบหัวเว็บสีเข้ม */}
 
-<Button>บันทึก</Button>                     {/* ปุ่มหลัก — หน้าละ 1 ปุ่มพอ */}
+<Button>บันทึก</Button>                     {/* ปุ่มหลัก — 1 ปุ่มต่อ "ส่วน" ของหน้า */}
 <Button variant="secondary">ยกเลิก</Button>
-<Button variant="ghost" size="sm">แก้ไข</Button>
+<Button variant="secondary" size="sm">แก้ไข</Button>
 <Button variant="danger">ลบอุปกรณ์</Button>
 
 <StatusBadge tone="success">ว่าง</StatusBadge>
@@ -115,9 +100,16 @@ export default function Workspace() {
 ทุกหน้าที่มีฟอร์มทำเหมือนกันหมด 3 ขั้น
 
 ```jsx
-import { apiFetch, errorMessage } from "@/lib/api";
+// ชิ้นส่วน — วางในหน้าที่มี state ของช่องกรอก (email, password) อยู่แล้ว
+import { useState } from "react";
+import { toast } from "sonner";
 
+import { apiFetch, errorMessage, fieldToInputId } from "@/lib/api";
+import { useLanguage } from "@/lib/useLanguage";
+
+const { t } = useLanguage();
 const [errors, setErrors] = useState({});
+const [formError, setFormError] = useState("");
 
 // 1) ตรวจ "ทุกช่องพร้อมกัน" คืน object ที่ key คือ id ของช่องที่ผิด
 //    อย่าหยุดที่ช่องแรกที่ผิด ไม่งั้นผู้ใช้ต้องกดส่งหลายรอบกว่าจะรู้ครบ
@@ -134,7 +126,6 @@ async function handleSubmit(event) {
   const found = validate();
   setErrors(found);
   if (Object.keys(found).length > 0) {
-    toast.error(t("error.summary"));
     // 2) พาโฟกัสไปช่องแรกที่ผิด ผู้ใช้จะได้ไม่ต้องไล่หาเอง
     document.getElementById(Object.keys(found)[0])?.focus();
     return;
@@ -147,17 +138,55 @@ async function handleSubmit(event) {
     // 3) แปลรหัสข้อผิดพลาดจาก backend เป็นภาษาที่ผู้ใช้เลือกอยู่
     //    🔴 ห้ามใช้ error.message ตรงๆ เพราะอาจเป็นภาษาไทยเสมอ
     //       หรือเป็นข้อความของเบราว์เซอร์อย่าง "Failed to fetch"
-    toast.error(errorMessage(error, t));
+    const message = errorMessage(error, t);
+
+    // backend บอกมาด้วยว่าผิดที่ช่องไหน (error.field) ก็แปะที่ช่องนั้น
+    // 🔴 ต้องผ่าน fieldToInputId() เสมอ ห้ามใช้ error.field ดิบๆ
+    //    backend ตั้งชื่อช่องแบบ shop_name แต่ id ของ <input> คือ shopName
+    //    ถ้าไม่แปลง ข้อความจะไปแปะกับช่องที่ไม่มีอยู่จริง หน้าจะเงียบสนิท
+    //    ผู้ใช้กดส่งแล้วไม่มีอะไรเกิดขึ้น และไม่มีทางรู้ว่าต้องแก้อะไร
+    // ไม่บอกช่อง = ขึ้นเป็นข้อความระดับฟอร์ม
+    if (error?.field) {
+      setFormError("");
+      setErrors({ [fieldToInputId(error.field)]: message });
+      document.getElementById(fieldToInputId(error.field))?.focus();
+    } else {
+      setFormError(message);
+    }
+    // ไม่ต้อง toast ซ้ำ ข้อความอยู่ในหน้าแล้วและอยู่ต่อจนกว่าจะแก้
   }
 }
 ```
 
-แล้วส่งข้อความเข้า `FormField` ผ่าน prop `error` — ตัว component จัดการให้หมด
+แล้วส่งข้อความเข้า `FormField` ผ่าน prop `error` และส่ง `onClearError` ไปด้วย
+เพื่อให้ข้อความหายทันทีที่ผู้ใช้เริ่มแก้ — ตัว component จัดการที่เหลือให้หมด
 ทั้งกรอบแดง ข้อความใต้ช่อง และการบอกโปรแกรมอ่านหน้าจอ
 
 ```jsx
-<FormField id="email" label={t("items.email")} error={errors.email} ... />
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: errors, clearError, t และ import ของ FormField
+<FormField
+  id="email"
+  label={t("items.email")}
+  error={errors.email}
+  onClearError={clearError}   // function (field) => ล้าง errors[field]
+  ...
+/>
 ```
+
+**ข้อผิดพลาดที่ไม่ได้ผิดที่ช่องใดช่องหนึ่ง** (เน็ตหลุด เซิร์ฟเวอร์ล่ม อีเมลหรือ
+รหัสผ่านไม่ถูกต้อง) ห้ามไปทำกรอบแดงให้ช่องที่กรอกถูกอยู่แล้ว ให้ใช้ `<FormError>`
+
+```jsx
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: formError, handleSubmit, loading
+import { FormError } from "@/components/FormError";
+
+<FormError message={formError} onRetry={handleSubmit} retrying={loading} />
+<Button type="submit">...</Button>
+```
+
+🔴 **วางไว้ติดกับปุ่มส่งเสมอ** ห้ามวางบนสุดของฟอร์ม เพราะบนมือถือฟอร์มยาว
+ผู้ใช้กดปุ่มที่อยู่ล่างสุดแล้วข้อความจะไปโผล่นอกจอที่เขามองอยู่
+`FormError` จะเลื่อนหน้าจอมาหาตัวเองและรับโฟกัสให้ด้วย
 
 ฟอร์มทุกอันใส่ `noValidate` ด้วย เพื่อปิดกล่องเตือนของเบราว์เซอร์
 ซึ่งขึ้นเป็นภาษาของเบราว์เซอร์ ไม่ใช่ภาษาที่ผู้ใช้เลือกในเว็บเรา
@@ -175,14 +204,18 @@ async function handleSubmit(event) {
 | ใช้กับอะไร | เขียนว่า |
 |---|---|
 | พื้นหลังของหน้า | `bg-paper` |
-| พื้นการ์ด ตาราง ช่องกรอก | `bg-surface` |
+| พื้นการ์ดและตาราง | `bg-surface` |
+| พื้นช่องกรอก (จมลงจากการ์ดหนึ่งระดับ) | `bg-paper` |
 | ตัวอักษรหลัก แถบหัวเว็บ ปุ่มหลัก | `text-ink` · `bg-ink` |
 | ตัวอักษรรอง คำบรรยาย หัวคอลัมน์ | `text-muted` |
 | เส้นขอบ เส้นคั่น | `border-line` |
 | สีเน้น (รูของแท็ก ป้าย Pro) | `bg-amber` · `text-amber-text` (อำพันที่อ่านออกบนพื้นขาว) |
 | ว่าง / คืนแล้ว | `text-success` |
 | ใกล้ครบกำหนด | `text-warning` |
-| เกินกำหนด / ปุ่มลบ | `text-danger` |
+| เกินกำหนด (ตัวอักษร เส้นขอบ) | `text-danger` |
+| ปุ่มลบ — พื้นปุ่ม | `<Button variant="danger">` (ใช้ `--danger-solid` ไม่ใช่ `text-danger`) |
+| ขอบปุ่มบนแถบหัวเว็บ | `border-header-line` |
+| วงแหวนโฟกัสบนแถบหัวเว็บ | `--focus-on-header` (CSS จัดการให้เอง ไม่ต้องเรียก) |
 
 ค่าจริงทั้งหมดอยู่ใน `nextjs/styles/globals.css` ซึ่งลอกมาจากตารางใน `docs/brand.md`
 
@@ -193,12 +226,16 @@ async function handleSubmit(event) {
 ### ความมนของมุม
 
 `rounded-control` 8px สำหรับปุ่มและช่องกรอก · `rounded-badge` 12px สำหรับป้ายและการ์ดเล็ก ·
-`rounded-card` 20px สำหรับการ์ดใหญ่และแผงเนื้อหา — มีแค่ 3 ค่านี้
+`rounded-card` 20px สำหรับการ์ดใหญ่และแผงเนื้อหา — มีแค่ 3 ค่านี้ ห้ามเพิ่มค่าที่ 4
 
 ### ระยะห่าง
 
 ใช้ได้แค่ 8 ค่า: `1`=4px `2`=8px `3`=12px `4`=16px `5`=24px `6`=32px `7`=48px `8`=64px
-เช่น `gap-4` `p-5` `mt-6` — ห้ามใช้ค่าอื่นอย่าง `p-7` แบบ Tailwind ปกติ เพราะถูกทับไว้แล้ว
+เช่น `gap-4` `p-5` `mt-6`
+
+🔴 **กับดักที่ต้องรู้** ตัวเลขพวกนี้ถูกทับค่าของ Tailwind มาตรฐานไว้
+ถ้าไปก็อปโค้ดจากเว็บมาแล้วมี `p-8` โค้ดนั้นหมายถึง 32px แต่ในโปรเจกต์เราคือ **64px**
+เวลาก็อปตัวอย่างจากที่อื่นมา ให้ไล่ดูเลขระยะห่างทุกตัวก่อนเสมอ
 
 ---
 
@@ -207,6 +244,7 @@ async function handleSubmit(event) {
 ข้อความทุกคำอยู่ใน `nextjs/lib/i18n.js` ที่เดียว ทั้งไทยและอังกฤษ
 
 ```jsx
+// ชิ้นส่วน — วางในหน้าที่มีของพวกนี้อยู่แล้ว: อยู่ข้างในฟังก์ชันของ component
 import { useLanguage } from "@/lib/useLanguage";
 
 const { t } = useLanguage();
@@ -245,10 +283,38 @@ const { t } = useLanguage();
 
 - [ ] ไม่มีค่าสีเขียนเองในไฟล์ของคุณ — `grep -nE "#[0-9a-fA-F]{6}|text-\[|bg-\[" pages/ของคุณ.js`
 - [ ] ข้อความทุกคำผ่าน `t()` และเติมครบทั้ง th และ en
-- [ ] หน้ามีครบ 3 สถานะ: กำลังโหลด / ไม่มีข้อมูล / มีข้อมูล
-- [ ] ทุกการกดที่เปลี่ยนข้อมูลมี toast ทั้งตอนสำเร็จและตอนพลาด
-- [ ] ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่แค่ toast
+- [ ] หน้ามีครบ 4 สถานะ: กำลังโหลด / โหลดไม่สำเร็จ (มีปุ่มลองใหม่) / ไม่มีข้อมูล / มีข้อมูล
+- [ ] ทุกการกดที่เปลี่ยนข้อมูลมี toast ตอนสำเร็จ · ตอนพลาดขึ้นในหน้า ไม่ใช่ toast
+- [ ] ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่ toast
+- [ ] ข้อผิดพลาดที่ backend ระบุช่องมา ผ่าน `fieldToInputId(error.field)` ไม่ใช่ `error.field` ดิบ
+- [ ] `cd nextjs && npm run check` ผ่าน (ตรวจกฎข้างบนให้อัตโนมัติ)
+- [ ] `cd nextjs && npm run check:pages` ผ่าน — ตัวนี้ **เปิดหน้าจริง** ไม่ได้อ่านไฟล์
+      ครั้งแรกต้องติดตั้งก่อน: `npm i && npx playwright install chromium`
+      ถ้ารันแล้วบอกว่าหา playwright ไม่เจอทั้งที่ลงแล้ว แปลว่า node_modules ในเครื่อง
+      กับใน container คนละชุดกัน (compose ครอบทับไว้) ให้ `docker compose down -v`
+      แล้ว `up --build` ใหม่หนึ่งรอบ
+      🔴 ต้องเรียกผ่าน `npm run` ไม่ใช่ `node scripts/...` ตรงๆ เพราะ playwright
+         ถูกประกาศไว้ใน nextjs/package.json จะหาเจอก็ต่อเมื่อรันจากโฟลเดอร์นั้น
+      ตรวจ: มี error ใน console ไหม · เนื้อหาเปลี่ยนเองหลังโหลดเสร็จไหม · ล้นจอไหม
+- [ ] 🔴 **เปิดหน้าจริงแล้วดูสองอย่าง**
+      1. สิ่งที่เขียนไป "ชนะ" จริงไหม — ถ้าเขียนทับสไตล์ของไลบรารี (toast, ปฏิทิน,
+         ตารางสำเร็จรูป) ให้คลิกขวา > Inspect แล้วดูค่าที่คำนวณได้
+      2. **เปิด console ค้างไว้ตอนโหลดหน้า** ถ้ามีข้อความสีแดงหรือสีเหลือง อย่าปล่อย
+      3. **โหลดซ้ำในสภาพ "เคยมาแล้ว"** — กดเปลี่ยนภาษา ปิดแท็บ เปิดใหม่ แล้วดูว่า
+         หน้าเปลี่ยนตัวเองหลังโหลดหรือเปล่า บั๊กชนิดนี้ไม่มี error ใน console เลย
+         เบราว์เซอร์ที่ใช้เทสเริ่มจากศูนย์เสมอ แต่คนใช้จริงพกของเก่ามาด้วยทุกครั้ง
+      สคริปต์ที่อ่านไฟล์บอกว่าผ่านทุกครั้งแม้โค้ดจะไม่มีผลเลย
+      (เคยพลาดสองครั้ง: สี toast เขียนถูกทุกบรรทัดแต่แพ้ CSS ของไลบรารี ·
+       วันที่ในตัวอย่างเปลี่ยนเองหลังโหลด เพราะเซิร์ฟเวอร์กับเบราว์เซอร์คนละเขตเวลา
+       ทั้งสองครั้งไฟล์ถูกหมด ภาพหน้าจอก็ดูปกติ เรื่องอยู่ใน console)
 - [ ] ข้อความผิดพลาดจาก backend ผ่าน `errorMessage(error, t)` ไม่ใช่ `error.message`
 - [ ] เปิดที่ 390px แล้วไม่มีอะไรล้นออกนอกจอ
 - [ ] ลองสลับเป็นโหมดมืดแล้วยังอ่านออกทุกบรรทัด
+- [ ] ทุกอย่างที่กดได้ **กว้างและสูง** อย่างน้อย 44px — รวมลิงก์ ไม่ใช่แค่ปุ่ม
+      (เคยพลาด: ปุ่ม "ลองอีกครั้ง" 74x23 และลิงก์สลับหน้า 70x17)
+- [ ] ของที่ไม่ใช่ตัวอักษรก็ต้องเห็นขอบเขต — ขอบปุ่ม ขอบช่องกรอก ช่องติ๊กตอนติ๊กแล้ว
+      วงแหวนโฟกัส ต้องต่างจากพื้นหลังอย่างน้อย 3:1 ทั้งสองโหมด
+      (เคยพลาด: ขอบปุ่มบนแถบหัวเว็บ 2.65:1 · ช่องติ๊กในโหมดมืด 1.77:1)
+- [ ] ลองกด Tab ไล่ทั้งหน้า **ทั้งสองโหมด** เห็นวงแหวนโฟกัสทุกจุดที่หยุด
+- [ ] ปุ่มที่ชื่อเหมือนกันสองปุ่มในหน้าเดียว ต้องมี `aria-label` บอกว่าอันไหนของอะไร
 - [ ] โลโก้เรียกผ่าน `<Logo />` ไม่ได้วาดเองหรือใส่รูปเอง

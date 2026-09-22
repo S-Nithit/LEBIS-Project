@@ -11,8 +11,10 @@
 // กฎที่ต้องรักษาไว้เวลาแก้ไฟล์นี้ (จาก docs/ui-guide.md)
 //   - ข้อความทุกคำผ่าน t() และเติมครบทั้ง th และ en ใน lib/i18n.js
 //   - ห้ามเขียนค่าสีเอง ใช้ชื่อสีของระบบเท่านั้น
-//   - ทุกการกดที่เปลี่ยนข้อมูลต้องมี toast ทั้งตอนสำเร็จและตอนพลาด
-//   - ข้อผิดพลาดของฟอร์มขึ้นใต้ช่องที่ผิด ไม่ใช่แค่ toast
+//   - สำเร็จ -> toast · พลาด -> ขึ้นในหน้าตรงจุดที่พลาด ห้ามเป็น toast
+//     (docs/brand.md หัวข้อ 6 แก้กฎข้อนี้เมื่อ 21 ก.ย. หลังไฟล์นี้เขียนไปแล้ว)
+//     ผิดที่ช่องไหน -> ใต้ช่องนั้นผ่าน FormField
+//     ไม่ใช่ความผิดของช่องไหน -> กล่อง FormError ที่อยู่ติดปุ่มที่ผู้ใช้เพิ่งกด
 
 import Head from "next/head";
 import { useCallback, useEffect, useState } from "react";
@@ -20,6 +22,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
+import { FormError } from "@/components/FormError";
 import { FormField } from "@/components/FormField";
 import { LoadingState } from "@/components/LoadingState";
 import { PageHeader } from "@/components/PageHeader";
@@ -97,21 +100,27 @@ function StatCard({ label, value, unit }) {
 
 // แถบยืนยันก่อนทำสิ่งที่ย้อนกลับยาก — ใช้แทน confirm() ของเบราว์เซอร์
 // เพราะกล่องของเบราว์เซอร์ขึ้นเป็นภาษาของเบราว์เซอร์ ไม่ใช่ภาษาที่ผู้ใช้เลือกในเว็บเรา
-function ConfirmPanel({ message, confirmLabel, onConfirm, onCancel, busy }) {
+function ConfirmPanel({ message, confirmLabel, onConfirm, onCancel, busy, error }) {
   const { t } = useLanguage();
 
   return (
     <Card className="mb-5">
-      <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="t-body">{message}</p>
-        <div className="flex shrink-0 gap-3">
-          <Button variant="secondary" onClick={onCancel} disabled={busy}>
-            {t("item.cancel")}
-          </Button>
-          <Button variant="danger" onClick={onConfirm} disabled={busy}>
-            {confirmLabel}
-          </Button>
+      <CardContent className="flex flex-col gap-4 p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="t-body">{message}</p>
+          <div className="flex shrink-0 gap-3">
+            <Button variant="secondary" onClick={onCancel} disabled={busy}>
+              {t("item.cancel")}
+            </Button>
+            <Button variant="danger" onClick={onConfirm} disabled={busy}>
+              {confirmLabel}
+            </Button>
+          </div>
         </div>
+
+        {/* ถ้าลบหรือรับคืนไม่สำเร็จ แผงนี้ต้องไม่ปิดตัวเอง เหตุผลจะได้อยู่ตรงที่ผู้ใช้กด
+            และปุ่มลองใหม่ก็อยู่ตรงนั้นพอดี ไม่ใช่ toast ที่หายไปใน 4 วินาที */}
+        <FormError message={error} onRetry={onConfirm} retrying={busy} />
       </CardContent>
     </Card>
   );
@@ -130,6 +139,9 @@ function ItemForm({ item, onSaved, onCancel }) {
     daily_rate: item ? String(item.daily_rate) : "0",
   });
   const [errors, setErrors] = useState({});
+  // ข้อผิดพลาดที่ไม่ได้เป็นของช่องใดช่องหนึ่ง เช่นเน็ตหลุด หรือเพดาน 50 ชิ้นของแพ็กเกจฟรี
+  // ขึ้นในกล่องที่อยู่ติดปุ่มบันทึก ไม่ใช่ toast (docs/brand.md หัวข้อ 6)
+  const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
   function change(field, value) {
@@ -159,7 +171,9 @@ function ItemForm({ item, onSaved, onCancel }) {
     setErrors(found);
 
     if (Object.keys(found).length > 0) {
-      toast.error(t("error.summary"));
+      // ข้อความอยู่ใต้ช่องที่ผิดแล้ว ตรงนี้แค่พาโฟกัสไปหาช่องแรก
+      // ไม่ต้องสรุปซ้ำเป็น toast เพราะ toast ไม่บอกว่าผิดช่องไหน
+      setFormError("");
       document.getElementById(Object.keys(found)[0])?.focus();
       return;
     }
@@ -173,6 +187,7 @@ function ItemForm({ item, onSaved, onCancel }) {
     };
 
     setSaving(true);
+    setFormError("");
     try {
       if (editing) {
         await apiFetch(`/api/items/${item.id}`, { method: "PUT", body });
@@ -183,14 +198,16 @@ function ItemForm({ item, onSaved, onCancel }) {
       }
       onSaved();
     } catch (error) {
-      // 🔴 ต้องผ่าน errorMessage เสมอ ห้ามเอา error.message มาโชว์ตรงๆ
-      toast.error(errorMessage(error, t));
-
-      // รหัสซ้ำเป็นความผิดของช่อง code โดยตรง เลยชี้ให้เห็นใต้ช่องนั้นด้วย
+      // รหัสซ้ำเป็นความผิดของช่อง code โดยตรง จึงขึ้นใต้ช่องนั้น ไม่ใช่ในกล่องรวม
+      // ถ้าขึ้นทั้งสองที่ ผู้ใช้จะอ่านข้อความเดียวกันสองรอบแล้วยังไม่รู้ว่าต้องแก้ตรงไหน
       if (error.code === "item_code_taken") {
         setErrors({ code: t("error.item_code_taken") });
         document.getElementById("code")?.focus();
+        return;
       }
+
+      // 🔴 ต้องผ่าน errorMessage เสมอ ห้ามเอา error.message มาโชว์ตรงๆ
+      setFormError(errorMessage(error, t));
     } finally {
       setSaving(false);
     }
@@ -254,6 +271,10 @@ function ItemForm({ item, onSaved, onCancel }) {
             />
           </div>
 
+          {/* กล่องนี้ต้องอยู่ติดปุ่มบันทึก เพราะบนมือถือฟอร์มนี้ยาวเกินหนึ่งจอ
+              ถ้าไปอยู่บนสุด ผู้ใช้ที่กดปุ่มล่างสุดจะไม่เห็นว่าเกิดอะไรขึ้น */}
+          <FormError message={formError} onRetry={handleSubmit} retrying={saving} />
+
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="submit" disabled={saving}>
               {saving ? t("item.saving") : t("item.save")}
@@ -274,6 +295,7 @@ function BorrowForm({ item, onSaved, onCancel }) {
 
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", due_date: "" });
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
 
   function change(field, value) {
@@ -295,12 +317,13 @@ function BorrowForm({ item, onSaved, onCancel }) {
     setErrors(found);
 
     if (Object.keys(found).length > 0) {
-      toast.error(t("error.summary"));
+      setFormError("");
       document.getElementById(Object.keys(found)[0])?.focus();
       return;
     }
 
     setSaving(true);
+    setFormError("");
     try {
       await apiFetch("/api/borrows", {
         method: "POST",
@@ -314,7 +337,9 @@ function BorrowForm({ item, onSaved, onCancel }) {
       toast.success(t("borrow.created"));
       onSaved();
     } catch (error) {
-      toast.error(errorMessage(error, t));
+      // เคสที่เจอบ่อยสุดคือของถูกยืมไปหมดแล้วระหว่างที่ฟอร์มนี้เปิดค้างอยู่
+      // ซึ่งไม่ใช่ความผิดของช่องไหนเลย จึงขึ้นเป็นกล่องรวมข้างปุ่ม
+      setFormError(errorMessage(error, t));
     } finally {
       setSaving(false);
     }
@@ -365,6 +390,8 @@ function BorrowForm({ item, onSaved, onCancel }) {
             />
           </div>
 
+          <FormError message={formError} onRetry={handleSubmit} retrying={saving} />
+
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="submit" disabled={saving}>
               {saving ? t("borrow.submitting") : t("borrow.submit")}
@@ -412,6 +439,12 @@ export default function Workspace() {
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  // ข้อผิดพลาดระดับหน้า — โหลดตารางไม่ขึ้น หรือสลับสถานะชำรุดไม่สำเร็จ
+  // ขึ้นเป็นกล่องเหนือตาราง ไม่ใช่ toast (docs/brand.md หัวข้อ 6)
+  const [pageError, setPageError] = useState("");
+  // ข้อผิดพลาดของแผงยืนยัน แยกจากตัวบน เพราะคนละที่บนหน้าจอ
+  const [confirmError, setConfirmError] = useState("");
+
   // หน่วงการค้นหา 300 มิลลิวินาที — ไม่งั้นพิมพ์หนึ่งตัวอักษรยิง API หนึ่งครั้ง
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -426,7 +459,7 @@ export default function Workspace() {
     try {
       setSummary(await apiFetch("/api/items/summary"));
     } catch (error) {
-      toast.error(errorMessage(error, t));
+      setPageError(errorMessage(error, t));
     }
   }, [t]);
 
@@ -449,8 +482,9 @@ export default function Workspace() {
       const data = await apiFetch(`/api/items?${params.toString()}`);
       setItems(data.items);
       setItemsTotal(data.total);
+      setPageError("");
     } catch (error) {
-      toast.error(errorMessage(error, t));
+      setPageError(errorMessage(error, t));
     } finally {
       setItemsLoading(false);
     }
@@ -463,8 +497,9 @@ export default function Workspace() {
       if (borrowFilter) params.set("status", borrowFilter);
 
       setBorrows(await apiFetch(`/api/borrows?${params.toString()}`));
+      setPageError("");
     } catch (error) {
-      toast.error(errorMessage(error, t));
+      setPageError(errorMessage(error, t));
     } finally {
       setBorrowsLoading(false);
     }
@@ -491,18 +526,21 @@ export default function Workspace() {
   async function refreshAll() {
     setPanel(null);
     setConfirm(null);
+    setConfirmError("");
     await Promise.all([loadItems(), loadBorrows(), loadSummary(), loadCategories()]);
   }
 
   async function handleDelete(item) {
     setBusy(true);
+    setConfirmError("");
     try {
       await apiFetch(`/api/items/${item.id}`, { method: "DELETE" });
       toast.success(t("item.deleted"));
       await refreshAll();
     } catch (error) {
-      toast.error(errorMessage(error, t));
-      setConfirm(null);
+      // เคสที่เจอจริงคือของชิ้นนี้เคยถูกเช่าไปแล้ว ซึ่งลบไม่ได้และต้องอธิบายให้ครบ
+      // แผงยืนยันจึงเปิดค้างไว้พร้อมเหตุผล แทนที่จะปิดตัวเองแล้วทิ้ง toast ไว้ใบเดียว
+      setConfirmError(errorMessage(error, t));
     } finally {
       setBusy(false);
     }
@@ -510,13 +548,13 @@ export default function Workspace() {
 
   async function handleReturn(borrow) {
     setBusy(true);
+    setConfirmError("");
     try {
       await apiFetch(`/api/borrows/${borrow.id}/return`, { method: "PUT" });
       toast.success(t("borrow.returned"));
       await refreshAll();
     } catch (error) {
-      toast.error(errorMessage(error, t));
-      setConfirm(null);
+      setConfirmError(errorMessage(error, t));
     } finally {
       setBusy(false);
     }
@@ -524,6 +562,7 @@ export default function Workspace() {
 
   // สลับของชำรุด / กลับมาให้เช่าได้ — ส่งแค่ช่อง status ช่องเดียว
   async function toggleBroken(item) {
+    setPageError("");
     try {
       await apiFetch(`/api/items/${item.id}`, {
         method: "PUT",
@@ -532,7 +571,7 @@ export default function Workspace() {
       toast.success(t("item.updated"));
       await refreshAll();
     } catch (error) {
-      toast.error(errorMessage(error, t));
+      setPageError(errorMessage(error, t));
     }
   }
 
@@ -626,8 +665,12 @@ export default function Workspace() {
             message={fill(t("item.confirmDelete"), { name: confirm.item.name })}
             confirmLabel={t("item.delete")}
             busy={busy}
+            error={confirmError}
             onConfirm={() => handleDelete(confirm.item)}
-            onCancel={() => setConfirm(null)}
+            onCancel={() => {
+              setConfirm(null);
+              setConfirmError("");
+            }}
           />
         ) : null}
 
@@ -639,10 +682,22 @@ export default function Workspace() {
             })}
             confirmLabel={t("borrow.return")}
             busy={busy}
+            error={confirmError}
             onConfirm={() => handleReturn(confirm.borrow)}
-            onCancel={() => setConfirm(null)}
+            onCancel={() => {
+              setConfirm(null);
+              setConfirmError("");
+            }}
           />
         ) : null}
+
+        {/* โหลดตารางไม่ขึ้น หรือสลับสถานะชำรุดไม่สำเร็จ — ขึ้นเหนือตารางพร้อมปุ่มลองใหม่
+            ไม่ใช่ toast เพราะผู้ใช้ต้องอ่านทันว่าตัวเลขบนแถบสถานะที่เห็นอยู่ยังเชื่อได้ไหม */}
+        <FormError
+          message={pageError}
+          onRetry={tab === "items" ? loadItems : loadBorrows}
+          retrying={tab === "items" ? itemsLoading : borrowsLoading}
+        />
 
         {tab === "items" ? (
           <section className="flex flex-col gap-4">

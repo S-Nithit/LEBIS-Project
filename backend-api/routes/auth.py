@@ -12,9 +12,14 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from database import create_user, get_user_by_email, update_user_token
+from database import (
+    create_user,
+    get_user_by_email,
+    update_user_profile,
+    update_user_token,
+)
 from services.security import (
     create_access_token,
     get_current_user,
@@ -31,12 +36,40 @@ router = APIRouter()
 #    โดยที่โค้ดใน route ไม่ต้องเช็กซ้ำ
 # ---------------------------------------------------------------------------
 
+# bcrypt รับรหัสผ่านได้ไม่เกิน 72 "ไบต์" ไม่ใช่ 72 "ตัวอักษร"
+# ภาษาไทยหนึ่งตัวอักษรกิน 3 ไบต์ รหัสไทย 25 ตัวจึงเกินขีดจำกัดแล้ว
+# ถ้าไม่ดักตรงนี้ bcrypt จะโยน error ออกมาเป็น HTTP 500 ซึ่งหน้าเว็บจะแปลว่า
+# "ระบบขัดข้อง" ทั้งที่ความจริงคือรหัสที่ผู้ใช้ตั้งยาวเกิน ลองใหม่กี่ครั้งก็ไม่ผ่าน
+MAX_PASSWORD_BYTES = 72
+
+
+def check_password_bytes(value: str) -> str:
+    if len(value.encode("utf-8")) > MAX_PASSWORD_BYTES:
+        raise ValueError("password_too_long")
+    return value
+
+
 class RegisterRequest(BaseModel):
     email: EmailStr
-    # bcrypt รับรหัสได้ไม่เกิน 72 ไบต์ เลยกั้นที่ตรงนี้ ไม่ให้หลุดไปพังข้างใน
-    password: str = Field(min_length=8, max_length=72)
+    password: str = Field(min_length=8)
     name: str = Field(min_length=1, max_length=120)
     shop_name: str | None = Field(default=None, max_length=120)
+    # ติ๊ก "จำฉันไว้ในเครื่องนี้" ตั้งแต่ตอนสมัคร ก็ได้ token อายุ 30 วันเลย
+    remember: bool = False
+
+    # 🔴 อีเมลถูกใช้เป็น primary key ของตาราง users และ Postgres แยกตัวพิมพ์เล็กใหญ่
+    #    ถ้าไม่แปลงเป็นตัวพิมพ์เล็กก่อน คนที่สมัครด้วย Ann@shop.com
+    #    แล้ววันหลังพิมพ์ ann@shop.com จะถูกระบบบอกว่ารหัสผ่านผิดไปตลอด
+    #    ต้องแปลงทั้งตอนสมัครและตอนเข้าสู่ระบบ ไม่งั้นก็ยังหากันไม่เจอ
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.strip().lower()
+
+    @field_validator("password")
+    @classmethod
+    def password_fits_bcrypt(cls, value: str) -> str:
+        return check_password_bytes(value)
 
 
 class LoginRequest(BaseModel):
@@ -45,7 +78,38 @@ class LoginRequest(BaseModel):
     # เพราะฉะนั้นบัญชีที่ seed ไว้เองก็ต้องใช้โดเมนปกติด้วย (ดู DEMO_ACCOUNTS
     # ใน database.py) ไม่งั้นจะสมัครไม่ได้ login ไม่ได้ ทั้งที่มีแถวอยู่ใน DB
     email: EmailStr
-    password: str = Field(min_length=1, max_length=72)
+    password: str = Field(min_length=1)
+    # ติ๊ก "จำฉันไว้ในเครื่องนี้" แล้ว token จะอยู่ได้ 30 วันแทน 24 ชั่วโมง
+    remember: bool = False
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.strip().lower()
+
+    # ตอนเข้าสู่ระบบก็ต้องดักเหมือนกัน เพราะ bcrypt.checkpw พังที่ขีดเดียวกัน
+    @field_validator("password")
+    @classmethod
+    def password_fits_bcrypt(cls, value: str) -> str:
+        return check_password_bytes(value)
+
+
+# ใช้แยกระหว่าง "ไม่ได้ส่งช่องนี้มา" (ไม่ต้องแตะ) กับ "ส่งมาเป็นค่าว่าง" (ตั้งใจล้าง)
+# ถ้าใช้ None แทนทั้งสองความหมาย การแก้แค่ชื่อจะลบชื่อร้านทิ้งไปด้วย
+UNSET = "__unset__"
+
+
+class UpdateProfileRequest(BaseModel):
+    """ข้อมูลที่เจ้าของร้านแก้เองได้จากหน้าบัญชี
+
+    มีแค่ชื่อกับชื่อร้านเท่านั้น — อีเมล รหัสผ่าน และ role ไม่อยู่ในนี้
+    เพราะสามอย่างนั้นเปลี่ยนตัวตนหรือสิทธิ์ของบัญชี ต้องมีเส้นทางของมันเอง
+
+    ช่องที่ไม่ส่งมาจะไม่ถูกแตะ ส่งมาเป็นค่าว่าง (null หรือ "") ถือว่าตั้งใจล้าง
+    """
+
+    name: str | None = Field(default=UNSET, max_length=120)
+    shop_name: str | None = Field(default=UNSET, max_length=120)
 
 
 class TokenResponse(BaseModel):
@@ -117,7 +181,7 @@ async def register(payload: RegisterRequest):
         role="free",
     )
 
-    token = create_access_token(user["email"])
+    token = create_access_token(user["email"], remember=payload.remember)
 
     return TokenResponse(access_token=token, email=user["email"], role=user["role"])
 
@@ -140,7 +204,7 @@ async def login(payload: LoginRequest):
             },
         )
 
-    token = create_access_token(user["email"])
+    token = create_access_token(user["email"], remember=payload.remember)
 
     # เก็บ token ใบล่าสุดไว้ในคอลัมน์ users.token ด้วย — คอลัมน์นี้ติดมากับ
     # boilerplate เก็บไว้เพื่อความเข้ากันได้ แต่ตัวที่ระบบเชื่อจริงคือ JWT
@@ -157,3 +221,29 @@ async def me(user=Depends(get_current_user)):
     ถ้าไม่ได้ส่ง token มา หรือ token ใช้ไม่ได้ จะไม่เข้าฟังก์ชันนี้เลย (ตอบ 401 ไปก่อน)
     """
     return to_user_response(user)
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(payload: UpdateProfileRequest, user=Depends(get_current_user)):
+    """แก้ชื่อและชื่อร้านของตัวเอง
+
+    ช่องที่ไม่ได้ส่งมาจะใช้ค่าเดิม ส่งมาเป็นค่าว่างถือว่าตั้งใจล้างค่า
+    Depends(get_current_user) ทำให้แก้ได้เฉพาะบัญชีของตัวเองเท่านั้น
+    ไม่มีทางส่งอีเมลคนอื่นมาแก้ข้อมูลเขาได้
+    """
+    def resolve(value, current):
+        # ไม่ได้ส่งช่องนี้มา -> ใช้ค่าเดิม
+        if value == UNSET:
+            return current
+        # ส่งมาเป็นค่าว่าง -> ตั้งใจล้างค่า
+        if value is None or value.strip() == "":
+            return None
+        return value.strip()
+
+    updated = await update_user_profile(
+        email=user["email"],
+        name=resolve(payload.name, user["name"]),
+        shop_name=resolve(payload.shop_name, user["shop_name"]),
+    )
+
+    return to_user_response(updated)

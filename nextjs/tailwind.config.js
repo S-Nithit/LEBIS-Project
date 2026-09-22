@@ -3,7 +3,9 @@
 // อยากเปลี่ยนสีหรือความมนของมุม ให้แก้ที่ globals.css ที่เดียว
 module.exports = {
   darkMode: "media", // โหมดมืดตามการตั้งค่าเครื่องของผู้ใช้ (brand.md หัวข้อ 2)
-  content: ["./pages/**/*.{js,jsx}", "./components/**/*.{js,jsx}"],
+  // ต้องมี lib/ ด้วย ไม่งั้นวันที่มีคลาสไปอยู่ในนั้น Tailwind จะไม่สร้าง CSS ให้
+  // แล้วหน้าจะหน้าตาผิดโดยไม่มี error อะไรเลย ซึ่งเป็นอาการที่หาต้นตอยากที่สุด
+  content: ["./pages/**/*.{js,jsx}", "./components/**/*.{js,jsx}", "./lib/**/*.{js,jsx}"],
   theme: {
     container: { center: true, padding: "1rem" },
     extend: {
@@ -15,6 +17,7 @@ module.exports = {
         paper: "var(--paper)",
         surface: "var(--surface)",
         line: "var(--line)",
+        "line-strong": "var(--line-strong)",
         muted: "var(--muted)",
         success: "var(--success)",
         warning: "var(--warning)",
@@ -22,6 +25,7 @@ module.exports = {
         "on-ink": "var(--on-ink)",
         "header-bg": "var(--header-bg)",
         "header-fg": "var(--header-fg)",
+        "header-line": "var(--header-line)",
       },
       fontSize: {
         // ขนาดตัวอักษรตามหัวข้อ 3 ของ brand.md — ใช้ชื่อพวกนี้แทนการใส่ px เอง
@@ -32,7 +36,6 @@ module.exports = {
         title: ["var(--text-page-title)", { lineHeight: "1.2" }],
       },
       borderRadius: {
-        inner: "var(--radius-inner)", // ปุ่มที่ซ้อนอยู่ในกรอบอีกที — 6px
         control: "var(--radius-control)", // ปุ่ม ช่องกรอก — 8px
         badge: "var(--radius-badge)", // ป้ายสถานะ การ์ดเล็ก — 12px
         card: "var(--radius-card)", // การ์ดใหญ่ แผงเนื้อหา — 20px

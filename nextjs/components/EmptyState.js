@@ -22,7 +22,9 @@ export function EmptyState({ title, description, action }) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface px-5 py-8 text-center">
       {/* ไอคอนคือโลโก้ตัวเดียวกับของแบรนด์ เรียกผ่าน Logo เสมอ ห้ามวาดเอง */}
-      <Logo size={40} showWordmark={false} />
+      <span aria-hidden="true">
+        <Logo size={40} showWordmark={false} />
+      </span>
 
       <div className="flex flex-col gap-2">
         <p className="t-section">{title}</p>

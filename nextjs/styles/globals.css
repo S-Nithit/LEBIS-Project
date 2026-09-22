@@ -4,10 +4,15 @@
 
 /*! LEBIS design system — สร้างจาก docs/brand.md ทุกบรรทัด
     ห้ามแก้ค่าสีหรือขนาดในหน้าใดหน้าหนึ่ง ถ้าต้องเปลี่ยนให้แก้ที่ brand.md ก่อน
-    แล้วค่อยลงมาแก้ไฟล์นี้ที่เดียว ทั้งเว็บจะเปลี่ยนตาม */
+    แล้วค่อยลงมาแก้ไฟล์นี้ที่เดียว ทั้งเว็บจะเปลี่ยนตาม
+
+    🔴 เคยทำกลับทางมาแล้ว: แก้ค่าสีในไฟล์นี้ก่อน แล้ว brand.md ตีพิมพ์ค่าเก่า
+       ที่ตกเกณฑ์ต่อไปอีกหนึ่งรอบเต็ม ทีมอ่าน brand.md ไม่ได้อ่านไฟล์นี้
+       ตอนนี้ scripts/check-conventions.mjs อ่านค่าจากทั้งสองไฟล์แล้วเทียบกัน
+       ถ้าไม่ตรงกันจะไม่ผ่าน ไม่ว่าจะแก้ฝั่งไหนก่อนก็ตาม */
 
 /* ---------------------------------------------------------------------------
-   Space Grotesk กับ DM Sans โหลดจาก Google Fonts ใน pages/_app.js (brand.md หัวข้อ 3)
+   Space Grotesk กับ DM Sans โหลดจาก Google Fonts ใน pages/_document.js (brand.md หัวข้อ 3)
    ทั้งสองตัวไม่มีตัวอักษรไทย เลยใส่ Prompt ที่มากับ boilerplate ต่อท้ายไว้
    เพื่อให้ภาษาไทยได้ฟอนต์ที่ออกแบบมาเหมือนกันทุกเครื่อง ไม่ใช่ฟอนต์ของระบบ
    ที่หน้าตาต่างกันระหว่าง Mac กับ Windows
@@ -50,18 +55,22 @@
     /* ขอบช่องกรอกต้องเห็นชัดว่าเป็นช่องให้กรอก (WCAG 1.4.11 ต้องได้ 3:1)
        เส้น --line ใช้กับเส้นคั่นตกแต่งซึ่งไม่มีเกณฑ์นี้ */
     --line-strong: #7d9094;
-    /* สีตัวอักษรของป้ายสถานะขนาด 13px บนพื้นอ่อนของสีตัวเอง
-       เข้มกว่าสีสถานะปกติเล็กน้อย เพื่อให้วัดจริงแล้วผ่าน 4.5:1 ทุกป้าย */
-    --badge-success-text: #2f7d5d;
-    --badge-warning-text: #99641a;
+    /* ตัวอักษรบนป้ายสถานะเข้มกว่า --amber-text / --success ปกติ
+       เพราะป้ายมีพื้นเป็นสีอ่อนของตัวเอง ไม่ใช่พื้นขาว ค่าที่ผ่านบนพื้นขาว
+       พอมาอยู่บนพื้นอ่อนจะเหลือ 4.51:1 กับ 4.53:1 ซึ่งเฉียดเกณฑ์เกินไป
+       (ดู docs/brand.md หัวข้อ 2 ฉบับแก้ไข 21 ก.ย. 2569) */
+    --badge-success-text: #256a4c;
+    --badge-warning-text: #8a5915;
     --badge-danger-text: #b3453b;
     --paper: #f7f9f9; /* พื้นหลังของหน้า */
     --surface: #ffffff; /* การ์ด ตาราง ช่องกรอก */
     --line: #dce6e7; /* เส้นขอบและเส้นคั่น */
     --muted: #4a6268; /* ตัวอักษรรอง คำบรรยาย หัวคอลัมน์ */
     --success: #2f7d5d; /* ว่าง คืนแล้ว */
-    --warning: #b4761f; /* ใกล้ครบกำหนด ของใกล้หมด */
-    --danger: #b3453b; /* เกินกำหนด ชำรุด ปุ่มที่ทำแล้วย้อนยาก */
+    --warning: #99641a; /* ใกล้ครบกำหนด ของใกล้หมด — ค่าเดียวกับ --amber-text เพื่อให้ผ่าน 4.5:1 */
+    --danger: #b3453b; /* เกินกำหนด ชำรุด — ใช้เป็นสีตัวอักษรและเส้นขอบ */
+    --danger-solid: #b3453b; /* พื้นของปุ่มอันตราย ตัวอักษรขาวได้ 5.48:1 */
+    --on-danger: #ffffff;
 
     /* สีที่วางบนพื้นเข้ม */
     --on-ink: #ffffff;
@@ -85,7 +94,6 @@
     --space-8: 64px;
 
     /* ---- ความมนของมุม ตามหัวข้อ 4 ---- */
-    --radius-inner: 6px; /* ปุ่มที่ซ้อนอยู่ในกรอบอีกที เช่นปุ่มสลับภาษา */
     --radius-control: 8px; /* ช่องกรอกและปุ่ม */
     --radius-badge: 12px; /* การ์ดเล็กและป้ายสถานะ */
     --radius-card: 20px; /* การ์ดใหญ่และแผงเนื้อหา */
@@ -97,10 +105,23 @@
     --primary: var(--ink);
     --primary-foreground: var(--on-ink);
     --primary-hover: var(--ink-2);
+    --primary-border: transparent;
+    /* ขอบของช่องติ๊กตอนติ๊กแล้ว ในโหมดสว่างใช้สีเดียวกับตัวกล่องได้เลย
+       เพราะ --primary เป็นสีหมึกเข้มซึ่งต่างจากพื้นการ์ด 12:1 อยู่แล้ว */
+    --checked-border: var(--primary);
     /* แถบหัวเว็บเป็นสีหมึกเข้มทั้งสองโหมด ไม่พลิกตาม --ink
        ไม่งั้นโหมดมืดจะได้แถบสีขาวที่มีตัวหนังสือสีขาวอยู่บนนั้น */
     --header-bg: #0f3b43;
     --header-fg: #ffffff;
+    /* ขอบปุ่มบนแถบหัวเว็บ — วัดได้ 4.71:1 บน --header-bg
+       ค่าเดิม #4A7D86 ได้แค่ 2.65:1 ซึ่งต่ำกว่า 3:1 ของ WCAG 1.4.11
+       ทั้งที่ token นี้ถูกสร้างขึ้นมาเพื่อผ่านเกณฑ์ข้อนั้นโดยเฉพาะ
+       .btn-on-dark พื้นโปร่ง เส้นนี้จึงเป็นขอบเขตทั้งหมดของปุ่มออกจากระบบ */
+    --header-line: #7fa8b0;
+    /* วงแหวนโฟกัสบนแถบหัวเว็บ — --amber-text ได้แค่ 2.43:1 บนพื้นหมึก
+       คนที่ใช้คีย์บอร์ดในโหมดสว่างจะไม่เห็นเลยว่าโฟกัสอยู่ที่ปุ่มไหน
+       ค่านี้ได้ 5.77:1 ทั้งโหมดสว่างและโหมดมืด เพราะแถบหัวเว็บไม่พลิกตามธีม */
+    --focus-on-header: #e6a65a;
   }
 
   /* -------------------------------------------------------------------------
@@ -123,14 +144,24 @@
       --badge-danger-text: #e4847a;
       --success: #57b58c;
       --warning: #e0a45c;
-      --danger: #e4847a; /* สว่างขึ้นเล็กน้อยเพื่อให้ป้ายผ่าน 4.5:1 บนพื้นเข้ม */
+      --danger: #e4847a; /* สว่างขึ้นเพื่อให้ป้ายผ่าน 4.5:1 บนพื้นเข้ม */
+      --danger-solid: #8c2f27; /* พื้นปุ่ม — เข้มลง ตัวอักษรขาวได้ 8.23:1 */
       --on-ink: #0b2126;
 
-              --primary: #4fb3c4; /* ฟ้าครามสว่างพอให้เป็นปุ่มหลักบนพื้นเข้ม */
-      --primary-foreground: #06232a;
-      --primary-hover: #6cc3d1;
+              /* ปุ่มหลักโหมดมืดใช้ --ink-2 ของแบรนด์ (#1A5A66) ไม่ประดิษฐ์สีใหม่
+         ตัวอักษรบนปุ่มได้ 7.05:1 · ตัวปุ่มเองต่างจากการ์ดแค่ 1.8:1
+         จึงใส่ขอบสีอ่อนกว่า (3.5:1) ให้เห็นขอบเขตของปุ่มตาม WCAG 1.4.11 */
+      --primary: #1a5a66;
+      --primary-foreground: #eef5f5;
+      --primary-hover: #226d7b;
+      --primary-border: #2e8c9c;
+      /* โหมดมืด --primary ต่างจากพื้นการ์ดแค่ 1.77:1 ถ้าใช้เป็นขอบด้วย
+         ช่องติ๊กที่ติ๊กแล้วจะไม่มีขอบให้เห็น เหลือแค่เครื่องหมายถูกลอยอยู่
+         ตอนยังไม่ติ๊กกล่องมีขอบที่ 4.13:1 พอติ๊กแล้วกลับมองยากกว่าเดิม */
+      --checked-border: #2e8c9c;
       --header-bg: #0a2a31;
       --header-fg: #eef5f5;
+      --header-line: #6b99a2; /* 4.83:1 บน #0A2A31 */
     }
   }
 
@@ -163,10 +194,35 @@
 
   /* วงแหวนโฟกัส — ใช้อำพันเข้มเพราะอำพันดิบได้แค่ 2.5:1 บนพื้นขาว
      WCAG 2.4.11 ต้องการ 3:1 สำหรับตัวบอกโฟกัส */
+  /* 🔴 :focus-visible ไม่มีใน Safari ต่ำกว่า 15.4
+        เบราว์เซอร์ที่ไม่รู้จักจะทิ้งกฎทั้งก้อน แล้วช่องกรอกจะไม่มีวงแหวนโฟกัสเลย
+        (วัดจากของจริง: จาก 2px solid กลายเป็น 3px none)
+        จึงต้องเขียน :focus ไว้ก่อนเป็นฐาน แล้วให้ :focus-visible ทับ
+        เบราว์เซอร์ใหม่จะใช้ :focus-visible · เบราว์เซอร์เก่าจะเหลือ :focus ซึ่งยังเห็น
+        ห้ามรวมสองตัวนี้ไว้ใน selector เดียวกันด้วยจุลภาค เพราะถ้าตัวหนึ่งไม่รู้จัก
+        ทั้งกฎจะถูกทิ้งทั้งก้อน ซึ่งคือปัญหาเดิมเป๊ะๆ */
+  :focus {
+    outline: 2px solid var(--amber-text);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
   :focus-visible {
     outline: 2px solid var(--amber-text);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+
+  /* เบราว์เซอร์ใหม่: กดเมาส์แล้วไม่ต้องขึ้นวงแหวน ขึ้นเฉพาะตอนใช้คีย์บอร์ด */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* แถบหัวเว็บเป็นพื้นหมึกเข้มทั้งสองโหมด วงแหวนสีเดียวกับที่ใช้บนพื้นขาว
+     จึงจมหายไปที่นั่น ต้องมีสีของตัวเอง ไม่งั้นการกด Tab บนแถบหัวเว็บ
+     จะไม่มีอะไรบอกเลยว่าตอนนี้อยู่ที่ปุ่มไหน */
+  header :focus-visible {
+    outline-color: var(--focus-on-header);
   }
 
   input,
@@ -272,8 +328,14 @@
     font-size: var(--text-eyebrow);
     font-weight: 600;
     letter-spacing: 0.18em;
-    text-transform: uppercase;
     color: var(--muted);
+  }
+
+  /* ตัวพิมพ์ใหญ่ใช้เฉพาะภาษาอังกฤษ — ภาษาไทยไม่มีตัวพิมพ์ใหญ่ uppercase จึงไม่ทำอะไรเลย
+     ถ้าประกาศไว้รวม component ตัวเดียวกันจะหน้าตาไม่เหมือนกันเมื่อสลับภาษา
+     (ภาษาอังกฤษถูกแปลงแรง ภาษาไทยไม่ถูกแตะ) ซึ่งไม่ใช่สิ่งที่ brand.md ตั้งใจ */
+  html[lang="en"] .t-eyebrow {
+    text-transform: uppercase;
   }
 
   /* กรอบความกว้างของเนื้อหา มีขอบข้างเสมอบนจอมือถือ */
@@ -340,9 +402,11 @@
     border-color: var(--danger);
   }
 
+  /* ปิดใช้งานชั่วคราวระหว่างส่งข้อมูล — ตัวหนังสือที่ผู้ใช้เพิ่งพิมพ์เองต้องยังอ่านออก
+     ถ้าจางลง คนที่อยากตรวจว่าพิมพ์อีเมลถูกไหมระหว่างรอ จะอ่านไม่ออกพอดี */
   .field-input:disabled {
-    opacity: 0.6;
     cursor: not-allowed;
+    background: var(--paper);
   }
 
   /* ปุ่ม — มุมมน 8px สูง 44px */
@@ -363,9 +427,19 @@
     transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
   }
 
+  /* 🔴 "กดไม่ได้" กับ "กำลังทำงานอยู่" ไม่ใช่เรื่องเดียวกัน
+        ปุ่มที่กดไม่ได้จริงๆ ทำให้จางได้ (WCAG ยกเว้นให้ เพราะมันไม่ได้สื่ออะไร)
+        แต่ปุ่มที่กำลังทำงานยังพูดอยู่ — ป้ายมันเปลี่ยนเป็น "กำลังบันทึก..."
+        ซึ่งเป็นข้อมูลชิ้นเดียวที่บอกว่าระบบยังไม่ตาย ถ้าทำให้จางลง
+        ข้อความที่สำคัญที่สุดในจังหวะนั้นจะกลายเป็นข้อความที่อ่านยากที่สุด */
   .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  .btn[aria-busy="true"]:disabled {
+    opacity: 1;
+    cursor: progress;
   }
 
   /* ปุ่มหลักอ่านจาก --primary ไม่ใช่ --ink เพราะ --ink พลิกเป็นสีอ่อนในโหมดมืด
@@ -373,38 +447,127 @@
   .btn-primary {
     background: var(--primary);
     color: var(--primary-foreground);
+    border-color: var(--primary-border);
   }
 
   .btn-primary:hover:not(:disabled) {
     background: var(--primary-hover);
   }
 
+  /* ขอบของปุ่มรองต้องเข้มพอให้เห็นว่าเป็นปุ่ม เหมือนขอบช่องกรอก (WCAG 1.4.11)
+     --line มีไว้สำหรับเส้นคั่นและขอบการ์ด ซึ่งไม่มีเกณฑ์นี้ */
   .btn-secondary {
     background: var(--surface);
     color: var(--ink);
-    border-color: var(--line);
+    border-color: var(--line-strong);
   }
 
   .btn-secondary:hover:not(:disabled) {
     border-color: var(--ink);
   }
 
+  /* ปุ่มจางก็ยังเป็นปุ่ม เวลาเอาเมาส์ชี้หรือเลื่อนคีย์บอร์ดมาถึง ต้องมีขอบขึ้นมา
+     ให้เห็นว่ากดได้ตรงไหนถึงตรงไหน (docs/brand.md หัวข้อ 2 — ขอบของสิ่งที่กดได้
+     ใช้ --line-strong) ตอนอยู่เฉยๆ ปล่อยให้โปร่ง เพราะมันคือปุ่มรองสุดในหน้า */
   .btn-ghost {
     background: transparent;
     color: var(--muted);
+    border-color: transparent;
   }
 
-  .btn-ghost:hover:not(:disabled) {
+  .btn-ghost:hover:not(:disabled),
+  .btn-ghost:focus-visible {
     color: var(--ink);
+    border-color: var(--line-strong);
   }
 
+  /* ปุ่มที่วางบนแถบหัวเว็บสีหมึก — สีทั้งชุดอยู่ในไฟล์นี้ ไม่ใช่เขียนทับเป็น
+     className ในหน้า เพราะ components/ui/button.js เขียนไว้ว่าห้ามแก้สีปุ่มในหน้าตัวเอง
+     ถ้าปล่อยให้แต่ละหน้าเขียนทับเอง วันหนึ่งจะมีปุ่มบนแถบหัวเว็บสามแบบที่ไม่เหมือนกัน */
+  .btn-on-dark {
+    background: transparent;
+    color: var(--header-fg);
+    border-color: var(--header-line);
+  }
+
+  .btn-on-dark:hover:not(:disabled),
+  .btn-on-dark:focus-visible {
+    border-color: var(--header-fg);
+  }
+
+  /* ใช้ --danger-solid ไม่ใช่ --danger
+     --danger ในโหมดมืดถูกทำให้สว่างขึ้นเพื่อให้ "ตัวอักษรสีแดงบนพื้นเข้ม" อ่านออก
+     ซึ่งเป็นคนละโจทย์กับ "ตัวอักษรขาวบนพื้นแดง" ถ้าเอามาใช้เป็นพื้นปุ่ม
+     ตัวอักษรขาวจะเหลือ 2.66:1 คือปุ่มลบที่อ่านไม่ออกในโหมดมืด */
   .btn-danger {
-    background: var(--danger);
-    color: #ffffff;
+    background: var(--danger-solid);
+    color: var(--on-danger);
   }
 
+  /* ข้อความแจ้งว่าทำสำเร็จ — ใช้สีของระบบ ไม่ใช่จานสีของไลบรารี toast
+     ถ้าปล่อยให้ไลบรารีเลือกสีเอง วันที่อัปเดตไลบรารี สีจะเปลี่ยนโดยไม่มีใครสั่ง
+     และมันจะไม่พลิกตามโหมดมืดของเราด้วย */
   /* ป้ายสถานะ — พื้นอ่อนของสีนั้นๆ ขอบบาง ตัวอักษรสีที่อ่านออกบนพื้นขาว
      ใช้ color-mix เพื่อผสมสีกับพื้น จะได้ไม่ต้องประกาศสีเพิ่มอีกชุด */
+  /* ช่องติ๊ก — วาดเองทั้งหมด ไม่ปล่อยให้เบราว์เซอร์วาด
+     เพราะในโหมดมืดเบราว์เซอร์จะวาดกล่องทึบสีเทาอุ่น ซึ่งดูเหมือนติ๊กไว้แล้ว */
+  .lebis-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+    display: inline-grid;
+    place-content: center;
+    transition: background-color 140ms ease, border-color 140ms ease;
+  }
+
+  /* เครื่องหมายถูกวาดด้วย ::before เพื่อให้ควบคุมสีได้เอง */
+  .lebis-checkbox::before {
+    content: "";
+    width: 11px;
+    height: 6px;
+    border-left: 2px solid var(--primary-foreground);
+    border-bottom: 2px solid var(--primary-foreground);
+    transform: rotate(-45deg) translate(1px, -1px) scale(0);
+    transition: transform 140ms ease;
+  }
+
+  .lebis-checkbox:checked {
+    background: var(--primary);
+    border-color: var(--checked-border);
+  }
+
+  .lebis-checkbox:checked::before {
+    transform: rotate(-45deg) translate(1px, -1px) scale(1);
+  }
+
+  /* กล่องบอกข้อผิดพลาดระดับฟอร์ม */
+  .form-error:focus {
+    outline: 2px solid var(--danger);
+    outline-offset: 2px;
+  }
+
+  .form-error {
+    /* 🔴 แยก border กับ border-color ออกจากกัน
+          ถ้าเขียนเป็น shorthand เส้นเดียวแล้วเบราว์เซอร์ไม่รู้จัก color-mix()
+          ทั้งบรรทัดถูกทิ้ง กลายเป็น border-width: 0 · border-style: none
+          กล่องที่มีหน้าที่บอกว่า "พังแล้วและจะอยู่ตรงนี้จนกว่าจะแก้" จะไม่มีกล่อง
+          เหลือแค่ตัวหนังสือสีแดงลอยอยู่ (Chrome ต่ำกว่า 111 · Safari ต่ำกว่า 16.2) */
+    border: 1px solid var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+    background: color-mix(in srgb, var(--danger) 7%, var(--surface));
+    color: var(--danger);
+    border-radius: var(--radius-badge);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-body);
+    line-height: 1.5;
+  }
+
   .badge {
     display: inline-flex;
     align-items: center;
@@ -441,16 +604,86 @@
     background: color-mix(in srgb, var(--danger) 8%, var(--surface));
   }
 
-  /* ป้ายแพ็กเกจ Pro — ใช้อำพันเวอร์ชันตัวอักษร ไม่ใช่สีดิบ (ข้อห้ามใน brand.md) */
+  /* ป้ายแพ็กเกจ Pro — ใช้อำพันเวอร์ชันตัวอักษร ไม่ใช่สีดิบ (ข้อห้ามใน brand.md)
+     ป้ายนี้ต่างจากป้ายอื่นตรงที่มันไปวางอยู่บนแถบหัวเว็บสีหมึก ซึ่งไม่พลิกตามธีม
+     ขอบที่ผสมจาก --amber จึงเหลือ ~2.75:1 บนพื้นนั้น ต่ำกว่า 3:1
+     ใช้ --amber เต็มๆ เป็นขอบแทน เพราะ --amber บนพื้นหมึกได้ 5.5:1 */
   .badge-accent {
     color: var(--badge-warning-text);
     border-color: color-mix(in srgb, var(--amber) 45%, transparent);
     background: color-mix(in srgb, var(--amber) 12%, var(--surface));
   }
 
+  /* บนแถบหัวเว็บสีหมึก ขอบที่ผสมกับความโปร่งใสจะจมลงไปในพื้นเข้ม วัดได้ ~2.75:1
+     ใช้ --amber เต็มๆ แทน ซึ่งบนพื้นหมึกได้ 4.95:1 (สว่าง) และ 6.15:1 (มืด)
+     บนพื้นการ์ดขาวยังใช้ค่าผสมเหมือนเดิม เพราะ --amber เต็มๆ บนขาวได้แค่ 2.46:1 */
+  header .badge-accent {
+    border-color: var(--amber);
+    /* 🔴 ต้องแก้ "พื้น" ด้วย ไม่ใช่แก้แค่ "ขอบ"
+          ค่าเดิมผสมกับ --surface ซึ่งเป็นสีขาวในโหมดสว่างและสีเข้มในโหมดมืด
+          ส่วนแถบหัวเว็บไม่พลิกตามธีม ผลคือป้ายเป็นก้อนสีครีมทึบ 11:1 ในโหมดสว่าง
+          (ทั้งที่รอบตัวมันเป็นเส้นบางๆ หมด) แล้วแทบหายไปที่ 1.31:1 ในโหมดมืด
+          รอบก่อนแก้ขอบเพราะขอบมีตัวเลขกำกับ ส่วนน้ำหนักทางสายตาไม่มีตัวเลข
+          จึงไม่ถูกมอง — วัดได้กับวัดไม่ได้ ไม่ใช่เรื่องเดียวกับสำคัญกับไม่สำคัญ */
+    background: transparent;
+    color: var(--amber);
+  }
+
+  /* ปุ่มเล็กยังต้องสูง 44px ตาม brand.md หัวข้อ 6 (กดด้วยนิ้วโป้งได้)
+     "เล็ก" ในที่นี้คือตัวอักษรกับระยะด้านข้างที่กระชับขึ้น ไม่ใช่เตี้ยลง */
   .btn-sm {
-    min-height: 36px;
+    min-height: 44px;
     padding: 0 var(--space-3);
     font-size: var(--text-label);
   }
+}
+
+/* ---------------------------------------------------------------------------
+   ข้อความแจ้งว่าทำสำเร็จ (toast)
+
+   🔴 สีของ toast ไม่ได้ตั้งที่นี่ — ตั้งที่ pages/_app.js ผ่านตัวแปรของ sonner เอง
+      (--normal-bg / --normal-text / --normal-border) เพราะ sonner อ่านจากตรงนั้น
+      ไม่ได้อ่าน background ที่เราเขียนทับ
+
+   เคยพลาดเรื่องนี้ 3 ชั้นซ้อน และทุกชั้น "ไฟล์ดูถูกหมด"
+     1. เขียน .lebis-toast เปล่าๆ น้ำหนัก (0,1,0) แพ้ของ sonner ที่ (0,2,0)
+     2. เพิ่ม [data-sonner-toast] ให้น้ำหนักเท่ากัน — ยังแพ้ เพราะกฎใน @layer
+        แพ้กฎนอก layer เสมอ และ sonner ฉีด <style> แบบไม่มี layer
+     3. ย้ายออกนอก @layer — ยังไม่มีผล เพราะ sonner ไม่ได้อ่าน background เลย
+
+   สิ่งที่เหลือไว้ตรงนี้คือรูปทรงกับฟอนต์ ซึ่ง sonner ไม่มีตัวแปรให้
+   บทเรียน: เรื่องแบบนี้อ่านจากไฟล์ไม่มีทางเห็น ต้องเปิดหน้าจริงแล้ววัดค่าที่คำนวณได้
+--------------------------------------------------------------------------- */
+[data-sonner-toast].lebis-toast {
+  border-radius: var(--radius-control);
+  font-family: inherit;
+  font-size: var(--text-body);
+}
+
+[data-sonner-toast].lebis-toast-success [data-icon] svg {
+  color: var(--success);
+}
+
+[data-sonner-toast].lebis-toast-error [data-icon] svg {
+  color: var(--danger);
+}
+
+/* ปุ่มในข้อความแจ้งเตือน — ต้องอยู่ในระบบเดียวกับปุ่มอื่นทั้งเว็บ
+   ค่าเริ่มต้นของ sonner คือ 60x24px ตัวอักษร 12px ซึ่งเล็กกว่าเกณฑ์ 44px ที่
+   docs/brand.md หัวข้อ 6 กำหนด และเป็นของชิ้นเดียวในทั้งระบบที่หลุดเกณฑ์นี้
+   สคริปต์ตรวจมองไม่เห็น เพราะปุ่มนี้เกิดจากการส่งข้อความให้ไลบรารี ไม่ได้เขียนเป็น JSX */
+[data-sonner-toast] .lebis-toast-action {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--text-body);
+  font-weight: 500;
+}
+
+[data-sonner-toast] .lebis-toast-action:hover {
+  border-color: var(--ink);
 }

@@ -10,6 +10,8 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef(({ className, type = "text", ...props }, ref) => (
+  // ok-touch-target: .field-input กำหนด min-height 44px ไว้ใน globals.css แล้ว
+  //                   (กฎ 9 ในสคริปต์ตรวจค่านั้นอีกชั้น)
   <input ref={ref} type={type} className={cn("field-input", className)} {...props} />
 ));
 Input.displayName = "Input";
