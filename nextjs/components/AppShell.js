@@ -28,21 +28,30 @@ export function AppShell({ user, onLogout, children }) {
           <Link
             href="/account"
             aria-label="LEBIS"
-            className="inline-flex min-h-[44px] items-center rounded-control"
+            className="inline-flex min-h-[44px] shrink-0 items-center rounded-control"
           >
             <Logo variant="dark" size={26} />
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             {user ? (
-              <div className="hidden items-center gap-3 md:flex">
-                <span className="text-label text-header-fg">
+              <div className="flex min-w-0 items-center gap-3">
+                {/* 🔴 ต้องเห็นบนมือถือด้วย ไม่ใช่เฉพาะจอคอม
+                       เดิมเป็น hidden md:flex ผลคือบนเครื่องที่หน้าร้าน ซึ่งพนักงาน
+                       หลายคนใช้ร่วมกัน ไม่มีอะไรบอกเลยว่าตอนนี้เปิดบัญชีของใครอยู่
+                       จนกว่าจะเลื่อนลงไปท้ายหน้า (วัดได้ที่ 801px ของจอสูง 844px)
+                       ชื่อร้านยาวๆ ตัดท้ายเอา ดีกว่าไม่บอกอะไรเลย */}
+                <span className="min-w-0 truncate text-label text-header-fg">
                   {user.shop_name || user.name || user.email}
                 </span>
-                {/* ป้ายแพ็กเกจ — Pro ได้สีอำพัน ซึ่งเป็นไฮไลต์จุดเดียวของแถบนี้ */}
-                <StatusBadge tone={planFor(user.role, t).tone}>
-                  {planFor(user.role, t).label}
-                </StatusBadge>
+                {/* ป้ายแพ็กเกจ — Pro ได้สีอำพัน ซึ่งเป็นไฮไลต์จุดเดียวของแถบนี้
+                    บนมือถือซ่อนไว้ เพราะการ์ดในหน้าบัญชีบอกแพ็กเกจอยู่แล้ว
+                    และพื้นที่บนแถบหัวเว็บต้องเหลือให้ชื่อร้านก่อน */}
+                <span className="hidden md:block">
+                  <StatusBadge tone={planFor(user.role, t).tone}>
+                    {planFor(user.role, t).label}
+                  </StatusBadge>
+                </span>
               </div>
             ) : null}
 
