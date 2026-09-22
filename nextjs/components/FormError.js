@@ -18,7 +18,13 @@ import { useEffect, useRef } from "react";
 
 import { useLanguage } from "@/lib/useLanguage";
 
-export function FormError({ message, onRetry, retrying = false }) {
+// stealFocus — ผู้เรียกเท่านั้นที่รู้ว่าตอนนี้ผู้ใช้กำลังพิมพ์อยู่หรือเปล่า
+//
+// 🔴 กล่องที่อยู่ "ข้างปุ่มที่เพิ่งกด" ควรรับโฟกัส เพราะผู้ใช้เพิ่งกดปุ่มนั้นเสร็จ
+//    แต่กล่องระดับหน้าโผล่ตอนผู้ใช้กำลังทำอย่างอื่นอยู่ การแย่งโฟกัสจึงเป็นการ
+//    กระชากเขาออกจากช่องที่กำลังพิมพ์ และบนมือถือคือการปิดแป้นพิมพ์กลางคำ
+//    role="alert" อ่านข้อความให้อยู่แล้วโดยไม่ต้องย้ายโฟกัส
+export function FormError({ message, onRetry, retrying = false, stealFocus = true }) {
   const boxRef = useRef(null);
   const { t } = useLanguage();
 
@@ -38,8 +44,8 @@ export function FormError({ message, onRetry, retrying = false }) {
     // ถ้าผู้ใช้ตั้งเครื่องให้ลดการเคลื่อนไหว ต้องเลื่อนแบบกระโดด ไม่ใช่ไถลนุ่มๆ
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     boxRef.current?.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
-    boxRef.current?.focus();
-  }, [message]);
+    if (stealFocus) boxRef.current?.focus();
+  }, [message, stealFocus]);
 
   if (!message) return null;
 

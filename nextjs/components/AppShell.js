@@ -20,6 +20,15 @@ export function AppShell({ user, onLogout, children }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
+      {/* ลิงก์ข้ามไปเนื้อหา — มองไม่เห็นจนกว่าจะกด Tab ถึงมัน
+          คนที่ใช้คีย์บอร์ดจะได้ไม่ต้องไล่ผ่านโลโก้ ชื่อร้าน และปุ่มออกจากระบบ
+          ทุกครั้งที่เปลี่ยนหน้า */}
+      <a
+        href="#main"
+        className="sr-only inline-flex min-h-[44px] items-center px-4 focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-30 focus:rounded-control focus:bg-surface focus:text-ink"
+      >
+        {t("nav.skipToContent")}
+      </a>
       {/* แถบหัวเว็บ — พื้นสีหมึก โลโก้ใช้ variant dark */}
       <header className="sticky top-0 z-20 bg-header-bg text-header-fg">
         <div className="app-container flex h-16 items-center justify-between gap-4">
@@ -28,21 +37,30 @@ export function AppShell({ user, onLogout, children }) {
           <Link
             href="/account"
             aria-label="LEBIS"
-            className="inline-flex min-h-[44px] items-center rounded-control"
+            className="inline-flex min-h-[44px] shrink-0 items-center rounded-control"
           >
             <Logo variant="dark" size={26} />
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             {user ? (
-              <div className="hidden items-center gap-3 md:flex">
-                <span className="text-label text-header-fg">
+              <div className="flex min-w-0 items-center gap-3">
+                {/* 🔴 ต้องเห็นบนมือถือด้วย ไม่ใช่เฉพาะจอคอม
+                       เดิมเป็น hidden md:flex ผลคือบนเครื่องที่หน้าร้าน ซึ่งพนักงาน
+                       หลายคนใช้ร่วมกัน ไม่มีอะไรบอกเลยว่าตอนนี้เปิดบัญชีของใครอยู่
+                       จนกว่าจะเลื่อนลงไปท้ายหน้า (วัดได้ที่ 801px ของจอสูง 844px)
+                       ชื่อร้านยาวๆ ตัดท้ายเอา ดีกว่าไม่บอกอะไรเลย */}
+                <span className="min-w-0 truncate text-label text-header-fg">
                   {user.shop_name || user.name || user.email}
                 </span>
-                {/* ป้ายแพ็กเกจ — Pro ได้สีอำพัน ซึ่งเป็นไฮไลต์จุดเดียวของแถบนี้ */}
-                <StatusBadge tone={planFor(user.role, t).tone}>
-                  {planFor(user.role, t).label}
-                </StatusBadge>
+                {/* ป้ายแพ็กเกจ — Pro ได้สีอำพัน ซึ่งเป็นไฮไลต์จุดเดียวของแถบนี้
+                    บนมือถือซ่อนไว้ เพราะการ์ดในหน้าบัญชีบอกแพ็กเกจอยู่แล้ว
+                    และพื้นที่บนแถบหัวเว็บต้องเหลือให้ชื่อร้านก่อน */}
+                <span className="hidden md:block">
+                  <StatusBadge tone={planFor(user.role, t).tone}>
+                    {planFor(user.role, t).label}
+                  </StatusBadge>
+                </span>
               </div>
             ) : null}
 
@@ -55,7 +73,7 @@ export function AppShell({ user, onLogout, children }) {
         </div>
       </header>
 
-      <main className="app-container w-full flex-1 py-5 md:py-6">{children}</main>
+      <main id="main" className="app-container w-full flex-1 py-5 md:py-6">{children}</main>
 
       <footer className="border-t border-line py-5">
         <div className="app-container flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -71,15 +89,9 @@ export function AppShell({ user, onLogout, children }) {
           >
             {t("nav.helpSignedIn")}
           </Link>
-          {/* ชื่อผู้ใช้ย้ายมาท้ายหน้าบนจอมือถือ แทนที่จะอัดไว้ในแถบบน */}
-          {user ? (
-            // 🔴 ต้องตัดคำได้ อีเมลยาวๆ ที่ไม่มีขีดกลางตัดบรรทัดเองไม่ได้
-            //    วัดที่ 320px: อีเมล 53 ตัวอักษรดันทั้งหน้าให้เลื่อนซ้ายขวาได้ 60px
-            //    ที่ไม่เคยเจอเพราะทุกการทดสอบล็อกอินด้วย demo@example.com ซึ่งสั้น
-            <span className="t-caption min-w-0 break-all md:hidden">
-              {user.email} · {planFor(user.role, t).label}
-            </span>
-          ) : null}
+          {/* บรรทัดนี้เคยมีเพราะแถบหัวเว็บซ่อนชื่อร้านบนมือถือ พอย้ายชื่อร้านขึ้นไป
+              อยู่บนแถบทุกขนาดจอแล้ว มันก็กลายเป็นการบอกตัวตนซ้ำรอบที่สาม
+              ในจอเดียว (แถบหัวเว็บ + แถวอีเมลในการ์ด + บรรทัดนี้) จึงเอาออก */}
         </div>
       </footer>
     </div>

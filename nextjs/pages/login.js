@@ -18,6 +18,7 @@ import { useRouter } from "next/router";
 import { toast } from "sonner";
 
 import { apiFetch, errorMessage, fieldToInputId, getToken, saveToken } from "@/lib/api";
+import { takeSignOutReason } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
 import { useSlowRequest } from "@/lib/useSlowRequest";
 import { AuthLayout } from "@/components/AuthLayout";
@@ -43,6 +44,18 @@ export default function Login() {
   const abortRef = useRef(null);
   // ข้อความ "ยกเลิกแล้ว" เป็นการบอกให้รู้ ไม่ใช่การบอกว่าพัง จึงไม่ใช้กล่องแดง
   const [cancelled, setCancelled] = useState("");
+  // เหตุผลที่ถูกพาออกจากระบบ (เซสชันหมดอายุ ฯลฯ)
+  // 🔴 ข้อความพวกนี้มีอยู่ครบทั้งสองภาษาตั้งแต่ต้น แต่ไม่เคยถูกแสดงที่ไหนเลย
+  //    เพราะทุกเส้นทางที่ token ตายจะเด้งกลับมาหน้านี้เงียบๆ
+  //    เจ้าของร้านเปิดแอปตอนเช้า กดปุ่ม แล้วโดนเด้งกลับ โดยไม่รู้ว่าเซสชันหมดอายุ
+  //    หรือระบบพัง — สองอย่างนี้ต้องทำคนละอย่างกัน
+  const [signedOutReason, setSignedOutReason] = useState("");
+  useEffect(() => {
+    const code = takeSignOutReason();
+    if (code) setSignedOutReason(errorMessage({ code }, t));
+    // ตั้งใจให้อ่านครั้งเดียวตอน mount แล้วลบทิ้ง จะได้ไม่ค้างข้ามรอบ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // มี token อยู่แล้ว = มีคนเข้าสู่ระบบค้างไว้บนเครื่องนี้
   //
@@ -311,6 +324,13 @@ export default function Login() {
           </div>
 
           {/* ข้อความบอกให้รู้ ไม่ใช่กล่องแดง — ไม่แย่งโฟกัส ไม่เลื่อนหน้าจอ */}
+          {/* บอกว่าทำไมถึงกลับมาอยู่ที่หน้านี้ ไม่ใช่ปล่อยให้เดาว่าระบบพังหรือเปล่า */}
+          {signedOutReason ? (
+            <p role="status" className="t-caption text-center">
+              {signedOutReason}
+            </p>
+          ) : null}
+
           {cancelled ? (
             <p role="status" className="t-caption text-center">
               {cancelled}

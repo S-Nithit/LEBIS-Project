@@ -55,7 +55,8 @@ export function useAuth(options = {}) {
         // ถ้าลบทิ้งด้วย เจ้าของร้านจะถูกเตะออกจากระบบกลางคันทั้งที่ลูกค้ายืนรออยู่
         // เพราะสัญญาณหลุดไปไม่กี่วินาที
         if (isDeadToken(error)) {
-          clearToken();
+          rememberSignOutReason(error.code);
+          clearSession();
           if (redirectTo) router.replace(redirectTo);
         } else if (!cancelled) {
           // เก็บ token ไว้ แล้วบอกหน้าเว็บว่าตอนนี้ติดต่อเซิร์ฟเวอร์ไม่ได้
@@ -128,11 +129,41 @@ export function useAuth(options = {}) {
 //    ซึ่งเป็นสิ่งเดียวกับที่บรรทัดข้างล่างตั้งใจกันไว้ แต่กันได้แค่ทางเดียว
 //    ไฟล์นั้นเป็นงานของ Sea จึงไม่แก้ให้ (CLAUDE.md หัวข้อ 7)
 //    แต่ย้ายของมาไว้ตรงนี้แล้ว Sea จะแก้ด้วยการ import หนึ่งบรรทัด
+// 🔴 ข้อความ error.token_expired กับ error.token_invalid มีอยู่ครบทั้งสองภาษา
+//    ตั้งแต่ต้น แต่ไม่เคยถูกแสดงที่ไหนเลย เพราะทุกเส้นทางที่ token ตาย
+//    จะ clearToken() แล้วเด้งไปหน้าเข้าสู่ระบบเงียบๆ
+//    เจ้าของร้านเปิดแอปตอนเช้า กดปุ่ม แล้วโดนเด้งกลับหน้าเข้าสู่ระบบ
+//    โดยไม่มีอะไรบอกว่าเป็นเพราะเซสชันหมดอายุ หรือเพราะระบบพัง
+//    เก็บเหตุผลไว้ใน sessionStorage ให้หน้าเข้าสู่ระบบหยิบไปแสดง
+//    ใช้วิธีนี้แทนการใส่ใน URL เพราะมันครอบคลุมทุกเส้นทางที่ token ตาย
+//    ไม่ใช่เฉพาะที่ที่จำได้ว่าต้องใส่พารามิเตอร์
+export const SIGNED_OUT_REASON_KEY = "lebis_signed_out_reason";
+
+export function rememberSignOutReason(code) {
+  try {
+    sessionStorage.setItem(SIGNED_OUT_REASON_KEY, code);
+  } catch (error) {
+    // เขียนไม่ได้ก็แค่ไม่มีข้อความอธิบาย
+  }
+}
+
+export function takeSignOutReason() {
+  try {
+    const code = sessionStorage.getItem(SIGNED_OUT_REASON_KEY);
+    if (code) sessionStorage.removeItem(SIGNED_OUT_REASON_KEY);
+    return code;
+  } catch (error) {
+    return null;
+  }
+}
+
 export function clearSession() {
   clearToken();
   try {
     // ลบอีเมลที่จำไว้ด้วย ไม่งั้นคนถัดไปที่ใช้เครื่องร้านจะเห็นอีเมลของคนก่อน
     localStorage.removeItem("lebis_last_email");
+    // และร่างที่พิมพ์ค้างไว้ในหน้าบัญชี ด้วยเหตุผลเดียวกัน
+    sessionStorage.removeItem("lebis_account_drafts");
   } catch (error) {
     // ลบไม่ได้ก็ไม่เป็นไร
   }
