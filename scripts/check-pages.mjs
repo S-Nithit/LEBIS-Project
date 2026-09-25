@@ -25,7 +25,23 @@ const BASE = process.argv.find((a) => a.startsWith("http")) || "http://localhost
 
 // หน้าที่ยังไม่ต้องเข้าสู่ระบบ กับหน้าที่ต้องเข้าสู่ระบบก่อน
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password"];
-const PRIVATE_ROUTES = ["/account", "/template"];
+// 🔴 หน้าที่ useAuth({redirectTo:"/login"}) ต้องอยู่ในรายการนี้ทุกหน้า
+//    ไม่ใส่ = สคริปต์เปิดหน้านั้นแล้วถูกเด้งไป /login แล้วมันไปวัดหน้า login
+//    แต่รายงานว่าหน้านั้นผ่าน คือ "ผ่าน" ที่ไม่เคยแตะหน้าจริงเลยแม้แต่ครั้งเดียว
+//    เคยพลาดมาแล้วตอนเก็บภาพหน้าจอ ได้ไฟล์ md5 ซ้ำกัน 6 ไฟล์เพราะเหตุนี้
+const PRIVATE_ROUTES = ["/account", "/template", "/workspace"];
+
+// 🔴 ทุกข้อที่ตรวจข้างล่างนี้วัดจาก "หน้าที่เบราว์เซอร์อยู่ตอนนั้น"
+//    ไม่ใช่ "หน้าที่เราสั่งให้ไป" ถ้าหน้านั้นเด้งไปที่อื่น ทุกตัวเลขจะมาจากหน้าที่เด้งไป
+//    แล้วรายงานว่าหน้าเดิมผ่าน — เป็น "ผ่าน" ที่ไม่เคยแตะหน้าจริงเลยแม้แต่ครั้งเดียว
+//    ตรวจท้ายสุดหลังเฝ้าครบ 3 วินาที เพราะการเด้งของ useAuth เกิดฝั่งเบราว์เซอร์
+//    ถ้าเช็คทันทีหลัง goto จะยังไม่เด้ง แล้วด่านนี้ก็จะไม่จับอะไรได้เหมือนกัน
+function assertLanded(page, route, label) {
+  const landed = new URL(page.url()).pathname;
+  if (landed !== route) {
+    failures.push(`${label} ถูกพาไป ${landed} — ทุกตัวเลขของหน้านี้วัดมาจากหน้าอื่น`);
+  }
+}
 
 // 🔴 ผู้ใช้จริงไม่ได้มาถึงหน้าเว็บด้วยเบราว์เซอร์เปล่าทุกครั้ง
 //    เบราว์เซอร์ที่ใช้เทสเริ่มจากศูนย์เสมอ ส่วนคนใช้จริงพกของเก่ามาด้วย
@@ -156,6 +172,8 @@ for (const scheme of ["light", "dark"]) {
       failures.push(`${label} เนื้อหาเปลี่ยนเองหลังผู้ใช้เห็นแล้ว — เขาจะเห็นข้อความเปลี่ยนต่อหน้า`);
     }
 
+    assertLanded(page, route, label);
+
     // ภาษาที่หน้าประกาศตัวเอง ต้องตรงกับภาษาที่วาดจริงตั้งแต่ต้น
     // 🔴 ยอมรับทั้ง th และ en = ไม่ได้พิสูจน์อะไรเลย
     //    คนที่เลือกอังกฤษไว้แล้วได้หน้าภาษาไทย ก็ผ่านการตรวจนี้
@@ -234,6 +252,7 @@ for (const scheme of ["light", "dark"]) {
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth
     );
+    assertLanded(page, route, label);
     if (overflow > 0) failures.push(`${label} ล้นออกนอกจอ ${overflow}px`);
     if (first !== null && last !== null && first !== last) {
       failures.push(`${label} เนื้อหาเปลี่ยนเองหลังข้อมูลขึ้นแล้ว — ผู้ใช้จะเห็นข้อความเปลี่ยนต่อหน้า`);
