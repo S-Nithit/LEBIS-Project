@@ -96,10 +96,11 @@ LEBIS-Project/
 │   │   ├── items.py               NEO
 │   │   ├── borrows.py             NEO
 │   │   ├── billing.py             KUL
-│   │   └── admin.py               SEA
+│   │   ├── admin.py               SEA
+│   │   └── inventory.py           KIM — read-only SQL feeding services/inventory.py
 │   ├── services/
 │   │   ├── security.py            KIM — JWT, bcrypt, role/tier dependencies
-│   │   ├── inventory.py           maps DB rows to plain dict/list, calls algorithms/
+│   │   ├── inventory.py           KIM — maps DB rows to plain dict/list, calls algorithms/
 │   │   └── line_notify.py         KIM — LINE Messaging API client
 │   └── algorithms/                ← DATA COURSE. PURE PYTHON, STDLIB ONLY.
 │       ├── hash_table.py          KIM
@@ -323,7 +324,7 @@ write code into another member's files.
 
 | Person | Backend | Frontend | Also owns |
 |---|---|---|---|
-| **Kim** (lead) | `database.py` schema, `routes/auth.py`, `services/security.py`, `services/line_notify.py`, `algorithms/hash_table.py` | `pages/login.js`, `pages/register.js` | repo setup, docker, deployment, PR review |
+| **Kim** (lead) | `database.py` schema, `routes/auth.py`, `services/security.py`, `services/line_notify.py`, `services/inventory.py` + `queries/inventory.py`, `algorithms/hash_table.py` | `pages/login.js`, `pages/register.js` | repo setup, docker, deployment, PR review |
 | **Neo** | `routes/items.py`, `routes/borrows.py`, `queries/items.py`, `queries/borrows.py`, `algorithms/search.py`, `algorithms/datasets.py` | `pages/workspace.js` | LINE API doc section, testing plan |
 | **Kul** | `routes/billing.py`, `queries/billing.py`, tier enforcement, `algorithms/sort_group.py` | `pages/pricing.js` | security + monetization doc sections |
 | **Sea** | `routes/users.py`, `routes/admin.py`, `queries/admin.py` | `pages/index.js`, `pages/settings.js`, `pages/admin.js` | Figma wireframes, analytics doc |
