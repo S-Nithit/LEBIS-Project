@@ -391,16 +391,50 @@ def benchmark_delete(items: list) -> dict:
     }
 
 
-def print_table(title: str, rows: list) -> None:
+def benchmark_insert(items: list) -> dict:
+    """วัดเวลา "เพิ่มของทีละชิ้นจนครบชุด" ของทั้งสามวิธี เริ่มจากที่เก็บว่าง
+
+    ทุกวิธีต้องเช็กรหัสซ้ำก่อนใส่ เพราะนี่คือกฎจริงของร้าน (add_item ในส่วนที่ 6)
+    ถ้าไม่นับการเช็กนี้ list จะดูเร็วเกินจริง — append เฉยๆ เป็น O(1)
+    แต่ append ที่ต้องเช็กซ้ำก่อนคือการไล่ดูทั้ง list = O(n) ต่อชิ้น
+    ร้านที่ไม่เช็กซ้ำจะมีรหัสเดียวกันสองชิ้น แล้วค้นเจอผิดตัว
+
+    ของใหม่ถูกสร้างก่อนทุกรอบผ่าน setup เวลาสร้างที่เก็บว่างจึงไม่ถูกนับ
+    เวลาของ HashTable รวมการขยายตารางไว้ด้วยแล้ว (amortized ตามจริง)
+    """
+
+    def with_list(target):
+        for item in items:
+            if find_with_list_scan(target, item["code"]) is None:
+                target.append(item)
+
+    def with_hash_table(table):
+        for item in items:
+            if table.get(item["code"]) is None:
+                table.insert(item["code"], item)
+
+    def with_dict(python_dict):
+        for item in items:
+            if item["code"] not in python_dict:
+                python_dict[item["code"]] = item
+
+    return {
+        "list": measure(with_list, setup=list),
+        "hash": measure(with_hash_table, setup=HashTable),
+        "dict": measure(with_dict, setup=dict),
+    }
+
+
+def print_table(title: str, rows: list, first_column: str = "จำนวนข้อมูล") -> None:
     """พิมพ์ผลเป็นตารางอ่านง่าย — rows คือ list ของ tuple
 
-    (จำนวนข้อมูล, เวลา list, เวลา hash, เวลา dict)
+    (จำนวนข้อมูล หรือชื่อชุด, เวลา list, เวลา hash, เวลา dict)
     """
     print()
     print(title)
     print("-" * 76)
     print(
-        f"{'จำนวนข้อมูล':>12} {'วน list (ms)':>15} {'HashTable (ms)':>16}"
+        f"{first_column:>12} {'วน list (ms)':>15} {'HashTable (ms)':>16}"
         f" {'dict (ms)':>12} {'เร็วขึ้นกี่เท่า':>14}"
     )
     print("-" * 76)
@@ -408,8 +442,9 @@ def print_table(title: str, rows: list) -> None:
     for size, list_ms, hash_ms, dict_ms in rows:
         # เร็วขึ้นกี่เท่า = เวลาของ list ÷ เวลาของ HashTable ที่เราเขียน
         speedup = list_ms / hash_ms if hash_ms > 0 else 0
+        label = f"{size:,}" if isinstance(size, int) else size
         print(
-            f"{size:>12,} {list_ms:>15.3f} {hash_ms:>16.3f}"
+            f"{label:>12} {list_ms:>15.3f} {hash_ms:>16.3f}"
             f" {dict_ms:>12.3f} {speedup:>13.1f}x"
         )
 
@@ -597,38 +632,289 @@ def demo_benchmark() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# ส่วนที่ 6 — คลังอุปกรณ์: เก็บทั้ง list และดัชนีแฮชคู่กัน
+#
+# ทำไมต้องเก็บสองที่ ไม่ใช่ตารางแฮชอย่างเดียว
+#   ตารางแฮชตอบเร็วแค่คำถามแบบ "รหัส X อยู่ไหน" แต่ไม่มีลำดับเลย
+#   (ดู keys() — ได้ตามลำดับถัง ไม่ใช่ลำดับที่ใส่ และไม่ได้เรียงอะไร)
+#   งานอื่นของระบบต้องการลำดับ: เรียงตามวันคืน (sort_group ของ Kul)
+#   หาของที่ครบกำหนดก่อนวันที่ X (binary search ของ Neo) นับของทั้งร้าน
+#
+#   จึงเก็บตัว record จริงไว้ใน list และให้ตารางแฮชเก็บแค่ "รหัส -> ตำแหน่งใน list"
+#
+#       items = [ {CAM-0001 ...}, {LEN-0002 ...}, {TRI-0003 ...} ]
+#       index = HashTable:  "CAM-0001" -> 0 · "LEN-0002" -> 1 · "TRI-0003" -> 2
+#
+#   list อย่างเดียว   ค้นด้วยรหัสต้องไล่ทีละตัว O(n)
+#   แฮชอย่างเดียว     ค้นเร็ว แต่เรียงหรือไล่ตามลำดับไม่ได้
+#   สองอย่างคู่กัน     ได้ทั้งคู่ แลกกับหน่วยความจำเพิ่มหนึ่งตาราง
+#                      และต้องดูแลให้สองที่ตรงกันเสมอ (ดู remove_item)
+# ---------------------------------------------------------------------------
+
+
+class InventoryError(ValueError):
+    """ความผิดพลาดที่เกิดจริงหน้าร้าน เช่น รหัสซ้ำ ของไม่พอ คืนของที่ไม่ได้ยืม
+
+    แยกเป็นชนิดของตัวเอง คนเรียกจะได้ดักเฉพาะเรื่องที่ตั้งใจ
+    โดยไม่เผลอกลืนบั๊กจริงอย่าง KeyError หรือ TypeError ไปด้วย
+    """
+
+
+class Inventory:
+    """คลังอุปกรณ์ของร้าน 1 ร้าน — list ของ record + ตารางแฮชเป็นดัชนี
+
+    record หนึ่งตัวมี 8 ฟิลด์ หน้าตาเดียวกับ make_dataset() ใน datasets.py
+        code / name / category / total / available / borrower / due_date / status
+    """
+
+    def __init__(self):
+        self.items = []
+        self.index = HashTable()
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def find(self, code: str):
+        """คืน record ของรหัสนั้น ไม่มีคืน None — O(1) เฉลี่ย"""
+        position = self.index.get(code)
+        if position is None:
+            return None
+        return self.items[position]
+
+    def _require(self, code: str) -> dict:
+        """เหมือน find แต่ไม่มีของ = ผิดพลาด ใช้กับงานที่ต้องมีของก่อน"""
+        item = self.find(code)
+        if item is None:
+            raise InventoryError(f"ไม่มีอุปกรณ์รหัส {code} ในร้าน")
+        return item
+
+    def add_item(self, record: dict) -> dict:
+        """เพิ่มอุปกรณ์ใหม่ — O(1) เฉลี่ย
+
+        ตรวจให้ผ่านทุกข้อก่อนค่อยใส่ ถ้าไม่ผ่านจะไม่แตะข้อมูลเลยสักอย่าง
+        ถ้าใส่ list ไปแล้วค่อยพังตอนใส่ดัชนี สองที่จะไม่ตรงกันตลอดไป
+        """
+        code = record["code"]
+        if self.index.get(code) is not None:
+            raise InventoryError(f"รหัส {code} มีอยู่แล้วในร้าน")
+        if record["total"] < 1:
+            raise InventoryError("จำนวนทั้งหมดต้องมีอย่างน้อย 1 ชิ้น")
+        if not 0 <= record["available"] <= record["total"]:
+            raise InventoryError("จำนวนที่ว่างต้องอยู่ระหว่าง 0 ถึงจำนวนทั้งหมด")
+
+        # เติมช่องที่ขาดให้ครบ 8 ฟิลด์ แล้วก็อปเป็น dict ใหม่
+        # จะได้ไม่ไปแก้ dict ที่คนเรียกถืออยู่ (เช่นชุดข้อมูลที่คนอื่นใช้ร่วม)
+        item = {"borrower": None, "due_date": None, "status": "ok", **record}
+
+        self.items.append(item)
+        self.index.insert(code, len(self.items) - 1)
+        return item
+
+    def remove_item(self, code: str) -> dict:
+        """ตัดอุปกรณ์ออกจากร้าน (เช่นชำรุดจนซ่อมไม่ได้) — O(1) เฉลี่ย
+
+        ลบตัวกลาง list ด้วย pop(position) ตรงๆ เป็น O(n)
+        เพราะ Python ต้องเลื่อนทุกตัวที่อยู่ข้างหลังมาอุดช่อง แล้วตำแหน่ง
+        ที่ดัชนีจำไว้ของตัวพวกนั้นก็ผิดหมด ต้องไล่แก้อีก n ตัว
+
+        จึงใช้วิธีสลับกับตัวท้ายแล้วตัดท้าย (swap-and-pop):
+          1. หาตำแหน่งของตัวที่จะลบจากดัชนี                O(1)
+          2. ยกตัวท้ายสุดมาวางทับตำแหน่งนั้น               O(1)
+          3. แก้ดัชนีของตัวที่ถูกย้าย ให้ชี้ตำแหน่งใหม่       O(1)
+          4. ตัดตัวท้ายทิ้ง แล้วลบรหัสออกจากดัชนี           O(1)
+        ราคาที่จ่ายคือลำดับใน list เปลี่ยน ซึ่งรับได้ เพราะงานที่ต้องการลำดับ
+        เอาไปเรียงเองอยู่แล้ว ไม่ได้พึ่งลำดับที่ใส่เข้ามา
+
+        ของที่ยังอยู่กับลูกค้าตัดออกไม่ได้ ไม่งั้นจะไม่มีทางรับคืน
+        """
+        item = self._require(code)
+        if item["available"] < item["total"]:
+            raise InventoryError(f"{code} ยังมีของอยู่กับลูกค้า ต้องรับคืนก่อนจึงตัดออกได้")
+
+        position = self.index.get(code)
+        last = self.items[-1]
+
+        self.items[position] = last
+        self.index.insert(last["code"], position)  # key เดิม = แก้ค่าทับ
+        self.items.pop()
+        self.index.delete(code)
+        return item
+
+    def borrow_item(self, code: str, borrower: str, due_date: str) -> dict:
+        """ปล่อยเช่า 1 ชิ้น ตัดจำนวนที่ว่างลง — O(1) เฉลี่ย
+
+        due_date เป็นข้อความ YYYY-MM-DD แบบเดียวกับ datasets.py
+        record มีช่องคนยืมช่องเดียวตามที่ออกแบบ 8 ฟิลด์ จึงเก็บคนยืมล่าสุด
+        (ในเว็บจริง ใบเช่าทุกใบถูกเก็บแยกไว้ในตาราง borrows)
+        """
+        item = self._require(code)
+        if item["status"] == "broken":
+            raise InventoryError(f"{code} ชำรุดอยู่ ปล่อยเช่าไม่ได้")
+        if item["available"] < 1:
+            raise InventoryError(f"{code} ไม่มีของว่างเหลือให้ปล่อยเช่า")
+        if not borrower.strip():
+            raise InventoryError("ต้องใส่ชื่อคนเช่า")
+
+        item["available"] -= 1
+        item["borrower"] = borrower
+        item["due_date"] = due_date
+        # ของหมดชั้น = out เหมือนที่หน้าเว็บตั้งให้เอง
+        item["status"] = "out" if item["available"] == 0 else "ok"
+        return item
+
+    def return_item(self, code: str) -> dict:
+        """รับคืน 1 ชิ้น เพิ่มจำนวนที่ว่างกลับ — O(1) เฉลี่ย"""
+        item = self._require(code)
+        if item["available"] >= item["total"]:
+            raise InventoryError(f"{code} ไม่ได้ถูกยืมอยู่ คืนไม่ได้")
+
+        item["available"] += 1
+        # คืนครบทุกชิ้นแล้ว = ไม่มีคนยืมค้างอยู่อีก
+        if item["available"] == item["total"]:
+            item["borrower"] = None
+            item["due_date"] = None
+        if item["status"] != "broken":
+            item["status"] = "ok"
+        return item
+
+
+def build_inventory(items: list) -> Inventory:
+    """ยกทั้งชุดข้อมูลใส่คลัง — ใช้กับ make_dataset() หรือ make_sample_items()"""
+    inventory = Inventory()
+    for item in items:
+        inventory.add_item(item)
+    return inventory
+
+
+def demo_inventory() -> None:
+    """โชว์ add / borrow / return / remove และทุกกรณีที่ต้องปฏิเสธ"""
+    print()
+    print("=" * 76)
+    print("4) คลังอุปกรณ์ — list + ดัชนีแฮช พร้อมตัวตรวจความถูกต้อง")
+    print("=" * 76)
+
+    shop = build_inventory(make_sample_items(5))
+    code = shop.items[1]["code"]
+    print(f"ร้านมีอุปกรณ์ {len(shop)} รายการ · ทดลองกับ {code}")
+
+    item = shop.find(code)
+    item["available"] = item["total"] = 1  # ให้เหลือ 1 ชิ้นจะได้เห็นตอนของหมด
+
+    shop.borrow_item(code, "คุณพลอย", "2026-10-05")
+    print(f"\nปล่อยเช่าให้คุณพลอย -> ว่าง {item['available']}/{item['total']} · สถานะ {item['status']}")
+
+    # ทุกบรรทัดข้างล่างต้องถูกปฏิเสธ — นี่คือตัวตรวจที่แผนงานสั่งไว้
+    attempts = [
+        ("ปล่อยเช่าซ้ำตอนของหมด", lambda: shop.borrow_item(code, "คุณหลิง", "2026-10-06")),
+        ("ตัดออกทั้งที่ยังอยู่กับลูกค้า", lambda: shop.remove_item(code)),
+        ("เพิ่มรหัสซ้ำ", lambda: shop.add_item(dict(item))),
+        ("ค้นรหัสที่ไม่มี", lambda: shop.borrow_item("ไม่มีรหัสนี้", "ใครก็ได้", "2026-10-06")),
+    ]
+    print()
+    for label, attempt in attempts:
+        try:
+            attempt()
+            print(f"  ❌ {label}: ผ่านไปได้ ซึ่งผิด")
+        except InventoryError as error:
+            print(f"  ✅ {label}: ปฏิเสธ — {error}")
+
+    shop.return_item(code)
+    print(f"\nรับคืน -> ว่าง {item['available']}/{item['total']} · คนยืม {item['borrower']} · สถานะ {item['status']}")
+    try:
+        shop.return_item(code)
+        print("  ❌ คืนของที่ไม่ได้ยืม: ผ่านไปได้ ซึ่งผิด")
+    except InventoryError as error:
+        print(f"  ✅ คืนของที่ไม่ได้ยืม: ปฏิเสธ — {error}")
+
+    # ตัดออกด้วย swap-and-pop แล้วเช็กว่าดัชนีกับ list ยังตรงกันทุกตัว
+    shop.remove_item(code)
+    in_sync = all(shop.index.get(each["code"]) == position for position, each in enumerate(shop.items))
+    print(f"\nตัด {code} ออก -> เหลือ {len(shop)} รายการ · ค้น {code} ได้ {shop.find(code)}")
+    print(f"ดัชนีกับ list ยังตรงกันทุกตัวหลังสลับตำแหน่ง: {in_sync}")
+
+
+# ---------------------------------------------------------------------------
+# ส่วนที่ 7 — วัดผลบนชุดมาตรฐาน A-D (ตัวเลขที่ใส่รายงาน)
+#
+# ทำไมต้องวัดบนชุดเดียวกับคนอื่น: รายงานของสามคน (hash_table / search / sort_group)
+# จะเทียบกันได้ก็ต่อเมื่อวัดบนข้อมูลชุดเดียวกัน
+#
+# ชุด D มี 1,000 รายการ ไม่ใช่ 120 ตามแผนแรก เพราะที่ 120 รายการ ตารางแฮช
+# เร็วกว่าวน list แค่ราว 1.4 เท่า ยังไม่ชัดพอจะสรุป ที่ 1,000 ห่างกันชัดแล้ว
+# และไม่ไปไกลกว่านี้เพราะ bubble sort ของ Kul ต้องรันสดตอนอัดวิดีโอได้
+# (วัดจริง: 1,000 รายการ 0.07 วินาที · 4,000 รายการ 1.42 วินาที)
+# ---------------------------------------------------------------------------
+
+
+def report_on_datasets(make_dataset, names=("A", "B", "C", "D")) -> dict:
+    """วัดค้นหา / เพิ่ม / ลบ ของทั้งสามวิธีบนชุด A-D แล้วพิมพ์เป็นตาราง
+
+    รับ make_dataset เข้ามาเป็นพารามิเตอร์ แทนการ import datasets ตรงๆ
+    เพราะไฟล์นี้ห้าม import ไฟล์อื่นในโปรเจกต์ (กฎ stdlib ที่หัวไฟล์)
+      ใน Colab     วางเซลล์ datasets.py ไว้ก่อน แล้วเรียก report_on_datasets(make_dataset)
+      ในโปรเจกต์   python3 scripts/data-course-hashtable.py
+
+    คืนตัวเลขทั้งหมดเป็น dict ด้วย เผื่อเอาไปวาดกราฟต่อ
+    """
+    results = {}
+    lookup_rows, insert_rows, delete_rows = [], [], []
+
+    for name in names:
+        items = make_dataset(name)
+        label = f"{name} ({len(items):,})"
+
+        lookup = benchmark_lookup(items)
+        insert = benchmark_insert(items)
+        deletion = benchmark_delete(items)
+
+        results[name] = {
+            "size": len(items),
+            "lookup": {key: lookup[key] for key in ("list", "hash", "dict")},
+            "insert": insert,
+            "delete": deletion,
+            "stats": lookup["table"].stats(),
+        }
+        lookup_rows.append((label, lookup["list"], lookup["hash"], lookup["dict"]))
+        insert_rows.append((label, insert["list"], insert["hash"], insert["dict"]))
+        delete_rows.append((label, deletion["list"], deletion["hash"], deletion["dict"]))
+
+    print_table("ตาราง H1 — ค้นหาทุกรหัสหนึ่งครั้ง", lookup_rows, first_column="ชุด (จำนวน)")
+    print_table("ตาราง H2 — เพิ่มทีละชิ้นจนครบชุด (เช็กรหัสซ้ำทุกครั้ง)", insert_rows, first_column="ชุด (จำนวน)")
+    print_table("ตาราง H3 — ลบทุกรหัสหนึ่งครั้ง", delete_rows, first_column="ชุด (จำนวน)")
+
+    print()
+    print("ตาราง H4 — สถานะของ HashTable หลังใส่ครบชุด")
+    print("-" * 76)
+    print(f"{'ชุด':>6} {'จำนวน':>8} {'ถัง':>6} {'ชน':>6} {'ขยาย':>6} {'โซ่ยาวสุด':>10} {'load factor':>12}")
+    print("-" * 76)
+    for name, result in results.items():
+        stat = result["stats"]
+        print(
+            f"{name:>6} {result['size']:>8,} {stat['จำนวนถัง']:>6,} {stat['ชนทั้งหมด']:>6,}"
+            f" {stat['ขยายตาราง']:>6} {stat['โซ่ที่ยาวสุด']:>10} {stat['load factor']:>12}"
+        )
+    print("-" * 76)
+
+    if "A" in results and "D" in results:
+        small, large = results["A"], results["D"]
+        grow = large["size"] / small["size"]
+        print(
+            f"\nอ่านตาราง: ข้อมูลโตขึ้น {grow:,.0f} เท่า (ชุด A -> ชุด D)"
+            f"\n  ค้นด้วยการวน list ใช้เวลาโตขึ้น {large['lookup']['list'] / small['lookup']['list']:,.0f} เท่า"
+            f"\n  ค้นด้วย HashTable ใช้เวลาโตขึ้น {large['lookup']['hash'] / small['lookup']['hash']:,.0f} เท่า"
+            "\n  งานที่วัดคือค้นครบทุกรหัส (n ครั้ง) แต่ละครั้ง list ไล่เฉลี่ยครึ่งรายการ"
+            "\n  เวลารวมจึงโตราว n²/2 ส่วนแฮชโตราว n เท่านั้น"
+            "\n  ต่อการค้นหนึ่งครั้ง list คือ O(n) ส่วนแฮชคือ O(1) เฉลี่ย"
+            "\n  (ชุดเล็กจับเวลาได้ไม่แม่น ตัวคูณที่ได้จริงจึงไม่ตรงสูตรเป๊ะ)"
+        )
+
+    return results
+
+
 if __name__ == "__main__":
     demo_basic_operations()
     demo_collision_and_resize()
     demo_benchmark()
+    demo_inventory()
 
-
-# ---------------------------------------------------------------------------
-# TODO (Kim) — รอ algorithms/datasets.py ของ Neo เสร็จก่อน
-#
-# ตอนนี้ตัวเลขในไฟล์นี้วัดบน make_sample_items() ซึ่งเป็นข้อมูลตัวอย่างของไฟล์นี้เอง
-# พอ datasets.py เสร็จ ต้องกลับมาเพิ่มรอบวัดผลบนชุดข้อมูลมาตรฐาน A ถึง D ด้วย
-#
-#   A = 10 รายการ สะอาด · B = 12 รายการ มีชื่อซ้ำ
-#   C = 10 รายการ ของหมดสต็อก · D = 1,000 รายการ
-#
-# ทำไมต้องวัดบนชุดเดียวกัน: รายงานของสามคน (hash_table / search / sort_group)
-# จะเทียบกันได้เฉพาะเมื่อวัดบนข้อมูลชุดเดียวกัน ถ้าแต่ละคนวัดบนข้อมูลของตัวเอง
-# ตัวเลขจะอ่านเทียบกันไม่ได้เลย และกรรมการจะเห็นว่าสามหัวข้อไม่ได้คุยกัน
-#
-# วิธีทำตอน datasets.py พร้อมแล้ว
-#   1. ใน Colab ให้วางเซลล์ของ datasets.py ไว้ก่อนเซลล์ของไฟล์นี้
-#      แล้วเรียก make_dataset("A") ... make_dataset("D") ส่งเข้า benchmark_lookup()
-#      กับ benchmark_delete() ได้ตรงๆ เพราะทั้งคู่รับ list ของ dict ธรรมดา
-#   2. ในโปรเจกต์ (ไม่ใช่ Colab) ห้าม import datasets ในไฟล์นี้ — จะพัง
-#      กฎ stdlib เท่านั้นที่หัวไฟล์ ให้เขียนสคริปต์วัดผลแยกไว้ข้างนอกแทน
-#   3. ตัวเลขหลักในรายงานให้ใช้จากชุด A-D เท่านั้น ไม่ต้องมีชุดเสริม
-#      ชุด D ถูกขยายจาก 120 เป็น 1,000 รายการแล้วด้วยเหตุผลนี้โดยตรง —
-#      ที่ 120 รายการ ตารางแฮชเร็วกว่าการวน list แค่ 1.4 เท่า ซึ่งยังไม่ชัดพอ
-#      จะสรุป ที่ 1,000 รายการเร็วกว่า 11 เท่า ชัดพอแล้ว
-#      (ไม่ไปไกลกว่านี้เพราะ bubble sort ของ Kul ต้องรันสดตอนอัดวิดีโอได้
-#       วัดจริง: 1,000 รายการใช้ 0.07 วินาที · 4,000 รายการใช้ 1.42 วินาที)
-#      รอบวัดที่ 4,000 รายการในไฟล์นี้เก็บไว้ได้ในฐานะข้อมูลประกอบ
-#
-# เงื่อนไขว่าทำเสร็จ: ตารางในรายงานมีผลของชุด A-D ครบทั้งสี่ชุด
-# ---------------------------------------------------------------------------
