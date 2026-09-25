@@ -91,13 +91,15 @@ LEBIS-Project/
 │   │   ├── borrows.py             NEO
 │   │   ├── billing.py             KUL
 │   │   ├── users.py               SEA
-│   │   └── admin.py               SEA
+│   │   ├── admin.py               SEA
+│   │   └── line.py                KIM — link code, test, digest, LINE webhook
 │   ├── queries/                   raw-SQL functions, one module per domain
 │   │   ├── items.py               NEO
 │   │   ├── borrows.py             NEO
 │   │   ├── billing.py             KUL
 │   │   ├── admin.py               SEA
-│   │   └── inventory.py           KIM — read-only SQL feeding services/inventory.py
+│   │   ├── inventory.py           KIM — read-only SQL feeding services/inventory.py
+│   │   └── notifications.py       KIM — notifications table + LINE link codes
 │   ├── services/
 │   │   ├── security.py            KIM — JWT, bcrypt, role/tier dependencies
 │   │   ├── inventory.py           KIM — maps DB rows to plain dict/list, calls algorithms/
@@ -163,6 +165,8 @@ users (
   shop_name   VARCHAR(120),
   role        VARCHAR(10) NOT NULL DEFAULT 'free',   -- admin | free | pro
   line_user_id VARCHAR(64),
+  line_link_code    VARCHAR(12),     -- one-time code the owner sends to the LINE OA
+  line_link_expires TIMESTAMPTZ,
   create_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 )
 
@@ -324,7 +328,7 @@ write code into another member's files.
 
 | Person | Backend | Frontend | Also owns |
 |---|---|---|---|
-| **Kim** (lead) | `database.py` schema, `routes/auth.py`, `services/security.py`, `services/line_notify.py`, `services/inventory.py` + `queries/inventory.py`, `algorithms/hash_table.py` | `pages/login.js`, `pages/register.js` | repo setup, docker, deployment, PR review |
+| **Kim** (lead) | `database.py` schema, `routes/auth.py`, `services/security.py`, `services/line_notify.py` + `routes/line.py` + `queries/notifications.py`, `services/inventory.py` + `queries/inventory.py`, `algorithms/hash_table.py` | `pages/login.js`, `pages/register.js` | repo setup, docker, deployment, PR review |
 | **Neo** | `routes/items.py`, `routes/borrows.py`, `queries/items.py`, `queries/borrows.py`, `algorithms/search.py`, `algorithms/datasets.py` | `pages/workspace.js` | LINE API doc section, testing plan |
 | **Kul** | `routes/billing.py`, `queries/billing.py`, tier enforcement, `algorithms/sort_group.py` | `pages/pricing.js` | security + monetization doc sections |
 | **Sea** | `routes/users.py`, `routes/admin.py`, `queries/admin.py` | `pages/index.js`, `pages/settings.js`, `pages/admin.js` | Figma wireframes, analytics doc |

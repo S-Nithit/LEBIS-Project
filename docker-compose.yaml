@@ -47,6 +47,10 @@ services:
       # ไฟล์ .env ไม่ขึ้น git (ดู .gitignore) ห้ามเขียนค่าจริงลงในไฟล์นี้
       # ยังไม่มี .env ให้ทำตามหัวข้อ "วิธีติดตั้งและรัน" ใน README
       JWT_SECRET: ${JWT_SECRET}
+      # LINE — ไม่ตั้งก็รันได้ แค่ไม่ส่งแจ้งเตือน (ดู docs/deployment.md ขั้นที่ 4)
+      LINE_CHANNEL_ACCESS_TOKEN: ${LINE_CHANNEL_ACCESS_TOKEN:-}
+      LINE_CHANNEL_SECRET: ${LINE_CHANNEL_SECRET:-}
+      LINE_ADD_FRIEND_URL: ${LINE_ADD_FRIEND_URL:-}
       # ใส่บัญชีทดลองให้อัตโนมัติ — ใช้ได้เฉพาะตอนรันในเครื่อง
       # ตอน deploy ขึ้น Railway ต้องตั้งเป็น false (ดู docs/deployment.md)
       SEED_DEMO_ACCOUNTS: "true"

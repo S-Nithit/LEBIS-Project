@@ -160,6 +160,66 @@ DELETE FROM users WHERE email = 'demo@example.com';
 
 ---
 
+## ขั้นที่ 5 — แจ้งเตือน LINE (Messaging API)
+
+ไม่ตั้งขั้นนี้ ระบบยังรันได้ทุกอย่าง แค่ไม่ส่ง LINE
+(`/api/line/test` กับ `/api/line/digest` จะตอบ 503 `line_not_configured`)
+
+### 5.1 สร้าง channel — ทำในหน้าเว็บของ LINE เท่านั้น
+
+1. [developers.line.biz/console](https://developers.line.biz/console/) → สร้าง Provider ชื่อ `LEBIS`
+2. สร้าง channel แบบ **Messaging API** (ระบบจะสร้าง LINE Official Account ให้พร้อมกัน)
+3. แท็บ **Basic settings** → คัด **Channel secret**
+4. แท็บ **Messaging API** → กด **Issue** ที่ **Channel access token (long-lived)** แล้วคัด token
+5. แท็บเดียวกัน → **Webhook URL** ใส่
+   `https://lebis-project-production.up.railway.app/api/line/webhook`
+   กด **Verify** ต้องขึ้น Success (ระบบตอบ 200 กับ event ว่างที่ LINE ส่งมาทดสอบ) แล้วเปิด **Use webhook**
+6. ในหน้า LINE Official Account Manager → **ตอบกลับอัตโนมัติ (Auto-reply messages) ให้ปิด**
+   ไม่งั้น OA จะตอบข้อความสำเร็จรูปซ้อนกับข้อความของเรา
+
+> 🔴 token กับ secret คือกุญแจเข้า OA ของเรา ห้ามวางในแชท ห้ามใส่ในไฟล์ที่ขึ้น git
+> ใส่ตรงในหน้า Variables ของ Railway และในไฟล์ `.env` ของเครื่องตัวเองเท่านั้น
+
+### 5.2 ตั้งค่าบน Railway (service backend)
+
+| ตัวแปร | ค่า |
+|---|---|
+| `LINE_CHANNEL_ACCESS_TOKEN` | token จากข้อ 4 |
+| `LINE_CHANNEL_SECRET` | secret จากข้อ 3 |
+| `LINE_ADD_FRIEND_URL` | ลิงก์แอดเพื่อนของ OA (ไม่ใส่ก็ได้) หน้าตั้งค่าจะโชว์ปุ่มแอดเพื่อนให้ |
+
+### 5.3 ตรวจหลังตั้งค่า
+
+| ตรวจอะไร | คาดหวัง |
+|---|---|
+| ผู้ใช้ Free เรียก `POST /api/line/digest` | **403** `tier_required` — อาจารย์เทสข้อนี้สด |
+| ผู้ใช้ Pro เรียก `POST /api/line/link-code` | ได้รหัส 8 ตัว |
+| แอด OA เป็นเพื่อนแล้วพิมพ์รหัสนั้นในแชท | OA ตอบ "ผูกบัญชีกับร้าน ... แล้ว" |
+| `POST /api/line/test` | ได้ข้อความทดสอบใน LINE |
+| มีใบเช่าที่ครบวันนี้หรือพรุ่งนี้ แล้วเรียก `POST /api/line/digest` | ได้ข้อความสรุปใน LINE |
+
+### ระบบส่งอะไร เมื่อไร
+
+- สรุปของต้องคืน **วันละ 1 ข้อความต่อร้าน** ตอน 08:00 เวลาไทย ให้**เจ้าของร้าน** (ไม่ใช่ลูกค้า)
+  เฉพาะร้านแพ็กเกจ Pro ที่ผูก LINE แล้ว และวันนั้นมีของเลยกำหนด / ครบวันนี้ / ครบพรุ่งนี้
+- ไม่มีของต้องคืน = ไม่ส่ง
+- เซิร์ฟเวอร์รีสตาร์ทหลัง 08:00 (เช่น deploy ใหม่) จะส่งตามหลังให้ทันที ไม่ส่งซ้ำ
+  เพราะเช็กในตาราง `notifications` ก่อน และใช้ retry key รายวันให้ LINE ทิ้งคำขอซ้ำเองอีกชั้น
+
+### โควตาข้อความ
+
+LINE OA แพ็กเกจฟรีในไทยส่ง push ได้ **300 ข้อความ/เดือน** ข้อความตอบกลับ (reply) ไม่นับ
+(ที่มา: lineforbusiness.com/th · ตรวจเมื่อ 25 ก.ย. 2569 — แพ็กเกจเปลี่ยนได้ ตรวจใหม่ก่อนใช้จริง)
+
+| ส่งแบบ | ใช้โควตาต่อร้านต่อเดือน | แพ็กเกจฟรีรองรับ |
+|---|---|---|
+| สรุปวันละครั้ง (ที่ระบบทำ) | ราว 30 | ราว 10 ร้าน |
+| ส่งทุกใบเช่า | ตามจำนวนใบเช่า | ร้านที่ปล่อยเช่าวันละ 10 ใบร้านเดียวก็หมดแล้ว |
+
+การผูกบัญชีใช้ reply ทั้งหมด จึงไม่กินโควตา
+
+---
+
 ## ตารางรวมตัวแปรทั้งหมด
 
 | ตัวแปร | ในเครื่อง | Railway (backend) | Vercel (frontend) |
@@ -172,6 +232,9 @@ DELETE FROM users WHERE email = 'demo@example.com';
 | `ADMIN_PASSWORD` | ไฟล์ `.env` | ✅ รหัสใหม่ ไม่ซ้ำกับในเครื่อง | — |
 | `PORT` | ไม่ต้องตั้ง | Railway ตั้งให้เอง | — |
 | `BACKEND_URL` | ไม่ต้องตั้ง (ใช้ `http://backend-api:8000`) | — | ✅ URL ของ backend |
+| `LINE_CHANNEL_ACCESS_TOKEN` | ไฟล์ `.env` (ไม่ตั้งก็ได้) | ✅ จากขั้นที่ 5 | — |
+| `LINE_CHANNEL_SECRET` | ไฟล์ `.env` (ไม่ตั้งก็ได้) | ✅ จากขั้นที่ 5 | — |
+| `LINE_ADD_FRIEND_URL` | ไม่ต้องตั้ง | ไม่บังคับ | — |
 
 ---
 

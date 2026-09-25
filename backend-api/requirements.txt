@@ -4,3 +4,5 @@ databases[asyncpg]
 pydantic
 bcrypt
 pyjwt
+# ใช้ส่งข้อความ LINE — เดิมติดมากับ fastapi[standard] แต่ไม่ควรพึ่งของที่พ่วงมา
+httpx

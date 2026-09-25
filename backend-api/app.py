@@ -1,3 +1,5 @@
+import asyncio
+import os
 from contextlib import asynccontextmanager
 
 import logging
@@ -11,13 +13,25 @@ from routes.auth import router as auth_router
 from routes.borrows import router as borrows_router
 from routes.health import router as health_router
 from routes.items import router as items_router
+from routes.line import router as line_router
+from services import line_notify
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_db()
     await setup_db()
+
+    # สรุปของต้องคืนทาง LINE ทุกเช้า 08:00 — รันเบื้องหลังตลอดอายุเซิร์ฟเวอร์
+    # ปิดได้ด้วย LINE_DAILY_JOB=off (ใช้ตอนทดสอบ ไม่ให้ส่งจริงระหว่างเทส)
+    daily_job = None
+    if os.getenv("LINE_DAILY_JOB", "on") != "off":
+        daily_job = asyncio.create_task(line_notify.daily_loop())
+
     yield
+
+    if daily_job is not None:
+        daily_job.cancel()
     await disconnect_db()
 
 
@@ -29,6 +43,7 @@ app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(health_router, prefix="/api/health", tags=["health"])
 app.include_router(items_router, prefix="/api/items", tags=["items"])
 app.include_router(borrows_router, prefix="/api/borrows", tags=["borrows"])
+app.include_router(line_router, prefix="/api/line", tags=["line"])
 
 
 logger = logging.getLogger("lebis")

@@ -115,6 +115,13 @@ ALTER_USERS = [
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS shop_name VARCHAR(120)",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(10) NOT NULL DEFAULT 'free'",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS line_user_id VARCHAR(64)",
+    # รหัสผูกบัญชี LINE — หน้าเว็บออกรหัส เจ้าของร้านพิมพ์ส่งในแชท LINE
+    # แล้ว webhook จับคู่รหัสกับร้าน (ดู services/line_notify.py)
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS line_link_code VARCHAR(12)",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS line_link_expires TIMESTAMPTZ",
+    # รหัสที่ยังใช้ได้ต้องไม่ซ้ำกันสองร้าน ไม่งั้นรหัสเดียวจะผูกผิดร้าน
+    """CREATE UNIQUE INDEX IF NOT EXISTS users_line_link_code
+       ON users (line_link_code) WHERE line_link_code IS NOT NULL""",
 ]
 
 # อุปกรณ์ในร้าน — code ซ้ำได้ข้ามร้าน แต่ห้ามซ้ำในร้านเดียวกัน (ดู UNIQUE ท้ายตาราง)
