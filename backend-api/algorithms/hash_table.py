@@ -917,4 +917,3 @@ if __name__ == "__main__":
     demo_collision_and_resize()
     demo_benchmark()
     demo_inventory()
-
