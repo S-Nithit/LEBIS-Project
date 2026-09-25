@@ -26,19 +26,19 @@ flowchart TB
 
     subgraph backend["Backend — FastAPI, async"]
         direction TB
-        routes["Routes, all under /api<br/>auth · items · borrows · billing<br/>users · admin · health"]
+        routes["Routes, all under /api<br/>auth · items · borrows · line · billing<br/>users · admin · health"]
         security["services/security.py<br/>JWT issue and verify · bcrypt<br/>require_role · require_tier"]
         inventory["services/inventory.py<br/>DB rows → plain dict and list"]
         algorithms["algorithms/<br/>hash table · search · sort<br/>standard library only"]
         queries["queries/<br/>raw SQL with named parameters"]
-        job["Daily job<br/>scans borrows for due and overdue rows"]
-        notify["services/line_notify.py<br/>push client"]
+        job["Daily job, 08:00 Bangkok<br/>background task in the backend process"]
+        notify["services/line_notify.py<br/>push and reply client · signature check"]
 
         routes -->|"Depends(...) on every gated route"| security
         routes --> inventory --> algorithms
         routes --> queries
         security --> queries
-        job -->|"reads borrows"| queries
+        job -->|"due and overdue borrows<br/>via binary search"| inventory
         job -->|"pro tier only"| notify
         notify -->|"writes notifications rows"| queries
     end
@@ -52,6 +52,7 @@ flowchart TB
     queries -->|"asyncpg"| db
     notify -->|"HTTPS push"| lineapi
     lineapi --> lineapp
+    lineapi -->|"webhook: owner sends a link code<br/>signed with the channel secret"| routes
 
     classDef client fill:#f4eefa,stroke:#8b6bb1,color:#2e1f45
     classDef web fill:#e8f0ff,stroke:#5b7cc4,color:#1a2b4a
@@ -76,7 +77,7 @@ flowchart TB
 | Next.js frontend | Docker container, port 3000 | Vercel |
 | FastAPI backend | Docker container, port 8000 | Railway or Render |
 | PostgreSQL | Docker container, host port 5433 mapped to 5432 | Managed PostgreSQL on the same platform as the backend |
-| Daily reminder job | Started by hand during development | Scheduled task on the backend platform |
+| Daily reminder job | Background task inside the backend process, 08:00 Bangkok time | Same — no separate scheduler service |
 | LINE Messaging API | Same external service in both cases | Same external service in both cases |
 
 ### Notes
@@ -99,10 +100,27 @@ adapter that converts database rows into plain dictionaries and lists lives in
 `services/inventory.py`. This keeps each algorithm file runnable on its own in a
 Google Colab notebook.
 
-The daily job reads `borrows` for rows that are due or overdue, writes one
-`notifications` row per reminder, and calls the LINE Messaging API through
-`services/line_notify.py`. Reminders are available to Pro accounts only; the tier
-check happens before the push.
+The daily job sends one message per shop per day, not one per borrow. It finds
+borrows that are overdue, due today or due tomorrow through `services/inventory.py`,
+which runs the hand-written binary search from `algorithms/search.py`. It then
+pushes a single summary to the shop owner's LINE and writes one `notifications` row
+per borrow in that summary. Reminders are available to Pro accounts only.
+
+One message per shop is a quota decision. A free LINE Official Account in Thailand
+can push 300 messages a month; reply messages are free. A daily summary costs about
+30 messages per shop per month. One message per borrow would exhaust the quota for
+a single busy shop.
+
+A shop links its LINE account without typing any LINE ID. The settings page asks
+for a one-time 8-character code, valid for 10 minutes. The owner sends that code to
+the LEBIS Official Account in the LINE app, LINE forwards it to `/api/line/webhook`,
+and the backend verifies the request signature before linking the account. The
+confirmation is sent as a reply, which does not count against the quota.
+
+The job cannot send the same summary twice. It skips shops that already have a
+`sent` row for today, and every push carries a retry key derived from the shop and
+the date, so the LINE platform itself discards a duplicate within 24 hours. This
+matters when the backend restarts after 08:00 and runs the job again.
 
 In local development all three services are defined in one `docker-compose.yaml`
 and start together. Inside the Compose network they reach PostgreSQL at `db:5432`.
@@ -123,6 +141,8 @@ erDiagram
         varchar shop_name "120, nullable"
         varchar role "10, default free — admin, free or pro"
         varchar line_user_id "64, nullable — set when LINE is linked"
+        varchar line_link_code "12, nullable — one-time code, unique while set"
+        timestamptz line_link_expires "nullable — code is valid for 10 minutes"
         timestamptz create_at "default now"
     }
 
