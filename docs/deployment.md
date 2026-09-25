@@ -167,25 +167,41 @@ DELETE FROM users WHERE email = 'demo@example.com';
 
 ### 5.1 สร้าง channel — ทำในหน้าเว็บของ LINE เท่านั้น
 
-1. [developers.line.biz/console](https://developers.line.biz/console/) → สร้าง Provider ชื่อ `LEBIS`
-2. สร้าง channel แบบ **Messaging API** (ระบบจะสร้าง LINE Official Account ให้พร้อมกัน)
-3. แท็บ **Basic settings** → คัด **Channel secret**
-4. แท็บ **Messaging API** → กด **Issue** ที่ **Channel access token (long-lived)** แล้วคัด token
-5. แท็บเดียวกัน → **Webhook URL** ใส่
-   `https://lebis-project-production.up.railway.app/api/line/webhook`
-   กด **Verify** ต้องขึ้น Success (ระบบตอบ 200 กับ event ว่างที่ LINE ส่งมาทดสอบ) แล้วเปิด **Use webhook**
-6. ในหน้า LINE Official Account Manager → **ตอบกลับอัตโนมัติ (Auto-reply messages) ให้ปิด**
+> ตั้งแต่ 4 ก.ย. 2567 (2024) LINE ไม่ให้สร้าง Messaging API channel จาก Developers Console ตรงๆ แล้ว
+> ต้องสร้าง LINE Official Account ก่อน แล้วเปิด Messaging API จากหน้าจัดการ OA
+> (ที่มา: developers.line.biz/en/docs/messaging-api/getting-started)
+
+1. [manager.line.biz](https://manager.line.biz) → เข้าสู่ระบบด้วยบัญชี LINE → **สร้างบัญชี LINE Official Account**
+   ตั้งชื่อ `LEBIS` กรอกฟอร์มให้ครบ
+2. ในหน้าจัดการ OA → **ตั้งค่า (Settings) → Messaging API → เปิดใช้ Messaging API**
+   ระบบจะให้เลือกหรือสร้าง Provider ตั้งชื่อ `LEBIS` — ขั้นนี้คือการสร้าง channel
+3. [developers.line.biz/console](https://developers.line.biz/console/) → เข้าด้วยบัญชีเดียวกัน → Provider `LEBIS` → คลิก channel
+4. แท็บ **Basic settings** → คัด **Channel secret** (ต้องเป็น Admin ของ channel)
+5. แท็บ **Messaging API** → **Channel access token (long-lived)** → กด **Issue** แล้วคัด token
+   (แบบ long-lived ไม่หมดอายุ ระบบของเราใช้แบบนี้)
+6. แท็บเดียวกัน → **Webhook URL** กด **Edit** ใส่
+   `https://lebis-project-production.up.railway.app/api/line/webhook` กด **Update**
+   → กด **Verify** ต้องขึ้น **Success** (ระบบตอบ 200 กับ event ว่างที่ LINE ส่งมาทดสอบ)
+   → เปิด **Use webhook**
+   ⚠️ ถ้า Verify ไม่ผ่าน เช็คว่าตั้ง `LINE_CHANNEL_SECRET` บน Railway แล้ว (ขั้น 5.2)
+   ถ้ายังไม่ตั้ง ระบบตอบ 503 ตั้งใจให้เป็นแบบนั้น
+7. กลับไปหน้าจัดการ OA → ตั้ง **ข้อความต้อนรับ (Greeting messages)** และ
+   **ตอบกลับอัตโนมัติ (Auto-reply messages)** เป็น **Disabled**
    ไม่งั้น OA จะตอบข้อความสำเร็จรูปซ้อนกับข้อความของเรา
+8. แท็บ **Messaging API** ของ Developers Console มี QR code ไว้แอด OA เป็นเพื่อน
 
 > 🔴 token กับ secret คือกุญแจเข้า OA ของเรา ห้ามวางในแชท ห้ามใส่ในไฟล์ที่ขึ้น git
 > ใส่ตรงในหน้า Variables ของ Railway และในไฟล์ `.env` ของเครื่องตัวเองเท่านั้น
 
 ### 5.2 ตั้งค่าบน Railway (service backend)
 
+ทำหลังข้อ 5 แต่**ก่อนข้อ 6** ของ 5.1 — ปุ่ม Verify ต้องใช้ secret ที่ตั้งไว้แล้ว
+ตั้งเสร็จ Railway จะ deploy ใหม่เอง รอให้ `/api/health` ตอบ 200 ก่อนค่อยกด Verify
+
 | ตัวแปร | ค่า |
 |---|---|
-| `LINE_CHANNEL_ACCESS_TOKEN` | token จากข้อ 4 |
-| `LINE_CHANNEL_SECRET` | secret จากข้อ 3 |
+| `LINE_CHANNEL_ACCESS_TOKEN` | token จากข้อ 5 |
+| `LINE_CHANNEL_SECRET` | secret จากข้อ 4 |
 | `LINE_ADD_FRIEND_URL` | ลิงก์แอดเพื่อนของ OA (ไม่ใส่ก็ได้) หน้าตั้งค่าจะโชว์ปุ่มแอดเพื่อนให้ |
 
 ### 5.3 ตรวจหลังตั้งค่า
