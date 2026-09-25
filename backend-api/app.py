@@ -8,7 +8,9 @@ from fastapi.responses import JSONResponse
 
 from database import connect_db, disconnect_db, setup_db
 from routes.auth import router as auth_router
+from routes.borrows import router as borrows_router
 from routes.health import router as health_router
+from routes.items import router as items_router
 
 
 @asynccontextmanager
@@ -25,6 +27,8 @@ app = FastAPI(title="LEBIS API", lifespan=lifespan)
 # เพิ่ม router ใหม่ให้เติมต่อท้ายบรรทัดพวกนี้ (เช่น items, borrows, billing)
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(health_router, prefix="/api/health", tags=["health"])
+app.include_router(items_router, prefix="/api/items", tags=["items"])
+app.include_router(borrows_router, prefix="/api/borrows", tags=["borrows"])
 
 
 logger = logging.getLogger("lebis")
