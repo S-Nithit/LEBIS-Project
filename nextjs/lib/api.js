@@ -187,3 +187,56 @@ export async function apiFetch(path, options = {}) {
 
   return data;
 }
+
+// ---------------------------------------------------------------------------
+// ดาวน์โหลดไฟล์ เช่น CSV — แนบ token แบบเดียวกับ apiFetch แต่คืนเป็นไฟล์แทน JSON
+//
+//   await apiDownload("/api/reports/rentals.csv", "lebis-rentals.csv");
+//
+// ทำไมไม่ใช้ <a href="/api/..." download> ธรรมดา
+//   ลิงก์ธรรมดาแนบ header Authorization ไม่ได้ เซิร์ฟเวอร์จะตอบ 401 แล้วเบราว์เซอร์
+//   ดาวน์โหลดไฟล์ข้อความ error มาให้แทน ผู้ใช้เปิดดูแล้วงงว่าทำไมไม่ใช่ตาราง
+//   จึงโหลดเป็น blob เอง แล้วสั่งให้เบราว์เซอร์บันทึก
+// ผิดพลาด = throw ApiError เหมือน apiFetch หน้าเว็บจับด้วย errorMessage() ได้เหมือนเดิม
+// ---------------------------------------------------------------------------
+
+export async function apiDownload(path, fallbackName) {
+  const token = getToken();
+  let response;
+  try {
+    response = await fetch(path, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      // ไฟล์ใหญ่กว่าคำขอปกติ จึงรอนานกว่าได้ แต่ก็ต้องมีเพดาน ไม่งั้นปุ่มค้างตลอดไป
+      signal:
+        typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(30000) : undefined,
+    });
+  } catch (networkError) {
+    throw new ApiError("network", { fallback: "network error" });
+  }
+
+  if (!response.ok) {
+    let data = null;
+    try {
+      data = await response.json();
+    } catch (bodyError) {
+      data = null;
+    }
+    throw new ApiError(readErrorCode(data, response), { status: response.status, fallback: `HTTP ${response.status}` });
+  }
+
+  const blob = await response.blob();
+  // ใช้ชื่อไฟล์ที่เซิร์ฟเวอร์ตั้งให้ (มีวันที่ในชื่อ) ถ้าอ่านไม่ได้ค่อยใช้ชื่อสำรอง
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const name = /filename="([^"]+)"/.exec(disposition)?.[1] || fallbackName;
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // คืนหน่วยความจำ — รอให้เบราว์เซอร์เริ่มบันทึกก่อนค่อยทิ้ง
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return name;
+}

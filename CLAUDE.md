@@ -127,6 +127,7 @@ LEBIS-Project/
 │       ├── index.js            ⭑  landing — SEA rebuilds this
 │       ├── login.js            ⭑  KIM extends
 │       ├── register.js            KIM
+│       ├── reports.js             KIM — rental report, range picker, CSV download (Pro)
 │       ├── workspace.js           NEO
 │       ├── pricing.js             KUL
 │       ├── settings.js            SEA
@@ -330,7 +331,7 @@ write code into another member's files.
 
 | Person | Backend | Frontend | Also owns |
 |---|---|---|---|
-| **Kim** (lead) | `database.py` schema, `routes/auth.py`, `services/security.py`, `services/line_notify.py` + `routes/line.py` + `queries/notifications.py`, `services/inventory.py` + `queries/inventory.py`, `routes/reports.py` + `queries/reports.py`, `algorithms/hash_table.py` | `pages/login.js`, `pages/register.js` | repo setup, docker, deployment, PR review |
+| **Kim** (lead) | `database.py` schema, `routes/auth.py`, `services/security.py`, `services/line_notify.py` + `routes/line.py` + `queries/notifications.py`, `services/inventory.py` + `queries/inventory.py`, `routes/reports.py` + `queries/reports.py`, `algorithms/hash_table.py` | `pages/login.js`, `pages/register.js`, `pages/reports.js`, `components/AppShell.js` | repo setup, docker, deployment, PR review |
 | **Neo** | `routes/items.py`, `routes/borrows.py`, `queries/items.py`, `queries/borrows.py`, `algorithms/search.py`, `algorithms/datasets.py` | `pages/workspace.js` | LINE API doc section, testing plan |
 | **Kul** | `routes/billing.py`, `queries/billing.py`, tier enforcement, `algorithms/sort_group.py` | `pages/pricing.js` | security + monetization doc sections |
 | **Sea** | `routes/users.py`, `routes/admin.py`, `queries/admin.py` | `pages/index.js`, `pages/settings.js`, `pages/admin.js` | Figma wireframes, analytics doc |

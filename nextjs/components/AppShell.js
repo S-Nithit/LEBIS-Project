@@ -8,15 +8,25 @@
 //  ตอนเพื่อนก็อปไปใช้แล้วเจอจอขาว — คอมเมนต์ในไฟล์ไม่มีใครตรวจให้)
 
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { Logo } from "@/components/Logo";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { planFor } from "@/lib/plan";
 import { useLanguage } from "@/lib/useLanguage";
+import { cn } from "@/lib/utils";
+
+// เมนูหลักของหน้าที่ต้องเข้าสู่ระบบ — เพิ่มหน้าใหม่ให้เติมแถวในนี้แถวเดียว
+const NAV_ITEMS = [
+  { href: "/workspace", key: "nav.workspace" },
+  { href: "/reports", key: "nav.reports" },
+  { href: "/account", key: "nav.account" },
+];
 
 export function AppShell({ user, onLogout, children }) {
   const { t } = useLanguage();
+  const router = useRouter();
 
   return (
     <div className="flex min-h-screen flex-col bg-paper">
@@ -32,10 +42,10 @@ export function AppShell({ user, onLogout, children }) {
       {/* แถบหัวเว็บ — พื้นสีหมึก โลโก้ใช้ variant dark */}
       <header className="sticky top-0 z-20 bg-header-bg text-header-fg">
         <div className="app-container flex h-16 items-center justify-between gap-4">
-          {/* โลโก้พากลับหน้าบัญชี ไม่ใช่ "/" เพราะหน้าแรกยังเป็นหน้าตัวอย่างของ boilerplate
-              เมื่อหน้า workspace ของ Neo เสร็จแล้วให้เปลี่ยนปลายทางตรงนี้ */}
+          {/* โลโก้พากลับหน้าอุปกรณ์ ซึ่งเป็นหน้าที่ร้านใช้ทั้งวัน
+              ไม่ใช่ "/" เพราะหน้านั้นเป็นหน้าขายของสำหรับคนที่ยังไม่ได้สมัคร */}
           <Link
-            href="/account"
+            href="/workspace"
             aria-label="LEBIS"
             className="inline-flex min-h-[44px] shrink-0 items-center rounded-control"
           >
@@ -65,13 +75,42 @@ export function AppShell({ user, onLogout, children }) {
             ) : null}
 
             {onLogout ? (
-              <Button variant="onDark" onClick={onLogout}>
+              // shrink-0 + nowrap: บนจอ 390px ปุ่มเคยถูกบีบจน "ออกจากระบบ" ตกเป็นสองบรรทัด
+              // ให้ชื่อร้านเป็นฝ่ายถูกตัดท้ายแทน
+              <Button variant="onDark" onClick={onLogout} className="shrink-0 whitespace-nowrap">
                 {t("nav.logout")}
               </Button>
             ) : null}
           </div>
         </div>
       </header>
+
+      {/* เมนูหลัก — แถวที่สองใต้แถบหัวเว็บ เพราะแถวบนบนมือถือเต็มแล้ว
+          (โลโก้ + ชื่อร้าน + ปุ่มออกจากระบบ) ถ้ายัดเมนูเข้าไปอีก ชื่อร้านจะถูกตัดจนอ่านไม่ออก
+          บนมือถือแบ่งสามช่องเท่ากัน ทุกช่องสูงอย่างน้อย 44px ตามเกณฑ์ของ brand.md
+          aria-current บอกโปรแกรมอ่านหน้าจอว่าตอนนี้อยู่หน้าไหน ไม่ใช่แค่ใช้สีบอก */}
+      {user ? (
+        <nav aria-label={t("nav.main")} className="border-b border-line bg-surface">
+          <div className="app-container grid grid-cols-3 sm:flex sm:gap-2">
+            {NAV_ITEMS.map((item) => {
+              const active = router.pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "inline-flex min-h-[44px] items-center justify-center border-b-2 px-3 text-label font-medium",
+                    active ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
+                  )}
+                >
+                  {t(item.key)}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      ) : null}
 
       <main id="main" className="app-container w-full flex-1 py-5 md:py-6">{children}</main>
 

@@ -52,13 +52,14 @@ calls the API directly to add a 51st item, or to trigger a LINE reminder, receiv
 
 ## 1.5 Scope
 
-**In scope** — six pages, each backed by its own API:
+**In scope** — seven pages, each backed by its own API:
 
 | Page | Purpose |
 |---|---|
 | Landing | Explains the product and the pricing to a first-time visitor |
 | Sign in / register | Account creation and JWT sign-in |
 | Workspace | Items, rentals and returns — the page staff use all day |
+| Reports | Which items earn, rental history, CSV export for Pro |
 | Pricing and checkout | Compare Free and Pro, upgrade through a simulated payment |
 | Settings | Shop profile, LINE account linking, current plan |
 | Admin analytics | Business metrics for the LEBIS operator, visible to admins only |
