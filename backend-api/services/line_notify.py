@@ -32,6 +32,7 @@ from datetime import date, datetime, time, timedelta
 
 import httpx
 
+from database import expire_pro_if_due
 from queries import notifications as notifications_query
 from services import inventory
 from services.inventory import BANGKOK
@@ -297,6 +298,10 @@ async def run_daily_job(today: str | None = None) -> dict:
     for user in await notifications_query.users_with_line():
         if not is_pro(user):
             continue  # ลดแพ็กเกจแล้วแต่ยังผูก LINE ค้างอยู่ — ไม่ส่ง
+        # งานนี้ไม่ได้ผ่าน get_current_user เหมือนคำขอจากหน้าเว็บ
+        # ถ้าไม่เช็คตรงนี้ ร้านที่ Pro หมดอายุแต่ไม่ได้เปิดเว็บ จะได้ LINE ต่อไปเรื่อยๆ
+        if user["role"] == "pro" and await expire_pro_if_due(user["email"]):
+            continue
         result = await send_digest(user, today)
         summary[result["status"]] = summary.get(result["status"], 0) + 1
     logger.info("สรุปรายวัน LINE: %s", summary)

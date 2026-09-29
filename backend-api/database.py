@@ -340,6 +340,37 @@ async def get_user_by_email(email: str):
     )
 
 
+async def expire_pro_if_due(email: str) -> bool:
+    """ใบสมัคร Pro หมดอายุแล้ว → ปิดใบนั้นและลดเป็น free ในคำสั่งเดียว คืน True ถ้าลดจริง
+
+    ลดเป็น free เฉพาะเมื่อ "มีใบที่เพิ่งหมดอายุ" และ "ไม่มีใบอื่นที่ยังไม่หมด"
+    บัญชี pro ที่ไม่มีใบสมัครเลย (เช่นบัญชีทดลองที่ตั้งเป็น pro ตรงๆ) จึงไม่ถูกแตะ
+
+    ทำใน SQL คำสั่งเดียว เพราะถ้าแยกเป็นสองคำสั่ง คำขอสองอันที่มาพร้อมกัน
+    อาจเห็นสถานะไม่ตรงกัน แล้วลด role ทั้งที่อีกคำขอเพิ่งต่ออายุไป
+    """
+    row = await database.fetch_one(
+        """
+        WITH expired AS (
+            UPDATE subscriptions SET status = 'expired'
+            WHERE user_email = :email AND status = 'active' AND expires_at < NOW()
+            RETURNING id
+        )
+        UPDATE users SET role = 'free'
+        WHERE email = :email
+          AND role = 'pro'
+          AND EXISTS (SELECT 1 FROM expired)
+          AND NOT EXISTS (
+              SELECT 1 FROM subscriptions
+              WHERE user_email = :email AND status = 'active' AND expires_at >= NOW()
+          )
+        RETURNING role
+        """,
+        {"email": email},
+    )
+    return row is not None
+
+
 async def update_user_token(email: str, token: str):
     await database.execute(
         "UPDATE users SET token = :token WHERE email = :email",

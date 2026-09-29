@@ -21,7 +21,7 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from database import get_user_by_email
+from database import expire_pro_if_due, get_user_by_email
 
 # กุญแจที่ใช้เซ็น JWT — มาจาก environment variable เท่านั้น ไม่มีค่า default
 # ใครถือกุญแจนี้ปลอม token เป็นใครก็ได้ในระบบ เลยห้ามเขียนค่าจริงลงไฟล์ใดๆ ใน repo
@@ -137,6 +137,13 @@ async def get_current_user(
     email = payload.get("sub")
 
     user = await get_user_by_email(email) if email else None
+
+    # Pro ที่ใบสมัครหมดอายุแล้ว ต้องถูกลดเป็น free ก่อนตรวจสิทธิ์ใดๆ
+    # ตรงนี้คือจุดเดียวที่ทุกคำขอต้องผ่าน จึงไม่ต้องมีงานเบื้องหลังคอยไล่เช็ค
+    # (ทุก route ที่ต้อง login เรียก get_current_user · require_tier ก็เรียกต่อจากตัวนี้)
+    if user is not None and user["role"] == "pro" and await expire_pro_if_due(email):
+        user = await get_user_by_email(email)
+
     if user is None:
         # token ถูกต้องแต่หา user ไม่เจอ (เช่นถูกลบไปแล้ว)
         raise HTTPException(
