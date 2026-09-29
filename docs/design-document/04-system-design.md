@@ -112,6 +112,26 @@ shop and the date. The LINE platform discards a second request with the same key
 for 24 hours. Both guards matter when the backend restarts after 08:00 and the job
 runs again.
 
+### Rental report and CSV export
+
+1. `GET /api/reports/rentals` returns every rental in the requested window, the
+   estimated revenue (daily rate × days rented) and the five items that earned the
+   most — the answer to the owner's third problem, not knowing which items earn.
+2. A Free account asking for more than 7 days receives the last 7 days and
+   `limited: true`. The plan limits history; it does not remove the report.
+3. `GET /api/reports/rentals.csv` is Pro only and returns **403** to a Free account.
+   The file starts with a UTF-8 byte-order mark so Excel shows Thai text correctly,
+   and any cell that begins with `=`, `+`, `-` or `@` is prefixed with `'` so Excel
+   treats it as text rather than a formula.
+
+### Pro subscriptions expire
+
+A Pro subscription lasts 30 days. The expiry is checked in `get_current_user`, the
+dependency every signed-in request passes through, and again by the daily LINE job,
+which does not go through a request. When the active subscription has expired, one
+SQL statement marks it `expired` and sets the account back to `free`, so the very
+next request sees Free limits.
+
 ### Linking a LINE account
 
 The owner never types a LINE user ID.

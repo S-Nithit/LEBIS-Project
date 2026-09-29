@@ -26,7 +26,7 @@ flowchart TB
 
     subgraph backend["Backend — FastAPI, async"]
         direction TB
-        routes["Routes, all under /api<br/>auth · items · borrows · line · billing<br/>users · admin · health"]
+        routes["Routes, all under /api<br/>auth · items · borrows · line · reports<br/>billing · users · admin · health"]
         security["services/security.py<br/>JWT issue and verify · bcrypt<br/>require_role · require_tier"]
         inventory["services/inventory.py<br/>DB rows → plain dict and list"]
         algorithms["algorithms/<br/>hash table · search · sort<br/>standard library only"]

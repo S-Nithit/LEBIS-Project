@@ -39,3 +39,6 @@ Thumbs.db
 logo/
 # ภาพหน้าจอกับไฟล์ชั่วคราวของเครื่องมือออกแบบ
 .impeccable/
+
+# ฉบับร่าง Design Document (สร้างใหม่ได้ทุกเมื่อด้วย scripts/build-design-doc.mjs)
+docs/design-document/build/

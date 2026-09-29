@@ -96,7 +96,7 @@ runs unchanged in Google Colab.
 | Nithit Srisengsuwanchai (Kim) | Team lead. Project setup, database, sign-in, LINE integration, deployment |
 | Intuch Srisawat (Neo) | Workspace page — items and rental records |
 | Issaree Ausavapirom (Kul) | Pricing and checkout page — Free and Pro limits |
-| [ full name ] (Sea) | Landing page, settings page, admin dashboard |
+| Pongsicha Seesavat (Sea) | Landing page, settings page, admin dashboard |
 
 Each member owns their pages from the API to the user interface, so every member
 has commits on both the backend and the frontend.
