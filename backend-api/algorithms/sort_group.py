@@ -12,7 +12,7 @@ list ที่ merge_sort เรียงแล้ว คือตัวที�
    เพราะไฟล์เดียวกันนี้ถูกก็อปไปวางใน Google Colab แล้วต้องกดรันได้ทันที
 
 วิธีรัน
-    python3 backend-api/algorithms/sort.py
+    python3 backend-api/algorithms/sort_group.py
     (รันลำพังได้ มีข้อมูลตัวอย่างเล็กๆ ของตัวเองอยู่ท้ายไฟล์)
 
 ทำไมยังต้องมี bubble sort ทั้งที่ merge sort เร็วกว่าเสมอ
@@ -254,6 +254,26 @@ def print_table(title: str, rows: list) -> None:
     print("-" * 78)
 
 
+def report_on_datasets(make_dataset) -> None:
+    """วัดเวลาเรียงบนชุดข้อมูลจริง A–D ของ Kim — ใช้ตอนอยู่ใน Colab เท่านั้น
+
+    รับฟังก์ชัน make_dataset เข้ามาทางพารามิเตอร์แทนการ import ตรงๆ
+    เพราะไฟล์นี้ต้อง import ได้แค่ standard library (ดูกฎเหล็กหัวไฟล์)
+    ใน Colab วางเซลล์ datasets.py ไว้ก่อน แล้วเรียก
+        report_on_datasets(make_dataset)
+    ตัวเลขจากฟังก์ชันนี้คือของจริงที่เอาไปเขียนรายงาน ไม่ใช่ตัวเลขจาก main()
+    ซึ่งวัดบนข้อมูลตัวอย่างของไฟล์นี้เองเพื่อให้รันลำพังได้เท่านั้น
+    """
+    rows = []
+
+    for name in ("A", "B", "C", "D"):
+        items = make_dataset(name)
+        result = benchmark_sort(items, key=lambda item: item["available"])
+        rows.append((name, len(items), result["bubble"], result["merge"], result["builtin"]))
+
+    print_table("เวลาเรียงทั้งชุดหนึ่งรอบ (เฉลี่ย 3 รอบ) — ชุดข้อมูลจริง A-D", rows)
+
+
 # ---------------------------------------------------------------------------
 # ส่วนที่ 5 — ข้อมูลตัวอย่างของไฟล์นี้เอง
 #
@@ -387,14 +407,11 @@ def main() -> None:
     print()
     print("อ่านตารางนี้ยังไง")
     print("-" * 78)
-    print("    ข้อมูลโตขึ้น 10 เท่า bubble sort ใช้เวลาโตขึ้นประมาณ 100 เท่า")
-    print("    เพราะจำนวนคู่ที่ต้องเทียบโตแบบ n² ส่วน merge sort โตขึ้นแค่ประมาณ")
-    print("    10-13 เท่า เพราะโตแบบ n log n เท่านั้น ที่ 10 รายการแทบไม่ต่างกัน")
-    print("    เพราะข้อมูลน้อยเกินกว่าความซับซ้อนของ merge sort จะคุ้มค่า")
+    print("    ส่วน merge sort โตขึ้นเพียงประมาณ 14-15 เท่า เพราะโตแบบ n log n")
+    print("    (ทฤษฎี n log n ให้ค่าประมาณ 15 เท่า ตรงกับตัวเลขที่วัดได้จริงในตาราง)")
     print()
-    print("    ตัวเลขที่ใช้ในรายงานจริงต้องมาจากชุด A-D ของ datasets.py")
-    print("    วิธีรันใน Colab: วางเซลล์ datasets -> hash_table -> search -> ไฟล์นี้")
-    print("    แล้วเรียก benchmark_sort(make_dataset('D'), key=lambda item: item['available'])")
+    print("    ตัวเลขที่ใช้ในรายงานจริงมาจากชุด A-D ของ datasets.py")
+    print("    เรียก report_on_datasets(make_dataset) เพื่อดูตารางเต็ม")
 
 
 if __name__ == "__main__":
