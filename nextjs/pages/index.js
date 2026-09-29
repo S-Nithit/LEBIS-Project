@@ -11,10 +11,10 @@
 import Head from "next/head";
 import Link from "next/link";
 
-import { useLanguage } from "@/lib/useLanguage";
-import { Logo } from "@/components/Logo";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/useLanguage";
 
 export default function LandingPage() {
   const { t } = useLanguage();
@@ -41,7 +41,7 @@ export default function LandingPage() {
             >
               <Logo size={32} />
             </Link>
-            <span className="hidden sm:inline-flex items-center rounded-badge border border-line-strong px-2 py-0.5 text-eyebrow font-semibold text-amber-text tracking-wider">
+            <span className="hidden sm:inline-flex items-center rounded-badge border border-line-strong px-2 py-0.5 text-eyebrow font-semibold text-muted tracking-wider">
               {t("landing.nav.badge")}
             </span>
           </div>
@@ -69,7 +69,7 @@ export default function LandingPage() {
 
             <Button
               asChild
-              className="min-h-[44px] bg-amber hover:opacity-95 text-on-ink border-transparent font-medium px-4 text-label shadow-sm"
+              className="min-h-[44px] px-4 text-label"
             >
               <Link href="/register">{t("landing.nav.getStarted")}</Link>
             </Button>
@@ -82,7 +82,7 @@ export default function LandingPage() {
         <section className="py-16 sm:py-24 lg:py-28 border-b border-line">
           <div className="app-container text-center">
             {/* ป้ายด้านบนหัวข้อหลัก */}
-            <div className="inline-flex items-center gap-2 rounded-badge border border-line bg-surface px-4 py-1.5 text-label font-medium text-amber-text mb-6">
+            <div className="inline-flex items-center gap-2 rounded-badge border border-line bg-surface px-4 py-1.5 text-label font-medium text-muted mb-6">
               <span>{t("landing.hero.pill")}</span>
             </div>
 
@@ -100,7 +100,7 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none">
               <Button
                 asChild
-                className="w-full sm:w-auto min-h-[44px] bg-amber hover:opacity-95 text-on-ink border-transparent px-6 text-body font-medium shadow-sm"
+                className="w-full sm:w-auto min-h-[44px] px-6 text-body font-medium"
               >
                 <Link href="/register">{t("landing.hero.ctaPrimary")}</Link>
               </Button>
@@ -136,7 +136,7 @@ export default function LandingPage() {
         <section id="features" className="py-16 sm:py-24 border-b border-line bg-surface/50">
           <div className="app-container">
             <div className="text-center max-w-2xl mx-auto">
-              <div className="inline-flex items-center rounded-badge border border-line bg-surface px-3 py-1 text-eyebrow font-semibold text-amber-text mb-3">
+              <div className="inline-flex items-center rounded-badge border border-line bg-surface px-3 py-1 text-eyebrow font-semibold text-muted mb-3">
                 {t("landing.features.pill")}
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink">
@@ -240,7 +240,7 @@ export default function LandingPage() {
         <section id="pricing" className="py-16 sm:py-24">
           <div className="app-container">
             <div className="text-center max-w-2xl mx-auto">
-              <div className="inline-flex items-center rounded-badge border border-line bg-surface px-3 py-1 text-eyebrow font-semibold text-amber-text mb-3">
+              <div className="inline-flex items-center rounded-badge border border-line bg-surface px-3 py-1 text-eyebrow font-semibold text-muted mb-3">
                 {t("landing.pricing.pill")}
               </div>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink">
@@ -308,7 +308,7 @@ export default function LandingPage() {
               </div>
 
               {/* แพ็กเกจ Pro */}
-              <div className="rounded-card border-2 border-line-strong bg-surface p-6 sm:p-8 flex flex-col justify-between relative shadow-sm">
+              <div className="rounded-card border border-line-strong bg-surface p-6 sm:p-8 flex flex-col justify-between relative">
                 <div>
                   <div className="inline-flex rounded-badge border border-amber/40 bg-surface px-3 py-1 text-label font-semibold text-amber-text mb-4">
                     {t("landing.pricing.pro.badge")}
@@ -357,7 +357,7 @@ export default function LandingPage() {
                 <div className="mt-8 pt-4">
                   <Button
                     asChild
-                    className="w-full min-h-[44px] bg-amber hover:opacity-95 text-on-ink border-transparent font-medium shadow-sm"
+                    className="w-full min-h-[44px] font-medium"
                   >
                     <Link href="/register">{t("landing.pricing.pro.cta")}</Link>
                   </Button>
