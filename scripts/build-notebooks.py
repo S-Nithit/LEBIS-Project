@@ -17,7 +17,8 @@
     เป็นของตัวเอง เหมือนในรีโปทุกอย่าง และโค้ดในเซลล์ก็ตรงกับไฟล์ทุกตัวอักษร
 
 วิธีรัน (จากรากของ repo)
-    python3 scripts/build-notebooks.py
+    python3 scripts/build-notebooks.py            ทั้งของ Kim และไฟล์รวม
+    python3 scripts/build-notebooks.py --final    เฉพาะ LEBIS_Final.ipynb (notebook ของ Kim ไม่ถูกรันใหม่)
 
     ได้ docs/data-course/LEBIS_Kim_HashTable.ipynb
     LEBIS_Final.ipynb จะถูกสร้างเมื่อมี algorithms/sort_group.py ของ Kul แล้ว
@@ -264,10 +265,11 @@ Flowchart ของส่วนนี้อยู่ในโฟลเดอร�
 # ---------------------------------------------------------------------------
 
 def build_final():
-    """LEBIS_Final.ipynb รวมงานสามคน — รอ sort_group.py ของ Kul
+    """LEBIS_Final.ipynb รวมงานสามคน — ไฟล์ที่แนบลิงก์ Colab ในรายงานวิชา Data
 
-    พอ Kul ส่งไฟล์แล้ว ให้เติมเซลล์โชว์งานของ Kul ในส่วนที่ 4 ตามฟังก์ชันจริงที่เขาเขียน
-    (ตอนนี้ยังไม่รู้ชื่อฟังก์ชัน จึงยังเขียนแทนไม่ได้)
+    ส่วนที่ 5 คือเหตุผลที่สามไฟล์ต้องอยู่ด้วยกัน: merge sort ของ Kul เรียงให้
+    binary search ของ Neo ค้นเป็นช่วง แล้ว hash table ของ Kim เปิดดูของทีละชิ้น
+    ถ้าตัวใดตัวหนึ่งเปลี่ยนรูปแบบข้อมูลที่ส่งต่อกัน เซลล์นั้นจะล้มให้เห็นทันที
     """
     sort_group = ALGORITHMS / "sort_group.py"
     if not sort_group.exists():
@@ -299,18 +301,56 @@ def build_final():
         markdown("---\n## 3. Search / Count — Binary Search (Neo)"),
         file_cell(SCRIPTS / "data-course-benchmark.py", "data_course_benchmark.py"),
         code("import data_course_benchmark\ndata_course_benchmark.main()"),
-        markdown("---\n## 4. Sort / Group — Merge Sort (Kul)\n\n> เติมเซลล์โชว์ผลของ Kul ตรงนี้ตามฟังก์ชันที่อยู่ใน sort_group.py"),
+        markdown("---\n## 4. Sort / Group — Merge Sort (Kul)\n\n"
+                 "ตรวจความถูกต้องก่อน (ผลต้องตรงกับ `sorted()` และคง stable) แล้ววัดเวลาบนชุด A–D"),
+        code("sort_group.verify()\nsort_group.report_on_datasets(datasets.make_dataset)"),
+        code("""items = datasets.make_dataset("D")
+
+# จัดกลุ่มรอบเดียว O(n) — ไม่ต้องวนแยกทีละหมวด
+by_type = sort_group.group_by_type(items)
+by_status = sort_group.group_by_status(items)
+print("ตามหมวด :", {name: len(group) for name, group in by_type.items()})
+print("ตามสถานะ:", {name: len(group) for name, group in by_status.items()})"""),
+        markdown("""---
+## 5. สามอัลกอริทึมทำงานต่อกัน
+
+คำถามที่ร้านถามทุกเช้า: **"ใบไหนเลยกำหนดคืนแล้วบ้าง แล้วของชิ้นนั้นคืออะไร"**
+
+1. **merge sort (Kul)** เรียงใบยืมตามวันครบกำหนด — O(n log n)
+2. **binary search (Neo)** ตัดเอาทุกใบที่ครบกำหนดก่อนวันนี้ — O(log n + k)
+3. **hash table (Kim)** เปิดดูรายละเอียดของแต่ละชิ้นด้วยรหัส — O(1) ต่อชิ้น
+
+แต่ละขั้นส่ง list ธรรมดาต่อให้ขั้นถัดไป ถ้าใครเปลี่ยนรูปแบบข้อมูล เซลล์นี้จะล้มทันที
+"""),
+        code("""TODAY = "2026-10-01"
+items = datasets.make_dataset("D")
+
+by_due = sort_group.sort_by_due_date(items)          # Kul — merge sort
+overdue = search.find_due_before(by_due, TODAY)       # Neo — binary search
+table = hash_table.build_hash_table(items)            # Kim — hash table
+
+# เทียบกับการไล่ทีละตัว ต้องได้ชุดเดียวกันเป๊ะ
+expected = sorted(x["code"] for x in items if x["due_date"] is not None and x["due_date"] < TODAY)
+assert sorted(x["code"] for x in overdue) == expected
+
+print(f"ใบยืมทั้งหมด {len(by_due)} ใบ · เลยกำหนดก่อน {TODAY}: {len(overdue)} ใบ (ตรงกับการไล่ทีละตัว)")
+for entry in overdue[:5]:
+    item = table.get(entry["code"])
+    print(f"  {item['code']:<10} {item['name']:<22} ผู้ยืม {item['borrower']:<12} ครบกำหนด {item['due_date']}")"""),
     ]
 
     path = save(notebook(cells, "LEBIS_Final.ipynb"), "LEBIS_Final.ipynb")
-    print(f"สร้างแล้ว {path.relative_to(ROOT)} — ยังต้องเติมส่วนของ Kul")
+    print(f"สร้างแล้ว {path.relative_to(ROOT)}")
     return path
 
 
 if __name__ == "__main__":
-    kim = build_kim()
-    if execute(kim):
-        print(f"  รันครบทุกเซลล์แล้ว ผลติดมาในไฟล์")
+    # --final = สร้างเฉพาะไฟล์รวม ไม่แตะ notebook ของ Kim
+    # เพราะรันใหม่ทีไรเวลาที่วัดได้ขยับทุกรอบ แล้วตัวเลขใน notebook จะไม่ตรงกับรายงานที่เขียนไปแล้ว
+    if "--final" not in sys.argv:
+        kim = build_kim()
+        if execute(kim):
+            print(f"  รันครบทุกเซลล์แล้ว ผลติดมาในไฟล์")
 
     final = build_final()
     if final is not None and execute(final):
