@@ -6,14 +6,15 @@
   ไฟล์นี้เลยแปลงแถวจาก DB ให้เป็น dict หน้าตาเดียวกับ make_dataset()
   ใน algorithms/datasets.py แล้วส่งต่อให้ฟังก์ชันใน search.py
 
-      DB row  ->  item_to_record() / borrow_to_record()  ->  algorithms/search.py
+      DB row  ->  item_to_record() / borrow_to_record()  ->  algorithms/sort_group.py
+                                                         ->  algorithms/search.py
 
   ห้ามย้ายการแปลงนี้เข้าไปใน algorithms/ เด็ดขาด ไม่งั้น Colab รันไม่ได้
 """
 
 from datetime import datetime, timedelta, timezone
 
-from algorithms import search
+from algorithms import search, sort_group
 from queries import inventory as inventory_query
 
 # ต้องตรงกับ BANGKOK ใน routes/borrows.py
@@ -65,9 +66,14 @@ def borrow_to_record(row) -> dict:
 
 
 async def open_borrows(owner_email: str) -> list:
-    """ใบเช่าที่ยังไม่คืนของร้าน เรียงตามวันกำหนดคืนแล้ว"""
-    rows = await inventory_query.open_borrows_by_due(owner_email)
-    return [borrow_to_record(row) for row in rows]
+    """ใบเช่าที่ยังไม่คืนของร้าน เรียงตามวันกำหนดคืนด้วย merge sort ของวิชา Data
+
+    SQL ไม่ได้เรียงให้แล้ว — sort_by_due_date ของ Kul เป็นคนเรียง
+    แล้วส่งต่อให้ find_due_before ของ Neo ซึ่งเป็น binary search ใช้ได้กับ list ที่เรียงแล้วเท่านั้น
+    merge sort ของ Kul เป็น stable sort ใบที่ครบกำหนดวันเดียวกันจึงยังเรียงตาม id ที่ SQL ส่งมา
+    """
+    rows = await inventory_query.open_borrows(owner_email)
+    return sort_group.sort_by_due_date([borrow_to_record(row) for row in rows])
 
 
 # ---------------------------------------------------------------------------

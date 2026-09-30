@@ -22,16 +22,15 @@ async def items_for_counting(owner_email: str):
     )
 
 
-async def open_borrows_by_due(owner_email: str):
-    """ใบเช่าที่ยังไม่คืน เรียงตามวันกำหนดคืน ใกล้สุดขึ้นก่อน
+async def open_borrows(owner_email: str):
+    """ใบเช่าที่ยังไม่คืนของร้าน — ยังไม่เรียงตามวันกำหนดคืน
 
     due_day คือ "วันที่" ตามเวลาไทย ไม่ใช่เวลาเต็ม
     DB อยู่เขต UTC แต่ร้านนับวันตามเวลาไทย จึงต้องแปลงก่อนตัดเป็นวันที่
     ไม่งั้นช่วงเที่ยงคืนถึงเจ็ดโมงเช้า วันที่จะคลาดไปหนึ่งวัน
 
-    🔴 ORDER BY ต้องเรียงด้วย due_day ตัวเดียวกับที่ algorithms/ ใช้เทียบ
-       find_due_before เป็น binary search ใช้ได้กับ list ที่เรียงแล้วเท่านั้น
-       ถ้าเรียงผิดหรือลบบรรทัดนี้ มันจะไม่ error แต่ตอบผิดแบบเงียบๆ
+    การเรียงตามวันกำหนดคืนทำใน services/inventory.py ด้วย merge sort ของวิชา Data
+    ที่นี่เรียงแค่ตาม id ให้ลำดับคงที่ทุกครั้ง (ใบที่ครบกำหนดวันเดียวกันจะออกมาเรียงเหมือนเดิม)
     """
     return await database.fetch_all(
         """
@@ -44,7 +43,7 @@ async def open_borrows_by_due(owner_email: str):
         JOIN items i ON i.id = b.item_id
         WHERE b.owner_email = :owner_email
           AND b.returned_at IS NULL
-        ORDER BY due_day, b.id
+        ORDER BY b.id
         """,
         {"owner_email": owner_email},
     )
