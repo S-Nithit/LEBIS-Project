@@ -24,7 +24,7 @@ const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = process.argv.find((a) => a.startsWith("http")) || "http://localhost:3000";
 
 // หน้าที่ยังไม่ต้องเข้าสู่ระบบ กับหน้าที่ต้องเข้าสู่ระบบก่อน
-const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password"];
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password"];
 // 🔴 หน้าที่ useAuth({redirectTo:"/login"}) ต้องอยู่ในรายการนี้ทุกหน้า
 //    ไม่ใส่ = สคริปต์เปิดหน้านั้นแล้วถูกเด้งไป /login แล้วมันไปวัดหน้า login
 //    แต่รายงานว่าหน้านั้นผ่าน คือ "ผ่าน" ที่ไม่เคยแตะหน้าจริงเลยแม้แต่ครั้งเดียว

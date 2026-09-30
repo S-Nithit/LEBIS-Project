@@ -30,15 +30,22 @@ item receives **404**, not 403 — a 403 would confirm that the item exists.
 **Course algorithms run inside the product.** The files in `algorithms/` import
 nothing but the Python standard library, so they also run in Google Colab.
 `services/inventory.py` converts database rows into the plain dictionaries those
-files expect. The daily LINE reminder finds due rentals with the hand-written
-binary search `find_due_before`. The same adapter provides `count_available` and
-`count_overdue` for the workspace summary; on the same data they return exactly the
-numbers the equivalent SQL returns.
+files expect. Two of the three algorithms are on the live request path:
 
-> [Editor's note — remove before submission] Once Neo's change to
-> `/api/items/summary` is merged, change the last sentence to: "The workspace
-> summary counts items with `count_available` and overdue rentals with
-> `count_overdue`." Until then the summary still counts with SQL.
+| Where in the product | Algorithm | Author |
+|---|---|---|
+| Open rentals are put in due-date order | `sort_by_due_date` — merge sort, O(n log n) | Kul |
+| Daily LINE reminder finds due and overdue rentals | `find_due_before` — binary search, O(log n + k) | Neo |
+| Workspace summary counts items on the shelf and overdue rentals | `count_available`, `count_overdue` | Neo |
+
+Kim's hash table is not on the request path. In the product, PostgreSQL's unique
+index on `(owner_email, code)` already finds an item by code, so a second index in
+memory would add nothing. The hash table is measured in the course notebook instead.
+
+The database no longer sorts open rentals by due date; merge sort does, and because
+it is stable, rentals due on the same day keep their database order. Replacing the
+SQL did not change a single number: on the same data, the order and the counts are
+identical to the queries they replaced.
 
 ### Where each component runs
 
@@ -124,6 +131,30 @@ runs again.
    and any cell that begins with `=`, `+`, `-` or `@` is prefixed with `'` so Excel
    treats it as text rather than a formula.
 
+### Upgrading to Pro (simulated checkout)
+
+No real money moves; the payment step shows a mock QR code.
+
+1. `POST /api/checkout/session` inserts a `transactions` row with status `pending`
+   and the price set by the server (299 THB). The row's id is the `checkout_id`
+   returned to the page, so the browser never supplies an amount.
+2. `POST /api/checkout/confirm` runs inside one database transaction:
+   - It locks the user's row (`SELECT … FOR UPDATE`). Every confirm for the same
+     account waits here, one at a time. An account that is already Pro gets
+     **409**.
+   - It locks the `pending` transaction that matches this `checkout_id` **and**
+     this user. An unknown, used or someone else's id gets **404**.
+   - It inserts a 30-day `subscriptions` row, marks the transaction `paid` with that
+     subscription id, and sets `users.role` to `pro`.
+3. The next request reads the user row again in `get_current_user`, so Pro limits
+   apply at once without signing in again.
+
+We attacked the flow before merging. Firing eight confirms for the same checkout at
+once, or opening four checkouts and confirming them all together, still produced
+exactly one paid transaction and one active subscription.
+`POST /api/checkout/cancel` marks the active subscription `cancelled` and returns
+the account to `free`.
+
 ### Pro subscriptions expire
 
 A Pro subscription lasts 30 days. The expiry is checked in `get_current_user`, the
@@ -153,6 +184,7 @@ The owner never types a LINE user ID.
 | Raw SQL with named parameters, no ORM | The course boilerplate uses the `databases` library with raw SQL; named parameters prevent SQL injection | An ORM would replace the provided structure the course asks us to extend |
 | Next.js rewrite instead of calling the API directly | One origin: no CORS, no public backend URL | Calling Railway from the browser would need CORS and expose the backend address |
 | JWT instead of the boilerplate's stored token | The token carries its own signature and expiry, so a leaked token stops working on its own; the user row is still read on every request, so a plan change applies immediately | An opaque token stored in `users.token` would need its own expiry and revocation logic |
+| Checkout id is the id of a pending `transactions` row, confirmed under row locks | The server sets the amount and can check the id belongs to the caller; locking the user row makes double payment impossible even with several open checkouts | A random id that is never stored cannot be checked, so any confirm call would upgrade the account |
 | One LINE message per shop per day | A free LINE Official Account in Thailand can push 300 messages a month; a daily summary uses about 30 per shop | One message per rental would exhaust the quota for a single busy shop |
 | Reminder job inside the backend process | No extra service to deploy or pay for; the duplicate guards make restarts safe | A separate scheduler service adds cost and one more thing to keep running |
 | Items kept in a list with a hash-table index (algorithms module) | The hash table finds an item by code in O(1) on average; the list keeps an order for sorting and binary search | A hash table alone cannot be sorted or searched by range |
