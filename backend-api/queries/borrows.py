@@ -122,17 +122,10 @@ async def count_all_by_item(item_id: int) -> int:
     )
 
 
-async def count_overdue_by_owner(owner_email: str) -> int:
-    """จำนวนใบที่เลยกำหนดคืนแล้ว — ตัวเลขช่องที่สามของแถบสถานะ"""
-    return await database.fetch_val(
-        """
-        SELECT COUNT(*) FROM borrows
-        WHERE owner_email = :owner_email
-          AND returned_at IS NULL
-          AND due_date < NOW()
-        """,
-        {"owner_email": owner_email},
-    )
+# หมายเหตุ: เคยมี count_overdue_by_owner() นับใบที่เลยกำหนดด้วย SQL อยู่ตรงนี้
+# ลบออกเพราะตอนนี้นับด้วย count_overdue() ของ algorithms/search.py แทน
+# (เรียกผ่าน services/inventory.py) ถ้าเก็บทั้งสองตัวไว้ เท่ากับมีนิยามของคำว่า
+# "เลยกำหนด" สองชุด แล้ววันที่สองชุดนั้นไม่ตรงกันจะไม่มีอะไรฟ้องให้เห็น
 
 
 # ---------------------------------------------------------------------------

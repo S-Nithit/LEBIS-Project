@@ -120,18 +120,21 @@ async def list_categories(owner_email: str):
 
 
 async def summary(owner_email: str):
-    """ตัวเลขสำหรับแถบสถานะบนสุดของหน้า Workspace
+    """จำนวนรายการและจำนวนชิ้นทั้งหมดของร้าน
 
     นับ "ชิ้น" ไม่ใช่ "รายการ" เพราะอุปกรณ์หนึ่งรายการมีได้หลายชิ้น
-    ของที่ปลดระวางแล้ว (status = 'broken') ไม่ถูกนับว่าเป็นของบนชั้น
+
+    🔴 ที่นี่ไม่นับ "ของว่างบนชั้น" แล้ว — ตัวเลขนั้นนับด้วย count_available()
+       ของ algorithms/search.py ผ่าน services/inventory.py แทน
+       เคยมีคอลัมน์ available_units อยู่ตรงนี้ด้วย ซึ่งแปลว่านิยามของคำว่า
+       "ว่าง" ถูกเขียนไว้สองที่ ถ้าวันหนึ่งแก้ที่เดียว เว็บกับรายงานวิชา Data
+       จะให้ตัวเลขคนละตัวโดยไม่มีใคร error ให้เห็น จึงตัดออกให้เหลือที่เดียว
     """
     return await database.fetch_one(
         """
         SELECT
-            COUNT(*)                                          AS item_rows,
-            COALESCE(SUM(total), 0)                           AS total_units,
-            COALESCE(SUM(available) FILTER (WHERE status <> 'broken'), 0)
-                                                              AS available_units
+            COUNT(*)                 AS item_rows,
+            COALESCE(SUM(total), 0)  AS total_units
         FROM items
         WHERE owner_email = :owner_email
         """,
