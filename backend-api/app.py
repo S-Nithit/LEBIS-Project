@@ -16,6 +16,7 @@ from routes.health import router as health_router
 from routes.items import router as items_router
 from routes.line import router as line_router
 from services import line_notify
+from routes.billing import router as billing_router
 
 
 @asynccontextmanager
@@ -46,6 +47,7 @@ app.include_router(health_router, prefix="/api/health", tags=["health"])
 app.include_router(items_router, prefix="/api/items", tags=["items"])
 app.include_router(borrows_router, prefix="/api/borrows", tags=["borrows"])
 app.include_router(line_router, prefix="/api/line", tags=["line"])
+app.include_router(billing_router, prefix="/api", tags=["billing"])
 
 
 logger = logging.getLogger("lebis")
