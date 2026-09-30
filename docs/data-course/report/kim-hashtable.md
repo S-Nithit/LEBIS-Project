@@ -180,7 +180,7 @@ load factor คือความยาวเฉลี่ยของโซ่ �
 
 ## 1.8 Flowchart
 
-อยู่ใน `docs/data-course/flowcharts/` ทั้งไฟล์ draw.io และ PDF
+อยู่ใน `docs/data-course/flowcharts/` ทั้งไฟล์ draw.io และ PDF · PDF อยู่ในโฟลเดอร์ทีมด้วย: https://drive.google.com/drive/folders/1r2B5_h15vtCjMgca2rhnYVqcbX1wulWY
 
 1. `flow_kim_1_overview` — ภาพรวมระบบ: คำสั่งทุกแบบผ่านดัชนีแฮชก่อน
 2. `flow_kim_2_insert` — เพิ่มอุปกรณ์ รวมเส้นทางตอนเกิดการชนและการขยายตาราง
@@ -191,7 +191,7 @@ load factor คือความยาวเฉลี่ยของโซ่ �
 | ไฟล์ | คืออะไร |
 |---|---|
 | `backend-api/algorithms/hash_table.py` | โค้ดทั้งหมด ใช้แค่ standard library |
-| `docs/data-course/LEBIS_Final.ipynb` | notebook ฉบับรวมสามคนที่รันแล้ว — ตัวเลขในรายงานนี้มาจากไฟล์นี้ (อัปขึ้น Colab) |
+| `docs/data-course/LEBIS_Final.ipynb` | notebook ฉบับรวมสามคนที่รันแล้ว — ตัวเลขในรายงานนี้มาจากไฟล์นี้ · **Colab:** https://colab.research.google.com/drive/1K3JSlNVuN-mof98pjE09J_nFKhZEmyV8 |
 | `docs/data-course/LEBIS_Kim_HashTable.ipynb` | notebook ของ Kim คนเดียว มีหัวข้อที่อธิบายละเอียดกว่า (ตัวเลขเป็นอีกรอบ อย่าเอามาผสม) |
 | `scripts/data-course-hashtable.py` | สคริปต์วัดชุด A–D ในเครื่อง |
 | `scripts/build-notebooks.py` | สร้าง notebook จากไฟล์จริงในรีโป |

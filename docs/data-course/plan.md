@@ -3,6 +3,18 @@
 โค้ดทั้งหมดของวิชานี้อยู่ที่ `backend-api/algorithms/` **ที่เดียว**
 ไฟล์เดียวกันนี้ถูกก็อปไปวางใน Google Colab ตอนทำรายงาน — ไม่เขียนซ้ำเป็นสองชุด
 
+## 🔗 ลิงก์ที่แนบในรายงาน
+
+| อะไร | ลิงก์ |
+|---|---|
+| Colab ฉบับรวมสามคน (`LEBIS_Final.ipynb`) | https://colab.research.google.com/drive/1K3JSlNVuN-mof98pjE09J_nFKhZEmyV8 |
+| โฟลเดอร์ทีม LEBIS-Data (notebooks · flowcharts) | https://drive.google.com/drive/folders/1r2B5_h15vtCjMgca2rhnYVqcbX1wulWY |
+
+- ตัวเลขในรายงาน**ทุกคน**คัดจากไฟล์นี้ (ชุด D: Kim ค้น 14.2× เพิ่ม 3.5× ลบ 8.8× · Neo 12.4× · Kul 34.6×)
+- **อย่ากด Run all ในไฟล์ที่แชร์** เวลาที่วัดจะขยับ แล้วตัวเลขในลิงก์จะไม่ตรงกับรายงาน
+- flowchart ของแต่ละคน: export เป็น PDF แล้วใส่ `LEBIS-Data/flowcharts` + commit ไว้ใน `docs/data-course/flowcharts/`
+- ถ้าแก้ไฟล์ใน `algorithms/` หลังจากนี้ ต้องสร้างไฟล์รวมใหม่ (`python3 scripts/build-notebooks.py --final`) อัปทับ แล้วอัปเดตตัวเลขในรายงานทุกคน — ถ้าไม่จำเป็นอย่าแก้จนถึง 18 ต.ค.
+
 ---
 
 ## 🔴 กฎเหล็กของโฟลเดอร์ `algorithms/`
