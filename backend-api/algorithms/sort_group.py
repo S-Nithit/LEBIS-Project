@@ -255,7 +255,7 @@ def print_table(title: str, rows: list) -> None:
 
 
 def report_on_datasets(make_dataset) -> None:
-    """วัดเวลาเรียงบนชุดข้อมูลจริง A–D ของ Kim — ใช้ตอนอยู่ใน Colab เท่านั้น
+    """วัดเวลาเรียงบนชุดข้อมูลจริง A–D ของ Neo (datasets.py) — ใช้ตอนอยู่ใน Colab เท่านั้น
 
     รับฟังก์ชัน make_dataset เข้ามาทางพารามิเตอร์แทนการ import ตรงๆ
     เพราะไฟล์นี้ต้อง import ได้แค่ standard library (ดูกฎเหล็กหัวไฟล์)
@@ -407,6 +407,7 @@ def main() -> None:
     print()
     print("อ่านตารางนี้ยังไง")
     print("-" * 78)
+    print("    ข้อมูลโตขึ้น 10 เท่า bubble sort ใช้เวลาโตขึ้นประมาณ 100 เท่า เพราะเป็น n²")
     print("    ส่วน merge sort โตขึ้นเพียงประมาณ 14-15 เท่า เพราะโตแบบ n log n")
     print("    (ทฤษฎี n log n ให้ค่าประมาณ 15 เท่า ตรงกับตัวเลขที่วัดได้จริงในตาราง)")
     print()
