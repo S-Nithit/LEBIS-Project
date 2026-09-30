@@ -56,6 +56,13 @@ async def get_pending_transaction_for_update(transaction_id: int, user_email: st
         {"id": transaction_id, "user_email": user_email},
     )
 
+async def get_user_role_for_update(user_email: str):
+    """อ่าน role พร้อมล็อกแถว user จนจบทรานแซกชัน — ให้ confirm ของคนเดียวกันเข้าคิวทีละใบ"""
+    return await database.fetch_val(
+        "SELECT role FROM users WHERE email = :user_email FOR UPDATE",
+        {"user_email": user_email},
+    )
+
 
 async def mark_transaction_paid(transaction_id: int, subscription_id: int, method: str):
     return await database.fetch_one(

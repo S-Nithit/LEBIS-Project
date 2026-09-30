@@ -108,6 +108,10 @@ async def confirm_checkout(payload: CheckoutConfirmRequest, user=Depends(get_cur
     คำขอแรกอัปเดตแถวเป็น paid แล้ว คำขอถัดไปจะไม่เจอแถว pending อีก จึงโดน 404
     """
     async with database.transaction():
+        role = await billing_query.get_user_role_for_update(user["email"])      # ← เพิ่มบรรทัดนี้
+        if role == "pro":                                                       # ← เพิ่มบรรทัดนี้
+            fail(409, "already_pro", "ร้านนี้ใช้แพ็กเกจ Pro อยู่แล้ว")              # ← เพิ่มบรรทัดนี้
+
         txn = await billing_query.get_pending_transaction_for_update(
             payload.checkout_id, user["email"]
         )
