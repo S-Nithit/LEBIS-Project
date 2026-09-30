@@ -162,15 +162,31 @@ async def list_items(
 
 @router.get("/summary", response_model=SummaryResponse)
 async def item_summary(user=Depends(get_current_user)):
-    """ตัวเลขสามช่องบนหัวหน้า Workspace: ว่างกี่ชิ้น ถูกยืมกี่ชิ้น เลยกำหนดกี่ใบ"""
+    """ตัวเลขสามช่องบนหัวหน้า Workspace: ว่างกี่ชิ้น ถูกยืมกี่ชิ้น เลยกำหนดกี่ใบ
+
+    สองตัวเลขนี้นับด้วยฟังก์ชันของวิชา Data ไม่ใช่ COUNT/SUM ของ SQL
+        available_units  <- algorithms/search.py :: count_available()
+        overdue_borrows  <- algorithms/search.py :: count_overdue()
+
+    ทำไมถึงคุ้มที่จะไม่ให้ SQL นับ ทั้งที่ SQL นับได้และเร็วกว่า
+    เพราะฟังก์ชันสองตัวนั้นคือชิ้นงานที่ถูกให้คะแนนในวิชา Data
+    ถ้ามันอยู่แต่ใน Colab แล้วเว็บนับเองด้วย SQL อีกชุด เท่ากับเขียนตรรกะ
+    เดียวกันสองรอบ แล้ววันหนึ่งสองรอบนั้นจะไม่ตรงกันโดยไม่มีใครรู้
+    ตอนนี้เหลือที่เดียว ถ้าแก้นิยามว่า "ว่าง" หมายถึงอะไร ทั้งเว็บและรายงาน
+    วิชา Data เปลี่ยนตามพร้อมกันเสมอ
+
+    ตัวเลขที่ได้เท่าเดิมทุกตัว ทั้งสองทางไม่นับของที่ชำรุด (status = 'broken')
+    และนับใบที่เลยกำหนดแบบเดียวกัน (ดู services/inventory.py)
+    """
     # นำเข้าตรงนี้แทนหัวไฟล์ เพราะไฟล์ทั้งสองอ้างถึงกันไปมาไม่ได้
-    from queries import borrows as borrows_query
+    from services import inventory
 
     row = await items_query.summary(user["email"])
-    overdue = await borrows_query.count_overdue_by_owner(user["email"])
+    shelf = await inventory.shelf_summary(user["email"])
+    overdue = await inventory.count_overdue(user["email"])
 
     total_units = int(row["total_units"])
-    available_units = int(row["available_units"])
+    available_units = int(shelf["available_units"])
 
     return SummaryResponse(
         item_rows=int(row["item_rows"]),
