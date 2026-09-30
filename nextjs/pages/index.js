@@ -20,7 +20,7 @@ export default function LandingPage() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col selection:bg-amber/20">
+    <div className="min-h-screen bg-paper text-ink flex flex-col">
       <Head>
         <title>LEBIS — {t("brand.tagline")}</title>
         <meta
@@ -30,7 +30,7 @@ export default function LandingPage() {
       </Head>
 
       {/* ── แถบนำทางด้านบน (Navbar) ─────────────────────────────────── */}
-      <header className="sticky top-0 z-40 w-full border-b border-line bg-surface/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-line bg-surface">
         <div className="app-container flex h-16 items-center justify-between gap-4">
           {/* ฝั่งซ้าย: โลโก้ และ ป้ายกำกับ RENTAL OS */}
           <div className="flex items-center gap-3">
@@ -63,14 +63,11 @@ export default function LandingPage() {
 
             <LanguageToggle />
 
-            <Button asChild variant="ghost" className="min-h-[44px] px-3 text-label">
+            <Button asChild variant="ghost" className="hidden sm:inline-flex min-h-[44px] px-3 text-label">
               <Link href="/login">{t("landing.nav.login")}</Link>
             </Button>
 
-            <Button
-              asChild
-              className="min-h-[44px] px-4 text-label"
-            >
+            <Button asChild className="min-h-[44px] px-3 sm:px-4 text-label whitespace-nowrap">
               <Link href="/register">{t("landing.nav.getStarted")}</Link>
             </Button>
           </nav>
@@ -133,7 +130,7 @@ export default function LandingPage() {
         </section>
 
         {/* ── 2. Features Section ────────────────────────────────────── */}
-        <section id="features" className="py-16 sm:py-24 border-b border-line bg-surface/50">
+        <section id="features" className="py-16 sm:py-24 border-b border-line">
           <div className="app-container">
             <div className="text-center max-w-2xl mx-auto">
               <div className="inline-flex items-center rounded-badge border border-line bg-surface px-3 py-1 text-eyebrow font-semibold text-muted mb-3">
@@ -310,7 +307,7 @@ export default function LandingPage() {
               {/* แพ็กเกจ Pro */}
               <div className="rounded-card border border-line-strong bg-surface p-6 sm:p-8 flex flex-col justify-between relative">
                 <div>
-                  <div className="inline-flex rounded-badge border border-amber/40 bg-surface px-3 py-1 text-label font-semibold text-amber-text mb-4">
+                  <div className="inline-flex rounded-badge border border-amber bg-surface px-3 py-1 text-label font-semibold text-amber-text mb-4">
                     {t("landing.pricing.pro.badge")}
                   </div>
                   <h3 className="font-display text-2xl font-bold text-ink">
