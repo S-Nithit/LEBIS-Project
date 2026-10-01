@@ -633,10 +633,18 @@ export default function Workspace() {
           />
         </div>
 
-        {/* เตือนเมื่อแพ็กเกจฟรีใกล้เต็ม — ขึ้นตั้งแต่ 40 รายการ */}
-        {user?.role === "free" && summary && summary.item_rows >= 40 ? (
+        {/* เตือนเมื่อแพ็กเกจใกล้เต็ม — ขึ้นตอนใช้ไปถึง 80% ของเพดาน
+
+            เลขเพดานมาจาก summary.item_limit ซึ่ง server เป็นคนบอก ไม่ได้พิมพ์ไว้ตรงนี้
+            และไม่ได้เช็ค role เองแล้ว เพราะ "ใครมีเพดานบ้าง" เป็นกติกาของแพ็กเกจ
+            ซึ่งเป็นเรื่องของ server ถ้าหน้าเว็บเดาเอง วันที่กติกาเปลี่ยนจะมีสองที่ที่ต้องแก้
+            แล้ววันหนึ่งจะแก้ไม่ครบ ผู้ใช้ Pro จะเห็นแถบเตือนเพดานทั้งที่ไม่มีเพดาน */}
+        {summary?.item_limit && summary.item_rows >= summary.item_limit * 0.8 ? (
           <p className="t-caption mb-4">
-            {fill(t("item.limitBanner"), { count: summary.item_rows })}
+            {fill(t("item.limitBanner"), {
+              limit: summary.item_limit,
+              count: summary.item_rows,
+            })}
           </p>
         ) : null}
 
