@@ -16,7 +16,7 @@
 // เพราะตัวตรวจที่ขึ้นเครื่องหมายถูกโดยไม่เคยเปิดเบราว์เซอร์ แย่กว่าไม่มีตัวตรวจ
 // จะข้ามจริงๆ ต้องสั่ง SKIP_PAGE_CHECK=1
 
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -29,7 +29,7 @@ const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password"];
 //    ไม่ใส่ = สคริปต์เปิดหน้านั้นแล้วถูกเด้งไป /login แล้วมันไปวัดหน้า login
 //    แต่รายงานว่าหน้านั้นผ่าน คือ "ผ่าน" ที่ไม่เคยแตะหน้าจริงเลยแม้แต่ครั้งเดียว
 //    เคยพลาดมาแล้วตอนเก็บภาพหน้าจอ ได้ไฟล์ md5 ซ้ำกัน 6 ไฟล์เพราะเหตุนี้
-const PRIVATE_ROUTES = ["/account", "/template", "/workspace", "/reports"];
+const PRIVATE_ROUTES = ["/account", "/template", "/workspace", "/reports", "/pricing"];
 
 // 🔴 ทุกข้อที่ตรวจข้างล่างนี้วัดจาก "หน้าที่เบราว์เซอร์อยู่ตอนนั้น"
 //    ไม่ใช่ "หน้าที่เราสั่งให้ไป" ถ้าหน้านั้นเด้งไปที่อื่น ทุกตัวเลขจะมาจากหน้าที่เด้งไป

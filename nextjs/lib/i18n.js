@@ -32,6 +32,8 @@ const TEXT = {
     "notFound.goAccount": "กลับไปหน้าบัญชีของคุณ",
     "page.account": "บัญชีของคุณ · LEBIS",
 
+    "nav.pricing": "แพ็กเกจ",
+
     "nav.logout": "ออกจากระบบ",
     "auth.alreadySignedIn": "เครื่องนี้เข้าสู่ระบบค้างไว้ด้วย {email} · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
     "auth.alreadySignedInUnknown": "เครื่องนี้มีบัญชีเข้าสู่ระบบค้างไว้ · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
@@ -222,6 +224,42 @@ const TEXT = {
 
     "page.workspace": "จัดการอุปกรณ์ · LEBIS",
 
+    "page.pricing": "แพ็กเกจและการชำระเงิน · LEBIS",
+
+"pricing.title": "แพ็กเกจของร้านคุณ",
+"pricing.subtitle": "เลือกแพ็กเกจที่เหมาะกับร้านของคุณ",
+"pricing.currentBadge": "แพ็กเกจนี้ใช้งานอยู่",
+"pricing.freeTitle": "ฟรี",
+"pricing.freeDesc": "เริ่มต้นใช้งานได้ทันที เหมาะกับร้านขนาดเล็ก",
+"pricing.freePrice": "ฟรี",
+"pricing.proTitle": "Pro",
+"pricing.proDesc": "สำหรับร้านที่ต้องการจัดการอุปกรณ์ไม่จำกัดและแจ้งเตือนอัตโนมัติ",
+"pricing.perMonth": "บาท / เดือน",
+"pricing.featureItemLimitFree": "เก็บอุปกรณ์ได้สูงสุด 50 ชิ้น",
+"pricing.featureItemLimitPro": "เก็บอุปกรณ์ได้ไม่จำกัด",
+"pricing.featureReportFree": "ดูรายงานย้อนหลังได้ 7 วัน",
+"pricing.featureReportPro": "ดูรายงานย้อนหลังได้ทั้งหมด",
+"pricing.featureLineFree": "ไม่มีแจ้งเตือนผ่าน LINE",
+"pricing.featureLinePro": "แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน",
+"pricing.featureCsvFree": "ไม่มีส่งออกไฟล์ CSV",
+"pricing.featureCsvPro": "ส่งออกไฟล์ CSV ได้",
+"pricing.upgrade": "อัปเกรดเป็น Pro",
+"pricing.upgrading": "กำลังเริ่มอัปเกรด...",
+"pricing.adminNote": "บัญชีผู้ดูแลระบบไม่ผูกกับแพ็กเกจใด",
+"pricing.expiresOn": "ต่ออายุอัตโนมัติในวันที่ {date}",
+
+"checkout.title": "ชำระเงินเพื่ออัปเกรดเป็น Pro",
+"checkout.amount": "ยอดชำระ",
+"checkout.methodNote": "นี่คือการจำลองการจ่ายเงินสำหรับสาธิตเท่านั้น ไม่มีการตัดเงินจริง",
+"checkout.pay": "ชำระเงินแล้ว",
+"checkout.paying": "กำลังดำเนินการ...",
+"checkout.success": "อัปเกรดเป็น Pro เรียบร้อยแล้ว",
+
+"error.already_pro": "ร้านนี้ใช้แพ็กเกจ Pro อยู่แล้ว",
+"error.admin_cannot_subscribe": "บัญชีผู้ดูแลระบบไม่ต้องสมัครแพ็กเกจ",
+"error.checkout_not_found": "ไม่พบรายการจ่ายเงินนี้ หรือถูกใช้ไปแล้ว กรุณาลองอัปเกรดใหม่อีกครั้ง",
+"error.invalid_plan": "เลือกแพ็กเกจที่ต้องการอัปเกรดไม่ถูกต้อง",
+
     "workspace.title": "อุปกรณ์ของร้าน",
     "workspace.subtitle":
       "ดูว่าของชิ้นไหนอยู่บนชั้น ชิ้นไหนอยู่กับลูกค้า และใครถึงกำหนดคืนแล้วบ้าง",
@@ -401,6 +439,8 @@ const TEXT = {
     "notFound.goAccount": "Back to your account",
     "page.account": "Your account · LEBIS",
 
+    "nav.pricing": "Plans",
+    
     "nav.logout": "Sign out",
     "auth.alreadySignedIn": "This device is still signed in as {email}. Fill in the form below to use a different account.",
     "auth.alreadySignedInUnknown": "This device is still signed in. Fill in the form below to use a different account.",
@@ -581,6 +621,42 @@ const TEXT = {
     "template.emptyBody": "Once there is data it appears here. Until then this box is what the user sees.",
 
     "page.workspace": "Equipment · LEBIS",
+
+    "page.pricing": "Pricing & billing · LEBIS",
+
+"pricing.title": "Your shop's plan",
+"pricing.subtitle": "Pick the plan that fits your shop.",
+"pricing.currentBadge": "Current plan",
+"pricing.freeTitle": "Free",
+"pricing.freeDesc": "Get started right away — good for small shops.",
+"pricing.freePrice": "Free",
+"pricing.proTitle": "Pro",
+"pricing.proDesc": "For shops that need unlimited equipment and automatic reminders.",
+"pricing.perMonth": "THB / month",
+"pricing.featureItemLimitFree": "Up to 50 items",
+"pricing.featureItemLimitPro": "Unlimited items",
+"pricing.featureReportFree": "7 days of report history",
+"pricing.featureReportPro": "Full report history",
+"pricing.featureLineFree": "No LINE reminders",
+"pricing.featureLinePro": "LINE reminders before each due date",
+"pricing.featureCsvFree": "No CSV export",
+"pricing.featureCsvPro": "CSV export",
+"pricing.upgrade": "Upgrade to Pro",
+"pricing.upgrading": "Starting upgrade...",
+"pricing.adminNote": "Administrator accounts are not tied to a plan.",
+"pricing.expiresOn": "Renews on {date}",
+
+"checkout.title": "Pay to upgrade to Pro",
+"checkout.amount": "Amount",
+"checkout.methodNote": "This is a simulated payment for the demo. Nothing is actually charged.",
+"checkout.pay": "I've paid",
+"checkout.paying": "Processing...",
+"checkout.success": "You are now on the Pro plan.",
+
+"error.already_pro": "This shop already has the Pro plan.",
+"error.admin_cannot_subscribe": "Administrator accounts do not need a plan.",
+"error.checkout_not_found": "That payment could not be found, or it was already used. Please start the upgrade again.",
+"error.invalid_plan": "That plan selection is not valid.",
 
     "workspace.title": "Your equipment",
     "workspace.subtitle":

@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/workspace", key: "nav.workspace" },
   { href: "/reports", key: "nav.reports" },
+  { href: "/pricing", key: "nav.pricing" },
   { href: "/account", key: "nav.account" },
 ];
 
@@ -91,7 +92,7 @@ export function AppShell({ user, onLogout, children }) {
           aria-current บอกโปรแกรมอ่านหน้าจอว่าตอนนี้อยู่หน้าไหน ไม่ใช่แค่ใช้สีบอก */}
       {user ? (
         <nav aria-label={t("nav.main")} className="border-b border-line bg-surface">
-          <div className="app-container grid grid-cols-3 sm:flex sm:gap-2">
+          <div className="app-container grid grid-cols-4 sm:flex sm:gap-2">
             {NAV_ITEMS.map((item) => {
               const active = router.pathname === item.href;
               return (
