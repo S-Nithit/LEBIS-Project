@@ -85,13 +85,34 @@ function borrowStatusBadge(status, t) {
 // ชิ้นส่วนของหน้า
 // ---------------------------------------------------------------------------
 
-function StatCard({ label, value, unit }) {
+// ตัวเลขหนึ่งช่องบนแถบสถานะ
+//
+// 🔴 ตอนข้อมูลยังมาไม่ถึงต้องขึ้นเป็นแถบรอ ไม่ใช่ "-"
+//    เพราะ "-" อ่านได้ว่า "ศูนย์" หรือ "ไม่มี" ซึ่งเป็นคำตอบ
+//    ส่วนความจริงตอนนั้นคือยังไม่มีคำตอบ
+//
+//    aria-busy="true" ทำสองอย่างพร้อมกัน: โปรแกรมอ่านหน้าจอจะไม่อ่านค่าที่ยัง
+//    ไม่นิ่งให้ผู้ใช้ฟัง และ scripts/check-pages.mjs จะข้ามส่วนนี้ไปตอนเทียบว่า
+//    เนื้อหาเปลี่ยนเองหรือเปล่า
+function StatCard({ label, value, unit, loading }) {
+  const { t } = useLanguage();
+
   return (
     <Card>
       <CardContent className="p-5">
         <p className="t-caption">{label}</p>
-        <p className="t-page-title mt-2">
-          {value} <span className="t-caption">{unit}</span>
+        <p className="t-page-title mt-2" aria-busy={loading ? "true" : undefined}>
+          {loading ? (
+            <>
+              <span className="skeleton-bar" aria-hidden="true" />
+              {/* แถบเป็นภาพล้วน คนที่ฟังหน้าเว็บต้องได้ยินว่ากำลังโหลดอยู่ */}
+              <span className="sr-only">{t("state.loading")}</span>
+            </>
+          ) : (
+            <>
+              {value} <span className="t-caption">{unit}</span>
+            </>
+          )}
         </p>
       </CardContent>
     </Card>
@@ -618,18 +639,21 @@ export default function Workspace() {
         <div className="mb-5 grid gap-4 sm:grid-cols-3">
           <StatCard
             label={t("workspace.statAvailable")}
-            value={summary ? summary.available_units : "-"}
+            value={summary?.available_units}
             unit={t("workspace.unit")}
+            loading={!summary}
           />
           <StatCard
             label={t("workspace.statBorrowed")}
-            value={summary ? summary.borrowed_units : "-"}
+            value={summary?.borrowed_units}
             unit={t("workspace.unit")}
+            loading={!summary}
           />
           <StatCard
             label={t("workspace.statOverdue")}
-            value={summary ? summary.overdue_borrows : "-"}
+            value={summary?.overdue_borrows}
             unit={t("workspace.unitBorrow")}
+            loading={!summary}
           />
         </div>
 
