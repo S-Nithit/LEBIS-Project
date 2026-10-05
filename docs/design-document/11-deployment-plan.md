@@ -44,11 +44,21 @@ ignores; in production they are set in the Railway and Vercel dashboards.
 | `SEED_DEMO_ACCOUNTS` | Railway | `false`, so no account with a published password exists in production |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Railway | The operator account for the admin dashboard |
 | `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_CHANNEL_SECRET` | Railway | Sending LINE messages and verifying webhooks |
+| `LINE_ADD_FRIEND_URL` | Railway | Add-friend link for the LEBIS Official Account, shown on the settings page |
 | `BACKEND_URL` | Vercel | Where the `/api/*` rewrite forwards requests |
 
 The system starts without the LINE variables. LINE endpoints then answer
 `503 line_not_configured` and the daily job skips sending, so a missing LINE
 setting cannot take the rest of the product down.
+
+**LINE in production.** The LEBIS Official Account (`@128pwqpa`, free Thai plan,
+300 push messages a month) is connected to the production backend. Its webhook
+points at `https://lebis-project-production.up.railway.app/api/line/webhook`, and
+LINE's webhook test returns 200, which shows the backend verified LINE's signature.
+On 3 October 2026 the full path was tested on production: a Pro account
+received a link code, the code was sent in the chat, and the account replied that
+the shop was linked. The test message and the daily summary then arrived on the
+phone.
 
 ## 11.4 Database changes
 
@@ -67,6 +77,7 @@ step. The project uses no migration tool, and none is planned during the course.
 | Sign in with `demo@example.com` | **Fails** — demo accounts must not exist in production |
 | Free account: `POST /api/items` with 50 items already stored | **403** |
 | Free account: `POST /api/line/digest` | **403** |
+| Pro account linked to LINE: `POST /api/line/test` | The message arrives in LINE |
 | Non-admin account: `GET /api/admin/*` (once the admin API exists) | **403** |
 | Register through the Vercel domain, then look for the row in Railway's database | The row exists — proves the rewrite reaches the production backend |
 
