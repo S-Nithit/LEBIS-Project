@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends
 from queries import admin as admin_queries
 from services.security import require_role
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+router = APIRouter()
 
 # ราคา Pro ต่อเดือน (บาท) — ใช้คำนวณ MRR เท่านั้น
 # 🔴 TODO ถามกุล: มีค่าคงที่นี้อยู่ที่เดียวกลางๆ แล้วหรือยัง (เช่นใน services
