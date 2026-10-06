@@ -105,12 +105,17 @@ function CheckoutPanel({ amount, onConfirm, onCancel, busy, error }) {
           <span className="t-page-title">{amount} ฿</span>
         </div>
 
-        {/* QR จำลอง — ไม่มีการเชื่อมต่อ payment gateway จริง ตามที่ระบบออกแบบไว้ */}
+        {/* QR จำลอง — ไม่มีการเชื่อมต่อ payment gateway จริง ตามที่ระบบออกแบบไว้
+            🔴 สแกนได้จริง แต่ข้างในเป็นแค่ข้อความ "การชำระเงินจำลอง ไม่มีการตัดเงินจริง"
+               ห้ามเปลี่ยนเป็น QR พร้อมเพย์ เดี๋ยวคนสแกนแล้วโอนเงินจริง
+               เดิมเป็นกล่องเปล่าเขียนว่า "QR" ซึ่งดูเหมือนรูปโหลดไม่ขึ้น
+            พื้นใช้ --qr-surface ซึ่งขาวทั้งสองโหมด เพราะ QR ต้องเป็นสีเข้มบนพื้นสว่างถึงจะสแกนได้
+            ไฟล์สร้างครั้งเดียวด้วยแพ็กเกจ qrcode นอกโปรเจกต์ ไม่ได้เพิ่ม dependency */}
         <div
           aria-hidden="true"
-          className="flex h-48 w-48 items-center justify-center self-center rounded-card border border-line bg-surface"
+          className="h-48 w-48 self-center rounded-card border border-line bg-[var(--qr-surface)] p-2"
         >
-          <span className="t-caption">QR</span>
+          <img src="/mock-qr.svg" alt="" width={176} height={176} className="h-full w-full" />
         </div>
 
         <p className="t-caption text-center">{t("checkout.methodNote")}</p>
