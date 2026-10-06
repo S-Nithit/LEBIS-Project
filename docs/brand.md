@@ -148,6 +148,7 @@ developer needs, including the tokens that exist only to satisfy a contrast rule
 | `--badge-danger-text` | `#B3453B` | `#E4847A` |
 | `--paper` | `#F7F9F9` | `#0B2126` |
 | `--surface` | `#FFFFFF` | `#103139` |
+| `--qr-surface` | `#FFFFFF` | `#FFFFFF` (unchanged — a QR code must be dark on light to scan) |
 | `--line` | `#DCE6E7` | `#234E56` |
 | `--muted` | `#4A6268` | `#9DB6BB` |
 | `--success` | `#2F7D5D` | `#57B58C` |
