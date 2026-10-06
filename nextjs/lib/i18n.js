@@ -313,7 +313,7 @@ const TEXT = {
     "item.deleted": "ลบอุปกรณ์เรียบร้อยแล้ว",
     "item.confirmDelete": "ต้องการลบ {name} ออกจากระบบใช่ไหม การลบย้อนกลับไม่ได้",
     "item.limitBanner":
-      "แพ็กเกจฟรีเก็บอุปกรณ์ได้ 50 รายการ ตอนนี้ใช้ไปแล้ว {count} รายการ",
+      "แพ็กเกจฟรีเก็บอุปกรณ์ได้ {limit} รายการ ตอนนี้ใช้ไปแล้ว {count} รายการ",
 
     "borrow.open": "ปล่อยเช่า",
     "borrow.newTitle": "เปิดรายการเช่า",
@@ -358,7 +358,7 @@ const TEXT = {
     "error.item_not_found": "ไม่พบอุปกรณ์ชิ้นนี้ อาจถูกลบไปแล้ว กรุณารีเฟรชหน้า",
     "error.item_code_taken": "รหัสนี้ถูกใช้กับอุปกรณ์ชิ้นอื่นในร้านแล้ว กรุณาใช้รหัสอื่น",
     "error.item_limit_reached":
-      "แพ็กเกจฟรีเก็บอุปกรณ์ได้ 50 รายการ อัปเกรดเป็น Pro เพื่อเพิ่มได้ไม่จำกัด",
+      "เก็บอุปกรณ์ได้ครบตามจำนวนของแพ็กเกจฟรีแล้ว อัปเกรดเป็น Pro เพื่อเพิ่มได้ไม่จำกัด",
     "error.item_has_history":
       "อุปกรณ์ชิ้นนี้เคยถูกเช่าไปแล้ว ลบไม่ได้เพราะประวัติการเช่าจะหายไปด้วย ถ้าเลิกใช้แล้วให้ทำเครื่องหมายว่าชำรุดแทน",
     "error.item_has_active_borrows":
@@ -708,7 +708,7 @@ const TEXT = {
     "item.deleted": "Equipment deleted.",
     "item.confirmDelete": "Delete {name} from LEBIS? This cannot be undone.",
     "item.limitBanner":
-      "The free plan holds 50 items. You are using {count} of them.",
+      "The free plan holds {limit} items. You are using {count} of them.",
 
     "borrow.open": "Rent out",
     "borrow.newTitle": "Open a rental",
@@ -751,7 +751,7 @@ const TEXT = {
     "error.item_not_found": "That item no longer exists. Please refresh the page.",
     "error.item_code_taken": "Another item in your shop already uses this code. Please pick a different one.",
     "error.item_limit_reached":
-      "The free plan holds 50 items. Upgrade to Pro for unlimited equipment.",
+      "You have reached the item limit of the free plan. Upgrade to Pro for unlimited equipment.",
     "error.item_has_history":
       "This item has been rented before, so deleting it would erase that history. Mark it out of order instead.",
     "error.item_has_active_borrows":
