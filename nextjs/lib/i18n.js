@@ -246,7 +246,7 @@ const TEXT = {
 "pricing.upgrade": "อัปเกรดเป็น Pro",
 "pricing.upgrading": "กำลังเริ่มอัปเกรด...",
 "pricing.adminNote": "บัญชีผู้ดูแลระบบไม่ผูกกับแพ็กเกจใด",
-"pricing.expiresOn": "ต่ออายุอัตโนมัติในวันที่ {date}",
+"pricing.expiresOn": "ใช้งานได้ถึงวันที่ {date}",
 
 "checkout.title": "ชำระเงินเพื่ออัปเกรดเป็น Pro",
 "checkout.amount": "ยอดชำระ",
@@ -644,7 +644,7 @@ const TEXT = {
 "pricing.upgrade": "Upgrade to Pro",
 "pricing.upgrading": "Starting upgrade...",
 "pricing.adminNote": "Administrator accounts are not tied to a plan.",
-"pricing.expiresOn": "Renews on {date}",
+"pricing.expiresOn": "Active until {date}",
 
 "checkout.title": "Pay to upgrade to Pro",
 "checkout.amount": "Amount",
