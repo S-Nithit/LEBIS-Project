@@ -1,0 +1,71 @@
+<mxfile host="app.diagrams.net"><diagram name="Page-1"><mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0"><root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<mxCell id="n2" value="Flowchart 4 — Search: three paths (hash · binary · linear)" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="55" y="10" width="720" height="34" as="geometry"/></mxCell>
+<mxCell id="n2b" value="search.py · The path is chosen by the kind of question asked; binary_search, the hand-written one, is drawn in full" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#555555;" vertex="1" parent="1"><mxGeometry x="55" y="44" width="720" height="20" as="geometry"/></mxCell>
+
+<mxCell id="n3" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="245" y="78" width="170" height="46" as="geometry"/></mxCell>
+
+<mxCell id="n4" value="Receive a search request from the web app&lt;br&gt;(an exact code, or part of a name)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="138" width="230" height="52" as="geometry"/></mxCell>
+
+<mxCell id="n5" value="Looking up an&lt;br&gt;exact code?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="204" width="230" height="86" as="geometry"/></mxCell>
+<mxCell id="n6" value="&lt;b&gt;Path 1 — linear&lt;/b&gt;&lt;br&gt;search_by_name()&lt;br&gt;Scan every item, match part of the name&lt;br&gt;Returns &lt;b&gt;all&lt;/b&gt; matches, not the first — O(n)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="530" y="212" width="220" height="76" as="geometry"/></mxCell>
+
+<mxCell id="n7" value="Is a hash table&lt;br&gt;available?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="304" width="230" height="86" as="geometry"/></mxCell>
+<mxCell id="n8" value="&lt;b&gt;Path 2 — hash&lt;/b&gt;&lt;br&gt;hash_lookup(table, code)&lt;br&gt;Compute the bucket, read straight from it&lt;br&gt;O(1) average · O(n) if every key collides" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="530" y="312" width="220" height="76" as="geometry"/></mxCell>
+
+<mxCell id="n9" value="Is the list sorted&lt;br&gt;by code?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="404" width="230" height="86" as="geometry"/></mxCell>
+<mxCell id="n10" value="sort_by_code() — O(n log n)&lt;br&gt;Sort once, then search it many times&lt;br&gt;&lt;b&gt;Unsorted, the halving cuts the wrong side&lt;/b&gt;&lt;br&gt;and returns None though the item is there" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="530" y="412" width="220" height="76" as="geometry"/></mxCell>
+
+<mxCell id="n11" value="&lt;b&gt;Path 3 — binary (hand-written)&lt;/b&gt;&lt;br&gt;low = 0 · high = len(items) − 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="504" width="230" height="50" as="geometry"/></mxCell>
+
+<mxCell id="n12" value="low ≤ high?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="568" width="230" height="86" as="geometry"/></mxCell>
+<mxCell id="n13" value="Return None&lt;br&gt;No item carries this code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1"><mxGeometry x="530" y="583" width="220" height="56" as="geometry"/></mxCell>
+
+<mxCell id="n14" value="middle = low + (high − low) // 2&lt;br&gt;current = items[middle][&quot;code&quot;]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="180" y="668" width="300" height="56" as="geometry"/></mxCell>
+
+<mxCell id="n15" value="current == code?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="738" width="230" height="86" as="geometry"/></mxCell>
+<mxCell id="n16" value="Return items[middle]&lt;br&gt;Found" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1"><mxGeometry x="530" y="753" width="220" height="56" as="geometry"/></mxCell>
+
+<mxCell id="n17" value="current &amp;lt; code?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" vertex="1" parent="1"><mxGeometry x="215" y="838" width="230" height="86" as="geometry"/></mxCell>
+<mxCell id="n18" value="low = middle + 1&lt;br&gt;Discard the whole left half" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="530" y="853" width="220" height="56" as="geometry"/></mxCell>
+<mxCell id="n19" value="high = middle − 1&lt;br&gt;Discard the whole right half" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1"><mxGeometry x="20" y="853" width="185" height="56" as="geometry"/></mxCell>
+
+<mxCell id="n20" value="End" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="245" y="1020" width="170" height="46" as="geometry"/></mxCell>
+
+<mxCell id="n21" value="&lt;b&gt;Why one round halves the work&lt;/b&gt;  Each comparison halves what is left to examine, so 1,000 items need about 10 comparisons (2¹⁰ = 1,024),&lt;br&gt;against roughly 500 on average for a linear scan · Written as a loop rather than recursion, so it adds no stack frames: memory is O(1), not O(log n)" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fillColor=#f9f9f9;strokeColor=#cccccc;" vertex="1" parent="1"><mxGeometry x="20" y="1090" width="787" height="60" as="geometry"/></mxCell>
+
+<mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n3" target="n4"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n4" target="n5"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<mxCell id="e32" value="No — by name" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n5" target="n6"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e33" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n5" target="n7"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<mxCell id="e34" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n7" target="n8"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e35" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n7" target="n9"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<mxCell id="e36" value="Not yet" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n9" target="n10"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e37" value="Sorted" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n9" target="n11"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n10" target="n11"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="640" y="529"/></Array></mxGeometry></mxCell>
+
+<mxCell id="e39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n11" target="n12"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e40" value="No — the range is empty" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n12" target="n13"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e41" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n12" target="n14"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n14" target="n15"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<mxCell id="e43" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n15" target="n16"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e44" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="n15" target="n17"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<mxCell id="e45" value="Yes — target lies to the right" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n17" target="n18"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e46" value="No — to the left" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n17" target="n19"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<mxCell id="e47" value="Loop back and compare again" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n18" target="n12"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="640" y="950"/><mxPoint x="207" y="950"/><mxPoint x="207" y="611"/></Array></mxGeometry></mxCell>
+<mxCell id="e48" value="Loop back" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n19" target="n12"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="112" y="985"/><mxPoint x="10" y="985"/><mxPoint x="10" y="611"/></Array></mxGeometry></mxCell>
+
+<mxCell id="e49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n6" target="n20"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="800" y="250"/><mxPoint x="800" y="1043"/></Array></mxGeometry></mxCell>
+<mxCell id="e50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n8" target="n20"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="800" y="350"/><mxPoint x="800" y="1043"/></Array></mxGeometry></mxCell>
+<mxCell id="e51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n13" target="n20"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="800" y="611"/><mxPoint x="800" y="1043"/></Array></mxGeometry></mxCell>
+<mxCell id="e52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="n16" target="n20"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="800" y="781"/><mxPoint x="800" y="1043"/></Array></mxGeometry></mxCell>
+
+</root></mxGraphModel></diagram></mxfile>

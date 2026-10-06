@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/workspace", key: "nav.workspace" },
   { href: "/reports", key: "nav.reports" },
   { href: "/account", key: "nav.account" },
+  { href: "/settings", key: "nav.settings" },
 ];
 
 export function AppShell({ user, onLogout, children }) {
