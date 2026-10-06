@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/workspace", key: "nav.workspace" },
   { href: "/reports", key: "nav.reports" },
-  { href: "/pricing", key: "nav.pricing" },
   { href: "/account", key: "nav.account" },
 ];
 
