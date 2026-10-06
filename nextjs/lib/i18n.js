@@ -32,7 +32,6 @@ const TEXT = {
     "notFound.goAccount": "กลับไปหน้าบัญชีของคุณ",
     "page.account": "บัญชีของคุณ · LEBIS",
 
-    "nav.pricing": "แพ็กเกจ",
 
     "nav.logout": "ออกจากระบบ",
     "auth.alreadySignedIn": "เครื่องนี้เข้าสู่ระบบค้างไว้ด้วย {email} · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
@@ -474,7 +473,6 @@ const TEXT = {
     "notFound.goAccount": "Back to your account",
     "page.account": "Your account · LEBIS",
 
-    "nav.pricing": "Plans",
     
     "nav.logout": "Sign out",
     "auth.alreadySignedIn": "This device is still signed in as {email}. Fill in the form below to use a different account.",
