@@ -93,7 +93,14 @@ export function AppShell({ user, onLogout, children }) {
           aria-current บอกโปรแกรมอ่านหน้าจอว่าตอนนี้อยู่หน้าไหน ไม่ใช่แค่ใช้สีบอก */}
       {user ? (
         <nav aria-label={t("nav.main")} className="border-b border-line bg-surface">
-          <div className={cn("app-container grid sm:flex sm:gap-2",user?.role === "admin" ? "grid-cols-5" : "grid-cols-4")}>
+          <div
+            className={cn(
+              "app-container",
+              user?.role === "admin"
+                ? "flex gap-1 overflow-x-auto sm:gap-2"
+                : "grid grid-cols-4 sm:flex sm:gap-2"
+            )}
+          >
             {NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "admin").map((item) => {
               const active = router.pathname === item.href;
               return (
@@ -102,7 +109,7 @@ export function AppShell({ user, onLogout, children }) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "inline-flex min-h-[44px] items-center justify-center border-b-2 px-3 text-label font-medium",
+                    "inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap border-b-2 px-3 text-label font-medium",
                     active ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
                   )}
                 >
