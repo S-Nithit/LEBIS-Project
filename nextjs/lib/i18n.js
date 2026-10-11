@@ -32,6 +32,7 @@ const TEXT = {
     "notFound.goAccount": "กลับไปหน้าบัญชีของคุณ",
     "page.account": "บัญชีของคุณ · LEBIS",
 
+
     "nav.logout": "ออกจากระบบ",
     "auth.alreadySignedIn": "เครื่องนี้เข้าสู่ระบบค้างไว้ด้วย {email} · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
     "auth.alreadySignedInUnknown": "เครื่องนี้มีบัญชีเข้าสู่ระบบค้างไว้ · กรอกข้อมูลข้างล่างเพื่อเข้าด้วยบัญชีอื่น",
@@ -257,6 +258,42 @@ const TEXT = {
 
     "page.workspace": "จัดการอุปกรณ์ · LEBIS",
 
+    "page.pricing": "แพ็กเกจและการชำระเงิน · LEBIS",
+
+"pricing.title": "แพ็กเกจของร้านคุณ",
+"pricing.subtitle": "เลือกแพ็กเกจที่เหมาะกับร้านของคุณ",
+"pricing.currentBadge": "แพ็กเกจนี้ใช้งานอยู่",
+"pricing.freeTitle": "ฟรี",
+"pricing.freeDesc": "เริ่มต้นใช้งานได้ทันที เหมาะกับร้านขนาดเล็ก",
+"pricing.freePrice": "ฟรี",
+"pricing.proTitle": "Pro",
+"pricing.proDesc": "สำหรับร้านที่ต้องการจัดการอุปกรณ์ไม่จำกัดและแจ้งเตือนอัตโนมัติ",
+"pricing.perMonth": "บาท / เดือน",
+"pricing.featureItemLimitFree": "เก็บอุปกรณ์ได้สูงสุด 50 ชิ้น",
+"pricing.featureItemLimitPro": "เก็บอุปกรณ์ได้ไม่จำกัด",
+"pricing.featureReportFree": "ดูรายงานย้อนหลังได้ 7 วัน",
+"pricing.featureReportPro": "ดูรายงานย้อนหลังได้ทั้งหมด",
+"pricing.featureLineFree": "ไม่มีแจ้งเตือนผ่าน LINE",
+"pricing.featureLinePro": "แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน",
+"pricing.featureCsvFree": "ไม่มีส่งออกไฟล์ CSV",
+"pricing.featureCsvPro": "ส่งออกไฟล์ CSV ได้",
+"pricing.upgrade": "อัปเกรดเป็น Pro",
+"pricing.upgrading": "กำลังเริ่มอัปเกรด...",
+"pricing.adminNote": "บัญชีผู้ดูแลระบบไม่ผูกกับแพ็กเกจใด",
+"pricing.expiresOn": "ใช้งานได้ถึงวันที่ {date}",
+
+"checkout.title": "ชำระเงินเพื่ออัปเกรดเป็น Pro",
+"checkout.amount": "ยอดชำระ",
+"checkout.methodNote": "นี่คือการจำลองการจ่ายเงินสำหรับสาธิตเท่านั้น ไม่มีการตัดเงินจริง",
+"checkout.pay": "ชำระเงินแล้ว",
+"checkout.paying": "กำลังดำเนินการ...",
+"checkout.success": "อัปเกรดเป็น Pro เรียบร้อยแล้ว",
+
+"error.already_pro": "ร้านนี้ใช้แพ็กเกจ Pro อยู่แล้ว",
+"error.admin_cannot_subscribe": "บัญชีผู้ดูแลระบบไม่ต้องสมัครแพ็กเกจ",
+"error.checkout_not_found": "ไม่พบรายการจ่ายเงินนี้ หรือถูกใช้ไปแล้ว กรุณาลองอัปเกรดใหม่อีกครั้ง",
+"error.invalid_plan": "เลือกแพ็กเกจที่ต้องการอัปเกรดไม่ถูกต้อง",
+
     "workspace.title": "อุปกรณ์ของร้าน",
     "workspace.subtitle":
       "ดูว่าของชิ้นไหนอยู่บนชั้น ชิ้นไหนอยู่กับลูกค้า และใครถึงกำหนดคืนแล้วบ้าง",
@@ -313,7 +350,7 @@ const TEXT = {
     "item.deleted": "ลบอุปกรณ์เรียบร้อยแล้ว",
     "item.confirmDelete": "ต้องการลบ {name} ออกจากระบบใช่ไหม การลบย้อนกลับไม่ได้",
     "item.limitBanner":
-      "แพ็กเกจฟรีเก็บอุปกรณ์ได้ 50 รายการ ตอนนี้ใช้ไปแล้ว {count} รายการ",
+      "แพ็กเกจฟรีเก็บอุปกรณ์ได้ {limit} รายการ ตอนนี้ใช้ไปแล้ว {count} รายการ",
 
     "borrow.open": "ปล่อยเช่า",
     "borrow.newTitle": "เปิดรายการเช่า",
@@ -358,7 +395,7 @@ const TEXT = {
     "error.item_not_found": "ไม่พบอุปกรณ์ชิ้นนี้ อาจถูกลบไปแล้ว กรุณารีเฟรชหน้า",
     "error.item_code_taken": "รหัสนี้ถูกใช้กับอุปกรณ์ชิ้นอื่นในร้านแล้ว กรุณาใช้รหัสอื่น",
     "error.item_limit_reached":
-      "แพ็กเกจฟรีเก็บอุปกรณ์ได้ 50 รายการ อัปเกรดเป็น Pro เพื่อเพิ่มได้ไม่จำกัด",
+      "เก็บอุปกรณ์ได้ครบตามจำนวนของแพ็กเกจฟรีแล้ว อัปเกรดเป็น Pro เพื่อเพิ่มได้ไม่จำกัด",
     "error.item_has_history":
       "อุปกรณ์ชิ้นนี้เคยถูกเช่าไปแล้ว ลบไม่ได้เพราะประวัติการเช่าจะหายไปด้วย ถ้าเลิกใช้แล้วให้ทำเครื่องหมายว่าชำรุดแทน",
     "error.item_has_active_borrows":
@@ -454,6 +491,7 @@ const TEXT = {
     "notFound.goAccount": "Back to your account",
     "page.account": "Your account · LEBIS",
 
+    
     "nav.logout": "Sign out",
     "auth.alreadySignedIn": "This device is still signed in as {email}. Fill in the form below to use a different account.",
     "auth.alreadySignedInUnknown": "This device is still signed in. Fill in the form below to use a different account.",
@@ -609,7 +647,7 @@ const TEXT = {
     "account.planPro":
       "Unlimited items, full report history, LINE reminders before each due date, and CSV export.",
 
-     "page.settings":"Settings · LEBIS",
+    "page.settings":"Settings · LEBIS",
     "settings.title":"Settings",
     "settings.subtitle":"Manage LINE alerts and your plan",
     "settings.line.title":"LINE notifications",
@@ -670,6 +708,42 @@ const TEXT = {
 
     "page.workspace": "Equipment · LEBIS",
 
+    "page.pricing": "Pricing & billing · LEBIS",
+
+"pricing.title": "Your shop's plan",
+"pricing.subtitle": "Pick the plan that fits your shop.",
+"pricing.currentBadge": "Current plan",
+"pricing.freeTitle": "Free",
+"pricing.freeDesc": "Get started right away — good for small shops.",
+"pricing.freePrice": "Free",
+"pricing.proTitle": "Pro",
+"pricing.proDesc": "For shops that need unlimited equipment and automatic reminders.",
+"pricing.perMonth": "THB / month",
+"pricing.featureItemLimitFree": "Up to 50 items",
+"pricing.featureItemLimitPro": "Unlimited items",
+"pricing.featureReportFree": "7 days of report history",
+"pricing.featureReportPro": "Full report history",
+"pricing.featureLineFree": "No LINE reminders",
+"pricing.featureLinePro": "LINE reminders before each due date",
+"pricing.featureCsvFree": "No CSV export",
+"pricing.featureCsvPro": "CSV export",
+"pricing.upgrade": "Upgrade to Pro",
+"pricing.upgrading": "Starting upgrade...",
+"pricing.adminNote": "Administrator accounts are not tied to a plan.",
+"pricing.expiresOn": "Active until {date}",
+
+"checkout.title": "Pay to upgrade to Pro",
+"checkout.amount": "Amount",
+"checkout.methodNote": "This is a simulated payment for the demo. Nothing is actually charged.",
+"checkout.pay": "I've paid",
+"checkout.paying": "Processing...",
+"checkout.success": "You are now on the Pro plan.",
+
+"error.already_pro": "This shop already has the Pro plan.",
+"error.admin_cannot_subscribe": "Administrator accounts do not need a plan.",
+"error.checkout_not_found": "That payment could not be found, or it was already used. Please start the upgrade again.",
+"error.invalid_plan": "That plan selection is not valid.",
+
     "workspace.title": "Your equipment",
     "workspace.subtitle":
       "See what is on the shelf, what is out with a customer, and who is past their return date.",
@@ -726,7 +800,7 @@ const TEXT = {
     "item.deleted": "Equipment deleted.",
     "item.confirmDelete": "Delete {name} from LEBIS? This cannot be undone.",
     "item.limitBanner":
-      "The free plan holds 50 items. You are using {count} of them.",
+      "The free plan holds {limit} items. You are using {count} of them.",
 
     "borrow.open": "Rent out",
     "borrow.newTitle": "Open a rental",
@@ -769,7 +843,7 @@ const TEXT = {
     "error.item_not_found": "That item no longer exists. Please refresh the page.",
     "error.item_code_taken": "Another item in your shop already uses this code. Please pick a different one.",
     "error.item_limit_reached":
-      "The free plan holds 50 items. Upgrade to Pro for unlimited equipment.",
+      "You have reached the item limit of the free plan. Upgrade to Pro for unlimited equipment.",
     "error.item_has_history":
       "This item has been rented before, so deleting it would erase that history. Mark it out of order instead.",
     "error.item_has_active_borrows":

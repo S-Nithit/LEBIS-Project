@@ -8,14 +8,9 @@ from fastapi import APIRouter, Depends
 
 from queries import admin as admin_queries
 from services.security import require_role
+from routes.billing import PLANS
 
 router = APIRouter()
-
-# ราคา Pro ต่อเดือน (บาท) — ใช้คำนวณ MRR เท่านั้น
-# 🔴 TODO ถามกุล: มีค่าคงที่นี้อยู่ที่เดียวกลางๆ แล้วหรือยัง (เช่นใน services
-#    ของฝั่ง billing) ถ้ามี ให้ import จากตรงนั้นแทน กันราคาสองที่ไม่ตรงกัน
-#    เงียบๆ ถ้าใครแก้ราคาที่เดียวแล้วลืมอีกที่
-PRICE_PRO_PER_MONTH = 299
 
 
 @router.get("/overview")
@@ -27,7 +22,7 @@ async def overview(admin=Depends(require_role("admin"))):
     total_shops = free_count + pro_count
 
     active_subs = await admin_queries.active_subscriptions_count()
-    mrr = active_subs * PRICE_PRO_PER_MONTH
+    mrr = active_subs * PLANS["pro"]["price"]
 
     revenue_rows = await admin_queries.revenue_by_month()
     signup_rows = await admin_queries.signups_by_month()

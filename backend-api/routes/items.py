@@ -77,6 +77,17 @@ class SummaryResponse(BaseModel):
     borrowed_units: int
     overdue_borrows: int
 
+    # เพดานจำนวนรายการของแพ็กเกจที่ผู้ใช้คนนี้ถืออยู่ เป็น None ถ้าไม่มีเพดาน
+    #
+    # 🔴 ส่งตัวเลขนี้ออกไปเพราะหน้าเว็บต้องบอกลูกค้าว่าเพดานเท่าไร
+    #    ถ้าหน้าเว็บพิมพ์เลขไว้เองในคำแปล วันที่เราขยับเพดาน ระบบจะกันที่เลขใหม่
+    #    แต่ข้อความยังบอกเลขเก่า = โกหกลูกค้าเรื่องสิ่งที่เขาจ่ายเงินซื้อ
+    #    และเป็นความผิดพลาดที่ไม่มี error ฟ้อง ต้องมีคนตาดีไปเห็นเองเท่านั้น
+    #
+    #    ใครมีเพดานบ้างเป็นกติกาของแพ็กเกจ ซึ่งเป็นเรื่องของ server ไม่ใช่หน้าเว็บ
+    #    หน้าเว็บจึงไม่ต้องรู้ว่า role ไหนเสียเงินหรือไม่เสีย แค่ดูว่าช่องนี้มีค่าไหม
+    item_limit: int | None = None
+
 
 # ---------------------------------------------------------------------------
 # 2) ฟังก์ชันช่วย
@@ -164,9 +175,10 @@ async def list_items(
 async def item_summary(user=Depends(get_current_user)):
     """ตัวเลขสามช่องบนหัวหน้า Workspace: ว่างกี่ชิ้น ถูกยืมกี่ชิ้น เลยกำหนดกี่ใบ
 
-    สองตัวเลขนี้นับด้วยฟังก์ชันของวิชา Data ไม่ใช่ COUNT/SUM ของ SQL
+    ตัวเลขเหล่านี้ไม่ได้มาจาก COUNT/SUM ของ SQL แต่มาจากโค้ดวิชา Data
         available_units  <- algorithms/search.py :: count_available()
         overdue_borrows  <- algorithms/search.py :: count_overdue()
+        borrowed_units   <- จำนวนใบเช่าที่ยังไม่คืน ผ่าน inventory.open_borrows()
 
     ทำไมถึงคุ้มที่จะไม่ให้ SQL นับ ทั้งที่ SQL นับได้และเร็วกว่า
     เพราะฟังก์ชันสองตัวนั้นคือชิ้นงานที่ถูกให้คะแนนในวิชา Data
@@ -185,6 +197,9 @@ async def item_summary(user=Depends(get_current_user)):
     shelf = await inventory.shelf_summary(user["email"])
     overdue = await inventory.count_overdue(user["email"])
 
+    # ใบเช่าที่ยังไม่คืน — หนึ่งแถวคือหนึ่งชิ้น ตาราง borrows ไม่มีคอลัมน์จำนวน
+    borrows_out = await inventory.open_borrows(user["email"])
+
     total_units = int(row["total_units"])
     available_units = int(shelf["available_units"])
 
@@ -192,9 +207,19 @@ async def item_summary(user=Depends(get_current_user)):
         item_rows=int(row["item_rows"]),
         total_units=total_units,
         available_units=available_units,
-        # ของที่ไม่ได้อยู่บนชั้น = ทั้งหมด ลบ ที่ว่างอยู่
-        borrowed_units=total_units - available_units,
+        # 🔴 นับจากใบเช่าที่ยังไม่คืนโดยตรง ห้ามใช้ total ลบ available
+        #    เพราะ count_available() ข้ามของที่ชำรุดไปทั้งก้อน ไม่ได้ลบทีละชิ้น
+        #    ของชำรุดที่วางนิ่งอยู่บนชั้นจึงหายไปจากฝั่ง "ว่าง" แล้วไปโผล่
+        #    ในผลลบ กลายเป็น "อยู่กับลูกค้า" ทั้งที่ไม่มีใครเอาไป
+        #
+        #    ผลข้างเคียงที่ตั้งใจ: ถ้าร้านมีของชำรุด total จะไม่เท่ากับ
+        #    available + borrowed อีกต่อไป ซึ่งถูกแล้ว เพราะของชำรุดเป็นกองที่สาม
+        #    ไม่ได้อยู่บนชั้นให้เช่า และไม่ได้อยู่กับลูกค้า
+        borrowed_units=len(borrows_out),
         overdue_borrows=overdue,
+        # เงื่อนไขเดียวกับที่ create_item ใช้บังคับเพดานจริง ดูข้างล่าง
+        # ถ้าวันหนึ่งแพ็กเกจอื่นมีเพดานด้วย ต้องแก้สองที่นี้ให้ตรงกัน
+        item_limit=FREE_ITEM_LIMIT if user["role"] == "free" else None,
     )
 
 

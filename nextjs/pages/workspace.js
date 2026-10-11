@@ -85,13 +85,34 @@ function borrowStatusBadge(status, t) {
 // ชิ้นส่วนของหน้า
 // ---------------------------------------------------------------------------
 
-function StatCard({ label, value, unit }) {
+// ตัวเลขหนึ่งช่องบนแถบสถานะ
+//
+// 🔴 ตอนข้อมูลยังมาไม่ถึงต้องขึ้นเป็นแถบรอ ไม่ใช่ "-"
+//    เพราะ "-" อ่านได้ว่า "ศูนย์" หรือ "ไม่มี" ซึ่งเป็นคำตอบ
+//    ส่วนความจริงตอนนั้นคือยังไม่มีคำตอบ
+//
+//    aria-busy="true" ทำสองอย่างพร้อมกัน: โปรแกรมอ่านหน้าจอจะไม่อ่านค่าที่ยัง
+//    ไม่นิ่งให้ผู้ใช้ฟัง และ scripts/check-pages.mjs จะข้ามส่วนนี้ไปตอนเทียบว่า
+//    เนื้อหาเปลี่ยนเองหรือเปล่า
+function StatCard({ label, value, unit, loading }) {
+  const { t } = useLanguage();
+
   return (
     <Card>
       <CardContent className="p-5">
         <p className="t-caption">{label}</p>
-        <p className="t-page-title mt-2">
-          {value} <span className="t-caption">{unit}</span>
+        <p className="t-page-title mt-2" aria-busy={loading ? "true" : undefined}>
+          {loading ? (
+            <>
+              <span className="skeleton-bar" aria-hidden="true" />
+              {/* แถบเป็นภาพล้วน คนที่ฟังหน้าเว็บต้องได้ยินว่ากำลังโหลดอยู่ */}
+              <span className="sr-only">{t("state.loading")}</span>
+            </>
+          ) : (
+            <>
+              {value} <span className="t-caption">{unit}</span>
+            </>
+          )}
         </p>
       </CardContent>
     </Card>
@@ -618,25 +639,36 @@ export default function Workspace() {
         <div className="mb-5 grid gap-4 sm:grid-cols-3">
           <StatCard
             label={t("workspace.statAvailable")}
-            value={summary ? summary.available_units : "-"}
+            value={summary?.available_units}
             unit={t("workspace.unit")}
+            loading={!summary}
           />
           <StatCard
             label={t("workspace.statBorrowed")}
-            value={summary ? summary.borrowed_units : "-"}
+            value={summary?.borrowed_units}
             unit={t("workspace.unit")}
+            loading={!summary}
           />
           <StatCard
             label={t("workspace.statOverdue")}
-            value={summary ? summary.overdue_borrows : "-"}
+            value={summary?.overdue_borrows}
             unit={t("workspace.unitBorrow")}
+            loading={!summary}
           />
         </div>
 
-        {/* เตือนเมื่อแพ็กเกจฟรีใกล้เต็ม — ขึ้นตั้งแต่ 40 รายการ */}
-        {user?.role === "free" && summary && summary.item_rows >= 40 ? (
+        {/* เตือนเมื่อแพ็กเกจใกล้เต็ม — ขึ้นตอนใช้ไปถึง 80% ของเพดาน
+
+            เลขเพดานมาจาก summary.item_limit ซึ่ง server เป็นคนบอก ไม่ได้พิมพ์ไว้ตรงนี้
+            และไม่ได้เช็ค role เองแล้ว เพราะ "ใครมีเพดานบ้าง" เป็นกติกาของแพ็กเกจ
+            ซึ่งเป็นเรื่องของ server ถ้าหน้าเว็บเดาเอง วันที่กติกาเปลี่ยนจะมีสองที่ที่ต้องแก้
+            แล้ววันหนึ่งจะแก้ไม่ครบ ผู้ใช้ Pro จะเห็นแถบเตือนเพดานทั้งที่ไม่มีเพดาน */}
+        {summary?.item_limit && summary.item_rows >= summary.item_limit * 0.8 ? (
           <p className="t-caption mb-4">
-            {fill(t("item.limitBanner"), { count: summary.item_rows })}
+            {fill(t("item.limitBanner"), {
+              limit: summary.item_limit,
+              count: summary.item_rows,
+            })}
           </p>
         ) : null}
 
