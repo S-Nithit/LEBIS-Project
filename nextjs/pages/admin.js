@@ -110,8 +110,8 @@ function RevenueChart({ data, t, language }) {
 function SignupsChart({ data, t, language }) {
   const width = 600;
   const height = 200;
-  const padLeft = 12;
-  const padRight = 12;
+  const padLeft = 40;
+  const padRight = 40;
   const padTop = 16;
   const padBottom = 28;
   const groupGap = 16;
