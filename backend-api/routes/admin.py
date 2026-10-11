@@ -9,11 +9,36 @@ from fastapi import APIRouter, Depends
 from queries import admin as admin_queries
 from services.security import require_role
 from routes.billing import PLANS
+from pydantic import BaseModel
+
+class RevenueMonth(BaseModel):
+    month: str
+    amount: float
+
+
+class SignupMonth(BaseModel):
+    month: str
+    free: int
+    pro: int
+
+
+class AdminOverviewResponse(BaseModel):
+    total_shops: int
+    free_count: int
+    pro_count: int
+    conversion_rate: float
+    mrr: float
+    arr: float
+    revenue_this_month: float
+    total_rentals: int
+    items_out: int
+    revenue_by_month: list[RevenueMonth]
+    signups_by_month: list[SignupMonth]
 
 router = APIRouter()
 
 
-@router.get("/overview")
+@router.get("/overview", response_model=AdminOverviewResponse)
 async def overview(admin=Depends(require_role("admin"))):
     """ตัวเลขรวม + ข้อมูลกราฟ 2 อัน ให้หน้า pages/admin.js ในคำขอเดียว"""
     counts = await admin_queries.overview_counts()
