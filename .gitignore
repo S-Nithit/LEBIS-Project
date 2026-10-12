@@ -45,3 +45,6 @@ docs/design-document/build/
 
 # PDF ส่งความคืบหน้ารายสัปดาห์ (update_30sep_LEBIS.pdf ฯลฯ) — ส่งทางระบบของวิชา ไม่ต้องเก็บในรีโป
 /update_*.pdf
+
+# คลิปดิบสำหรับตัดต่อวิดีโอ — ไฟล์ใหญ่ ไม่เก็บในรีโป ส่งกันทาง Drive
+/video-clips/
