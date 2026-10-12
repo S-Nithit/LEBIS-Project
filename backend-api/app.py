@@ -17,7 +17,7 @@ from routes.items import router as items_router
 from routes.line import router as line_router
 from services import line_notify
 from routes.billing import router as billing_router
-
+from routes.admin import router as admin_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,7 +48,7 @@ app.include_router(items_router, prefix="/api/items", tags=["items"])
 app.include_router(borrows_router, prefix="/api/borrows", tags=["borrows"])
 app.include_router(line_router, prefix="/api/line", tags=["line"])
 app.include_router(billing_router, prefix="/api", tags=["billing"])
-
+app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 
 logger = logging.getLogger("lebis")
 

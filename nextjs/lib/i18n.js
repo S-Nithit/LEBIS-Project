@@ -192,7 +192,7 @@ const TEXT = {
       "บัญชีผู้ดูแลระบบ ใช้ดูแลระบบหลังบ้าน ไม่ใช่บัญชีสำหรับใช้งานร้าน จึงไม่ได้ผูกกับแพ็กเกจใด",
     "account.planPro":
       "บันทึกอุปกรณ์ได้ไม่จำกัด ดูรายงานย้อนหลังได้ทั้งหมด แจ้งเตือนผ่าน LINE ก่อนถึงกำหนดคืน และส่งออกไฟล์ได้",
-    
+
     "page.settings":"ตั้งค่า · LEBIS",
     "settings.title":"ตั้งค่า",
     "settings.subtitle":"จัดการแจ้งเตือน LINE และแพ็กเกจของร้าน",
@@ -459,6 +459,24 @@ const TEXT = {
     "landing.pricing.pro.f5": "ส่งออกไฟล์ CSV",
     "landing.pricing.pro.cta": "อัปเกรดเป็น Pro",
     "landing.footer.text": "LEBIS — ระบบจัดการสต็อกและบันทึกการเช่าสำหรับร้านเช่าอุปกรณ์",
+
+    "page.admin":"ผู้ดูแลระบบ · LEBIS",
+    "nav.admin":"ผู้ดูแล",
+    "admin.title":"แดชบอร์ดผู้ดูแลระบบ",
+    "admin.subtitle":"ภาพรวมผู้ใช้ รายได้ และการเช่าทั้งระบบ",
+    "admin.noAccessTitle":"ไม่มีสิทธิ์เข้าถึงหน้านี้",
+    "admin.noAccessBody":"หน้านี้สำหรับผู้ดูแลระบบเท่านั้น",
+    "admin.stats.shops":"ร้านทั้งหมด",
+    "admin.stats.free":"ฟรี",
+    "admin.stats.pro":"Pro",
+    "admin.stats.conversion":"อัตราเปลี่ยนเป็น Pro",
+    "admin.stats.mrr":"MRR",
+    "admin.stats.arr":"ARR",
+    "admin.stats.rentals":"การเช่าทั้งหมด",
+    "admin.stats.itemsOut":"กำลังถูกยืม",
+    "admin.charts.revenueTitle":"รายได้รายเดือน (Pro)",
+    "admin.charts.signupsTitle":"คนสมัครใหม่รายเดือน",
+
   },
 
   en: {
@@ -662,7 +680,7 @@ const TEXT = {
     "settings.plan.cancelledToast":"Plan cancelled",
     "settings.plan.upgrade":"Upgrade to Pro",
     "action.keep":"Keep plan",
-    
+
     "help.tipsLead": "Most sign-in problems clear up in seconds — try these two first.",
     "help.tip1": "Is the email typed in full? Capital letters do not matter — either way signs you in.",
     "help.tip2": "Use the Show button beside the password field to check what you typed.",
@@ -889,6 +907,23 @@ const TEXT = {
     "landing.pricing.pro.f5": "CSV export",
     "landing.pricing.pro.cta": "Upgrade to Pro",
     "landing.footer.text": "LEBIS — Rental OS for small equipment rental shops.",
+
+    "page.admin":"Admin · LEBIS",
+    "nav.admin":"Admin",
+    "admin.title":"Admin Dashboard",
+    "admin.subtitle":"Overview of users, revenue, and rentals across the system",
+    "admin.noAccessTitle":"You don't have access to this page",
+    "admin.noAccessBody":"This page is for administrators only",
+    "admin.stats.shops":"Total shops",
+    "admin.stats.free":"Free",
+    "admin.stats.pro":"Pro",
+    "admin.stats.conversion":"Free→Pro conversion",
+    "admin.stats.mrr":"MRR",
+    "admin.stats.arr":"ARR",
+    "admin.stats.rentals":"Total rentals",
+    "admin.stats.itemsOut":"Currently out",
+    "admin.charts.revenueTitle":"Monthly revenue (Pro)",
+    "admin.charts.signupsTitle":"New signups by month",
   },
 };
 
