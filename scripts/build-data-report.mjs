@@ -65,8 +65,12 @@ const seal = existsSync(sealPath) ? `data:image/png;base64,${readFileSync(sealPa
 const files = readdirSync(REPORT_DIR).filter((f) => f.endsWith(".md"));
 const parts = [];
 
+const THAI = /[฀-๿]/;
+
 for (const [prefix, title, owner] of SECTIONS) {
-  const matches = files.filter((f) => f.startsWith(prefix));
+  // เล่มนี้เป็นภาษาอังกฤษ — ถ้ามีฉบับแปล xxx.en.md ใช้ตัวนั้น ต้นฉบับ xxx.md เก็บไว้เหมือนเดิม
+  const all = files.filter((f) => f.startsWith(prefix));
+  const matches = all.filter((f) => !all.includes(f.replace(/\.md$/, ".en.md")));
   if (matches.length > 1) problems.push(`มีไฟล์ขึ้นต้นด้วย "${prefix}" มากกว่าหนึ่งไฟล์: ${matches.join(", ")}`);
   const file = matches[0];
   if (!file) {
@@ -78,20 +82,32 @@ for (const [prefix, title, owner] of SECTIONS) {
   if (/^> \[Editor's note/m.test(text)) problems.push(`${file} ยังมี [Editor's note] ค้าง`);
   const blank = text.match(/\[ ?(TBD|TODO|ใส่ตัวเลข|รอผล)[^\]]*\]/i);
   if (blank) problems.push(`${file} ยังมีช่องที่ไม่ได้กรอก: ${blank[0]}`);
+  // ฉบับแปลยังมีไทยได้ถ้าเป็นค่าจริงในข้อมูล (เช่นชื่ออุปกรณ์ที่ใช้ค้นหา) — เตือนเฉพาะไฟล์ที่ยังไม่แปล
+  if (!file.endsWith(".en.md") && THAI.test(text)) warnings.push(`${file} ยังมีภาษาไทยอยู่ — เล่มนี้เป็นภาษาอังกฤษ ควรมีฉบับแปล ${file.replace(/(\.en)?\.md$/, ".en.md")}`);
   const heading = (text.match(/^# (.+)$/m) || [null, title])[1];
   parts.push({ title: heading, owner, markdown: text });
 }
 
 // ---------------------------------------------------------------------------
-// flowchart — เรียงตามเลขภาพ (1–3 Kim · 4–5 Neo · 6–7 Kul) ไม่เอาไฟล์ _eng
+// flowchart — เรียงตามเลขภาพ (1–3 Kim · 4–5 Neo · 6–7 Kul)
+// เล่มนี้เป็นภาษาอังกฤษ ภาพไหนมีฉบับ _eng ใช้ตัวนั้น ไม่มีก็ใช้ฉบับไทยแล้วเตือน
 // ---------------------------------------------------------------------------
 
-const flowFiles = existsSync(FLOW_DIR)
+const flowAll = existsSync(FLOW_DIR)
   ? readdirSync(FLOW_DIR)
       .map((f) => f.match(/^flow_(kim|neo|kul)_(\d+)_(.+)\.pdf$/))
-      .filter((m) => m && !m[3].endsWith("_eng"))
-      .sort((a, b) => Number(a[2]) - Number(b[2]))
+      .filter(Boolean)
   : [];
+const flowFiles = [...new Set(flowAll.map((m) => Number(m[2])))]
+  .sort((a, b) => a - b)
+  .map((n) => {
+    const same = flowAll.filter((m) => Number(m[2]) === n);
+    const eng = same.find((m) => m[3].endsWith("_eng"));
+    if (eng) return eng;
+    const th = same.find((m) => !m[3].endsWith("_eng"));
+    warnings.push(`${th[0]} ยังไม่มีฉบับภาษาอังกฤษ (…_eng.pdf) — ใช้ฉบับไทยไปก่อน`);
+    return th;
+  });
 
 for (const n of [1, 2, 3, 4, 5, 6, 7]) {
   if (!flowFiles.some((m) => Number(m[2]) === n)) {
