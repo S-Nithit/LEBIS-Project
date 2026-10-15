@@ -48,3 +48,6 @@ docs/design-document/build/
 
 # คลิปดิบสำหรับตัดต่อวิดีโอ — ไฟล์ใหญ่ ไม่เก็บในรีโป ส่งกันทาง Drive
 /video-clips/
+
+# ฉบับร่างรายงานวิชา Data (สร้างใหม่ได้ทุกเมื่อด้วย scripts/build-data-report.mjs)
+docs/data-course/report/build/
