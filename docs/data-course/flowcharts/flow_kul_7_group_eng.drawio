@@ -1,0 +1,156 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0">
+  <diagram id="Kuxq5UKm-CQMjf21PSdu" name="flow_kul_7_group">
+    <mxGraphModel dx="2838" dy="1278" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-1" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" value="Flowchart 7 — Grouping: group_by_type and group_by_status" vertex="1">
+          <mxGeometry height="34" width="787" x="20" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-2" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#555555;" value="sort_group.py · receives items as a parameter, imports no team member's file · walks the data once like count_by_status, but stores whole records in buckets instead of only counting" vertex="1">
+          <mxGeometry height="20" width="787" x="20" y="44" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;group_by_type(items) → dict&lt;/b&gt;&lt;br&gt;group by equipment category · O(n)&lt;br&gt;&lt;i&gt;categories are not known in advance&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="320" x="40" y="76" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;group_by_status(items) → dict&lt;/b&gt;&lt;br&gt;group by status · O(n)&lt;br&gt;&lt;i&gt;known in advance: only 3 statuses&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="320" x="440" y="76" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="Start" vertex="1">
+          <mxGeometry height="44" width="200" x="100" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="Start" vertex="1">
+          <mxGeometry height="44" width="200" x="500" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" value="groups = { }&lt;br&gt;&lt;i&gt;start from an empty dict&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="320" x="40" y="196" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" value="groups = { ok: [ ], out: [ ], broken: [ ] }&lt;br&gt;&lt;i&gt;all 3 keys created up front&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="320" x="440" y="196" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-9" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="Another record left?" vertex="1">
+          <mxGeometry height="90" width="320" x="40" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-10" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="Another record left?" vertex="1">
+          <mxGeometry height="90" width="320" x="440" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-11" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="Is this category&lt;br&gt;already a key in groups?&lt;br&gt;&lt;i&gt;5 real categories in datasets.py&lt;/i&gt;" vertex="1">
+          <mxGeometry height="100" width="320" x="40" y="388" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-12" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="Is status one of&lt;br&gt;the 3 known keys?&lt;br&gt;&lt;i&gt;unknown values skipped, no crash&lt;/i&gt;" vertex="1">
+          <mxGeometry height="100" width="320" x="440" y="388" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-13" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="Create the new key as an empty list&lt;br&gt;&lt;i&gt;groups.setdefault does this in one call&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="320" x="40" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-14" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#777777;" value="&lt;i&gt;No key-creation step&lt;br&gt;because all keys were created up front&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="150" x="445" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="groups[category].append(item)" vertex="1">
+          <mxGeometry height="60" width="320" x="40" y="592" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="groups[status].append(item)" vertex="1">
+          <mxGeometry height="60" width="320" x="440" y="592" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="Return groups&lt;br&gt;&lt;i&gt;only the categories actually found in the data&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="320" x="40" y="716" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="Return groups&lt;br&gt;&lt;i&gt;always all 3 keys, even if some groups are empty&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="320" x="440" y="716" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-19" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="End" vertex="1">
+          <mxGeometry height="44" width="200" x="100" y="818" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-20" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="End" vertex="1">
+          <mxGeometry height="44" width="200" x="500" y="818" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-21" parent="1" style="text;html=1;align=left;verticalAlign=top;fontSize=11;fillColor=#f9f9f9;strokeColor=#cccccc;spacing=10;" value="&lt;b&gt;Why one pass into buckets is faster than searching category by category&lt;/b&gt;&lt;br&gt;&lt;br&gt;• The bucket method reads the data &lt;b&gt;once&lt;/b&gt;, however many categories there are, so it is &lt;b&gt;O(n)&lt;/b&gt;&lt;br&gt;• Searching category by category (first scan for cameras, then scan again for lenses) reads the whole data again &lt;b&gt;once per category&lt;/b&gt;, so it is &lt;b&gt;O(n × number of categories)&lt;/b&gt;&lt;br&gt;• The team's data set has &lt;b&gt;5 categories&lt;/b&gt; (camera · lens · tripod · light · microphone), so the category-by-category method must read the data &lt;b&gt;5 times&lt;/b&gt; to get the same result&lt;br&gt;• &lt;b&gt;Memory is O(n)&lt;/b&gt; for both functions, because every record is stored in some bucket and none is discarded, unlike counting, which uses &lt;b&gt;O(1)&lt;/b&gt;&lt;br&gt;• Unlike &lt;b&gt;Neo's count_by_status&lt;/b&gt;, which keeps only &lt;b&gt;counts&lt;/b&gt;, this keeps &lt;b&gt;whole records&lt;/b&gt;, for when you need to know &quot;what is there&quot;, not just &quot;how many&quot;&lt;br&gt;• Both functions &lt;b&gt;always return the keys they promise&lt;/b&gt; — group_by_status returns all 3 keys even if some groups are empty, so callers do not have to write .get() guards everywhere, which someone would certainly forget somewhere" vertex="1">
+          <mxGeometry height="160" width="787" x="20" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-22" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-23" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-24" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-11" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-25" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-17" value="No more">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="398" y="321" />
+              <mxPoint x="398" y="751" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-26" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-13" value="Key not there yet">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-27" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-15" value="Already there">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="374" y="438" />
+              <mxPoint x="374" y="622" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-28" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-29" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-9" value="Next record">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="682" />
+              <mxPoint x="20" y="682" />
+              <mxPoint x="20" y="321" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-30" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-31" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-32" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-33" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-12" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-34" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-18" value="No more">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="321" />
+              <mxPoint x="790" y="751" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-35" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-16" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-36" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-10" value="No — skip">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="438" />
+              <mxPoint x="420" y="321" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-37" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-10" value="Next record">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="682" />
+              <mxPoint x="420" y="682" />
+              <mxPoint x="420" y="321" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-38" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
