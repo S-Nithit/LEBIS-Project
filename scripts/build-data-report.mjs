@@ -47,7 +47,8 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 // ---------------------------------------------------------------------------
 
 const cover = JSON.parse(readFileSync(join(REPORT_DIR, "cover.json"), "utf8"));
-for (const key of ["course_code", "instructor", "submitted"]) {
+// รหัสวิชาไม่บังคับ — ไม่กรอกก็ขึ้นแค่ชื่อวิชา
+for (const key of ["instructor", "submitted"]) {
   if (!String(cover[key] || "").trim()) problems.push(`cover.json ยังไม่ได้กรอก "${key}"`);
 }
 // ช่องที่ยังว่าง ฉบับร่างโชว์เป็นแถบเหลืองให้เห็นชัดว่าต้องกรอก ไม่ใช่ปล่อยว่างเงียบๆ
@@ -149,7 +150,7 @@ const coverHtml = `
 <section class="cover">
   <p class="inst">${esc(cover.institution)}<br>${esc(cover.school)}</p>
   ${seal ? `<img class="seal" src="${seal}" alt="">` : ""}
-  <p class="course">${field(cover.course_code, "COURSE CODE")} - ${esc(cover.course_name)}</p>
+  <p class="course">${String(cover.course_code || "").trim() ? `${esc(cover.course_code)} - ` : ""}${esc(cover.course_name)}</p>
   <p class="rtitle">${esc(cover.report_title)}${FINAL ? "" : " (Draft)"}</p>
   <p class="instructed"><b>INSTRUCTED BY:</b> ${field(cover.instructor, "INSTRUCTOR NAME")}</p>
   <table class="who">
