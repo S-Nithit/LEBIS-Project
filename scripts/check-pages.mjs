@@ -30,7 +30,7 @@ const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password"];
 //    แต่รายงานว่าหน้านั้นผ่าน คือ "ผ่าน" ที่ไม่เคยแตะหน้าจริงเลยแม้แต่ครั้งเดียว
 //    เคยพลาดมาแล้วตอนเก็บภาพหน้าจอ ได้ไฟล์ md5 ซ้ำกัน 6 ไฟล์เพราะเหตุนี้
 
-const PRIVATE_ROUTES = ["/account", "/template", "/workspace", "/reports", "/pricing", "/settings"];
+const PRIVATE_ROUTES = ["/account", "/template", "/workspace", "/reports", "/pricing", "/settings", "/admin"];
 
 // 🔴 ทุกข้อที่ตรวจข้างล่างนี้วัดจาก "หน้าที่เบราว์เซอร์อยู่ตอนนั้น"
 //    ไม่ใช่ "หน้าที่เราสั่งให้ไป" ถ้าหน้านั้นเด้งไปที่อื่น ทุกตัวเลขจะมาจากหน้าที่เด้งไป

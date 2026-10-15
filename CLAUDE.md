@@ -472,12 +472,16 @@ the frontend out of compose.
 | 23 Sep | Proposal |
 | 30 Sep | 2–3 pages, or 40% complete |
 | 7 Oct | 4–6 pages, or 70% complete |
-| 14 Oct | Progress video — whole app working |
-| 21 Oct | Full Design Document (PDF) + 3-minute demo video |
+| 14 Oct | 3-minute demo video — YouTube Unlisted link (✅ submitted) |
+| 21 Oct | Full Design Document (PDF) + on-stage pitch with live edge-case testing |
 
 Final deliverables: Design Document PDF · private repo with landing-page README and
 a live URL · 3-minute YouTube demo (all four members on camera, no URLs shown) ·
 on-stage pitch with live edge-case testing.
+
+Before the pitch, run `DEMO_PASSWORD=… node scripts/check-edge-cases.mjs` against
+production — it fires every case the instructor is expected to try. The checklist
+for the day is `docs/pitch-checklist.md`.
 
 ### Data Structures & Algorithms
 

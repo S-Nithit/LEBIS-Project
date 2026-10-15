@@ -45,6 +45,7 @@ ignores; in production they are set in the Railway and Vercel dashboards.
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Railway | The operator account for the admin dashboard |
 | `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_CHANNEL_SECRET` | Railway | Sending LINE messages and verifying webhooks |
 | `LINE_ADD_FRIEND_URL` | Railway | Add-friend link for the LEBIS Official Account, shown on the settings page |
+| `LINE_DAILY_JOB` | Railway | `off` pauses the 08:00 summary; unset or any other value runs it. Paused between test rounds to save the 300-message monthly quota |
 | `BACKEND_URL` | Vercel | Where the `/api/*` rewrite forwards requests |
 
 The system starts without the LINE variables. LINE endpoints then answer
@@ -78,7 +79,8 @@ step. The project uses no migration tool, and none is planned during the course.
 | Free account: `POST /api/items` with 50 items already stored | **403** |
 | Free account: `POST /api/line/digest` | **403** |
 | Pro account linked to LINE: `POST /api/line/test` | The message arrives in LINE |
-| Non-admin account: `GET /api/admin/*` (once the admin API exists) | **403** |
+| Non-admin account (Free or Pro): `GET /api/admin/overview` | **403** |
+| No token, or a forged token | **401** |
 | Register through the Vercel domain, then look for the row in Railway's database | The row exists — proves the rewrite reaches the production backend |
 
 ## 11.6 Rolling back

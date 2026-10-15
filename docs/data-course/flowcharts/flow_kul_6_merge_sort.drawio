@@ -1,0 +1,146 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0">
+  <diagram id="49B17u3zCQfQJgj0rsEh" name="flow_kul_6_merge_sort">
+    <mxGraphModel dx="4465" dy="2324" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-1" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" value="Flowchart 6 — การเรียงลำดับ: merge_sort (แบ่งครึ่ง → ผสาน)" vertex="1">
+          <mxGeometry height="34" width="787" x="20" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-2" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#555555;" value="sort_group.py · โครงเป็น recursion แบ่งครึ่งซ้ำจนเหลือชิ้นเดียว ต่างจาก hash_table.py ที่คำนวณตำแหน่งจาก key ตรงๆ และต่างจาก count_* ใน search.py ที่เดินข้อมูลรอบเดียวจบ" vertex="1">
+          <mxGeometry height="20" width="787" x="20" y="44" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="เริ่ม" vertex="1">
+          <mxGeometry height="46" width="170" x="245" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" value="รับ items และฟังก์ชัน key เข้ามา&lt;b&gt;ทางพารามิเตอร์&lt;/b&gt;&lt;br&gt;&lt;i&gt;ไม่ได้ import ไฟล์ของใครในทีม ใช้แต่ stdlib&lt;/i&gt;" vertex="1">
+          <mxGeometry height="56" width="300" x="180" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-5" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="len(items) ≤ 1 ?" vertex="1">
+          <mxGeometry height="86" width="230" x="215" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" value="&lt;b&gt;base case&lt;/b&gt;&lt;br&gt;คืน list(items)เดิม&lt;br&gt;&lt;i&gt;ชิ้นเดียวถือว่าเรียงแล้วเสมอ&lt;br&gt;เป็นจุดที่ recursion หยุดแตกตัว&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="220" x="530" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="middle = len(items) // 2" vertex="1">
+          <mxGeometry height="46" width="230" x="215" y="312" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;แบ่งครึ่งแล้วเรียกตัวเอง&lt;/b&gt;&lt;br&gt;left = merge_sort(items[:middle], key)&lt;br&gt;right = merge_sort(items[middle:], key)" vertex="1">
+          <mxGeometry height="70" width="300" x="180" y="376" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-9" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" value="ลึกประมาณ log₂(n) ชั้น&lt;br&gt;1,000 รายการ ≈ 10 ชั้น&lt;br&gt;&lt;i&gt;ไม่เสี่ยง stack overflow&lt;/i&gt;" vertex="1">
+          <mxGeometry height="62" width="220" x="530" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-10" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#1f3a5f;" value="_merge(left, right, key) — ผสานสองฝั่งที่เรียงแล้วเข้าเป็นก้อนเดียว · O(n)" vertex="1">
+          <mxGeometry height="20" width="787" x="20" y="462" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-11" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="i=0 , j=0 , merged = []&amp;nbsp;" vertex="1">
+          <mxGeometry height="46" width="230" x="215" y="492" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-12" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="i &amp;lt; len(left)&lt;br&gt;&lt;b&gt;และ&lt;/b&gt; j &amp;lt; len(right) ?" vertex="1">
+          <mxGeometry height="90" width="230" x="215" y="556" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-13" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;เติมส่วนที่เหลือต่อท้ายทั้ง2ฝั่ง&lt;/b&gt;&lt;br&gt;merged.extend(left[i:])&lt;br&gt;merged.extend(right[j:])&lt;br&gt;&lt;i&gt;ฝั่งที่ยังไม่หมดเรียงอยู่แล้ว ต่อท้ายได้เลย&lt;/i&gt;" vertex="1">
+          <mxGeometry height="78" width="220" x="530" y="566" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-14" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="key(left[i]) &lt;b&gt;&amp;lt;=&lt;/b&gt; key(right[j]) ?" vertex="1">
+          <mxGeometry height="96" width="230" x="215" y="664" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;หยิบฝั่งซ้าย&lt;/b&gt;&lt;br&gt;merged.append(left[i])&lt;br&gt;i += 1" vertex="1">
+          <mxGeometry height="70" width="185" x="15" y="682" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;หยิบฝั่งขวา&lt;/b&gt;&lt;br&gt;merged.append(right[j])&lt;br&gt;j += 1" vertex="1">
+          <mxGeometry height="70" width="220" x="530" y="682" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-17" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#6b4423;" value="&lt;i&gt;เขียน &amp;lt;= ไม่ใช่ &amp;lt; ตรงนี้ คือจุดเดียวที่ทำให้เป็น &lt;b&gt;stable sort&lt;/b&gt;&lt;br&gt;ค่าเท่ากัน ตัวจากฝั่งซ้ายถูกหยิบก่อนเสมอ&lt;/i&gt;" vertex="1">
+          <mxGeometry height="38" width="330" x="460" y="766" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="คืน merged ขึ้นไปให้ชั้นบนของ recursion ผสานต่อ(เรียงแล้วทั้งก้อน)" vertex="1">
+          <mxGeometry height="60" width="230" x="215" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-19" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="จบ" vertex="1">
+          <mxGeometry height="46" width="170" x="245" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-20" parent="1" style="text;html=1;align=left;verticalAlign=top;fontSize=11;fillColor=#f9f9f9;strokeColor=#cccccc;spacing=10;" value="&lt;b&gt;ทำไมแบ่งครึ่งแล้วผสาน ถึงเร็วกว่าการไล่สลับทีละคู่&lt;/b&gt;&lt;br&gt;&lt;br&gt;• แบ่งครึ่งซ้ำจนเหลือ 1 ทำให้มี &lt;b&gt;log₂(n) ชั้น&lt;/b&gt; และการผสานแต่ละชั้นใช้ &lt;b&gt;O(n)&lt;/b&gt; รวมเป็น &lt;b&gt;O(n log n)&lt;/b&gt;&lt;br&gt;• bubble sort ต้องไล่เทียบทุกคู่ซ้ำไปเรื่อยๆ จึงเป็น &lt;b&gt;O(n²)&lt;/b&gt; — วัดจริงบนชุด D ขนาด 1,000 รายการ &lt;b&gt;merge sort เร็วกว่า bubble sort 34.6 เท่า&lt;/b&gt;&lt;br&gt;• เขียน &lt;b&gt;&amp;lt;= ไม่ใช่ &amp;lt;&lt;/b&gt; ตอนเทียบฝั่งซ้าย ทำให้เป็น &lt;b&gt;stable sort&lt;/b&gt; ลำดับเดิมของรายการที่ due_date เท่ากันจึงไม่ถูกสลับมั่วโดยไม่มีเหตุผล&lt;br&gt;• คืน &lt;b&gt;list ใหม่เสมอ ไม่แก้ของเดิม&lt;/b&gt; เพราะอาจมีคนอื่นถือ list ใบเดียวกันอยู่ แบบเดียวกับ sort_by_code ใน search.py&lt;br&gt;• list ที่เรียงแล้วจากไฟล์นี้คือตัวที่ &lt;b&gt;find_due_before (binary search ของ Neo)&lt;/b&gt; ใช้ต่อโดยตรง ถ้าเรียงผิด การตัดครึ่งจะตัดผิดข้างโดย&lt;b&gt;ไม่มี error ฟ้องเลย&lt;/b&gt;" vertex="1">
+          <mxGeometry height="130" width="787" x="20" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-21" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-22" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-23" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-6" value="ใช่">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-24" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-7" value="ไม่ — ยังแบ่งต่อได้">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-25" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-26" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-27" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-28" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-13" value="ไม่ — ฝั่งใดฝั่งหนึ่งหมดแล้ว">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-29" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-14" value="ใช่ — ยังมีของทั้งสองฝั่ง">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-30" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-15" value="ใช่">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-31" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-16" value="ไม่">
+          <mxGeometry relative="1" x="-0.0556" y="3" as="geometry">
+            <mxPoint x="3" y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-32" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-12" value="วนกลับไปเทียบหัวใหม่">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="107" y="824" />
+              <mxPoint x="8" y="824" />
+              <mxPoint x="8" y="601" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-33" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-12" value="วนกลับ">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="824" />
+              <mxPoint x="8" y="824" />
+              <mxPoint x="8" y="601" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-34" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-18">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="605" />
+              <mxPoint x="800" y="890" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-35" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="buWZ9kO0xOohI7CN-Vdh-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="buWZ9kO0xOohI7CN-Vdh-36" edge="1" parent="1" source="buWZ9kO0xOohI7CN-Vdh-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="buWZ9kO0xOohI7CN-Vdh-19">
+          <mxGeometry relative="1" x="-0.0841" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="300" />
+              <mxPoint x="815" y="300" />
+              <mxPoint x="815" y="983" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c7QVKBLfUE9yaJwH1Uqj-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;" value="ทางเข้าทีระบบเรียกใช้จริง&lt;br&gt;sort_by_due_date(items)&lt;br&gt;• กรองใบที due_date เป็น None ออกก่อน — ของทีไม่มีคนยืมไม่มี&lt;br&gt;วันคืนให้เรียง และเทียบ None กับข้อความไม่ได้&lt;br&gt;• เรียกเข้า merge_sort ด้วย key = due_date&lt;br&gt;• ส่งผลต่อให้ find_due_before ของ Neo ซึงเป็น binary search&lt;br&gt;ใช้ได้เฉพาะ list ทีเรียงแล้ว&lt;br&gt;sort_by_available คือ merge_sort ตัวเดียวกัน เปลียนแค่ key =&lt;br&gt;available จึงไม่ต้องวาดแยก" vertex="1">
+          <mxGeometry height="144" width="340" x="500" y="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
