@@ -29,11 +29,11 @@ const FINAL = process.argv.includes("--final");
 // ลำดับในเล่ม — 00 กับ 99 ผู้รวมเล่มเขียน ที่เหลือแต่ละคนเขียนส่วนของตัวเอง
 // หาไฟล์จากคำนำหน้าชื่อ คนเขียนตั้งชื่อต่อท้ายได้อิสระ เช่น kim-hashtable.md
 const SECTIONS = [
-  ["00-intro", "บทนำ", "Neo (ผู้รวมเล่ม)"],
-  ["kim-", "ส่วนที่ 1 — Insert / Delete · ตารางแฮช", "Kim"],
-  ["neo-", "ส่วนที่ 2 — Search / Count · binary search", "Neo"],
-  ["kul-", "ส่วนที่ 3 — Sort / Group · merge sort", "Kul"],
-  ["99-summary", "สรุป — สามอัลกอริทึมทำงานต่อกัน", "Neo (ผู้รวมเล่ม)"],
+  ["00-intro", "Introduction", "Neo (editor)"],
+  ["kim-", "Part 1 — Insert / Delete · Hash Table", "Kim"],
+  ["neo-", "Part 2 — Search / Count · Binary Search", "Neo"],
+  ["kul-", "Part 3 — Sort / Group · Merge Sort", "Kul"],
+  ["99-summary", "Conclusion — Three Algorithms Working Together", "Neo (editor)"],
 ];
 const OWNER = { kim: "Kim", neo: "Neo", kul: "Kul" };
 
@@ -161,15 +161,15 @@ const coverHtml = `
 </section>`;
 
 const tocHtml = `
-<section class="toc"><h2>สารบัญ</h2><ol>
-  ${parts.map((p) => `<li>${esc(p.title)}${p.missing ? ' <span class="todo">(ยังไม่ได้ส่ง)</span>' : ""}</li>`).join("")}
-  <li>ภาคผนวก — Flowchart</li>
+<section class="toc"><h2>Contents</h2><ol>
+  ${parts.map((p) => `<li>${esc(p.title)}${p.missing ? ' <span class="todo">(not submitted yet)</span>' : ""}</li>`).join("")}
+  <li>Appendix — Flowcharts</li>
 </ol></section>`;
 
 const appendixHtml = `
-<h1>ภาคผนวก — Flowchart</h1>
-<p>Flowchart ของทั้งเล่ม เรียงตามเลขภาพ ภาพละหนึ่งหน้า ต้นฉบับ draw.io และ PDF อยู่ใน <code>docs/data-course/flowcharts/</code></p>
-<table><thead><tr><th>รูปที่</th><th>เรื่อง</th><th>ส่วน</th></tr></thead><tbody>
+<h1>Appendix — Flowcharts</h1>
+<p>All flowcharts in the report, in figure order, one per page. The draw.io sources and PDFs are in <code>docs/data-course/flowcharts/</code>.</p>
+<table><thead><tr><th>Figure</th><th>Subject</th><th>Author</th></tr></thead><tbody>
 ${flowFiles.map((m) => {
   const f = figures.find((x) => x.file === m[0]);
   return `<tr><td>${f.number}</td><td>${esc(f.title)}</td><td>${f.owner}</td></tr>`;
@@ -178,10 +178,10 @@ ${flowFiles.map((m) => {
 ${figures.map((f, i) => `
 <section class="figpage">
   <span class="slot">FIGSLOT-${String(i).padStart(2, "0")}-END</span>
-  <p class="caption">รูปที่ ${f.number}: ${esc(f.title)} (${f.owner})${f.of > 1 ? ` — หน้า ${f.k} จาก ${f.of}` : ""}</p>
+  <p class="caption">Figure ${f.number}: ${esc(f.title)} (${f.owner})${f.of > 1 ? ` — page ${f.k} of ${f.of}` : ""}</p>
 </section>`).join("")}`;
 
-const html = `<!doctype html><html lang="th"><head><meta charset="utf-8">
+const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <style>
@@ -190,7 +190,9 @@ const html = `<!doctype html><html lang="th"><head><meta charset="utf-8">
   @page { size: A4; margin: 22mm; }
   * { box-sizing: border-box; }
   body { font-family: "Times New Roman", Times, "Sarabun", serif; font-size: 12pt; line-height: 1.5; color: #000; }
-  h1 { font-size: 16pt; font-weight: 700; margin: 0 0 10pt; page-break-before: always; }
+  /* padding-top: สระและวรรณยุกต์ไทยที่อยู่เหนือบรรทัดยื่นออกนอกกล่อง ถ้าไม่เว้นที่
+     ตรงขึ้นหน้าใหม่ จะถูกพิมพ์ไปค้างเป็นจุดเล็กๆ ท้ายหน้าก่อนหน้า */
+  h1 { font-size: 16pt; font-weight: 700; margin: 0 0 10pt; padding-top: 8pt; page-break-before: always; }
   h2 { font-size: 13pt; font-weight: 700; margin: 16pt 0 6pt; }
   h3 { font-size: 12pt; font-weight: 700; margin: 12pt 0 4pt; }
   /* หัวข้อและชื่อตารางต้องไม่ค้างอยู่ท้ายหน้า แล้วปล่อยให้เนื้อหาของมันไปขึ้นหน้าถัดไป */
@@ -231,7 +233,7 @@ const html = `<!doctype html><html lang="th"><head><meta charset="utf-8">
 <script>
   const parts = JSON.parse(document.getElementById("parts").textContent);
   document.getElementById("doc").innerHTML = parts.map((p) => p.missing
-    ? '<h1>' + p.title + '</h1><p><span class="todo">ยังไม่ได้ส่ง — ผู้รับผิดชอบ: ' + p.owner + '</span></p>'
+    ? '<h1>' + p.title + '</h1><p><span class="todo">Not submitted yet — author: ' + p.owner + '</span></p>'
     : marked.parse(p.markdown)).join("") + document.getElementById("appendix").innerHTML;
   document.fonts.ready.then(() => { document.body.dataset.ready = "1"; });
 </script></body></html>`;

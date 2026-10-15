@@ -1,67 +1,67 @@
-# บทนำ
+# Introduction
 
-> ส่วนนี้เขียนโดยผู้รวมเล่ม (Neo) เพื่อปูพื้นก่อนอ่านสามส่วนหลัก
-> ตัวเลขทุกตัวในเล่มมาจาก `LEBIS_Final.ipynb` ฉบับรวมสามคน รอบเดียวกันทั้งเล่ม
+> Written by the editor (Neo) to set the scene for the three main parts.
+> Every number in this report comes from `LEBIS_Final.ipynb`, the combined notebook of all three members, from one single run.
 
-## ระบบที่ใช้อัลกอริทึมเหล่านี้
+## The system these algorithms serve
 
-LEBIS เป็นระบบยืม–คืนอุปกรณ์สำหรับร้านให้เช่าขนาดเล็ก 1–3 คน เช่นร้านเช่ากล้อง
-ใช้งานจริงอยู่ที่ <https://lebis-project.vercel.app>
+LEBIS is a borrow-and-return system for small equipment rental shops with one to three staff, such as camera rental shops.
+It runs live at <https://lebis-project.vercel.app>.
 
-ร้านแบบนี้ถามคำถามชุดเดิมซ้ำทุกวัน รายงานเล่มนี้คือคำตอบว่า **แต่ละคำถามควรใช้โครงสร้างข้อมูลแบบไหน และทำไม**
+A shop like this asks the same questions every day. This report answers **which data structure each question needs, and why**.
 
-| คำถามของร้าน | กลุ่มอัลกอริทึม | ผู้เขียน | อยู่ในส่วนที่ |
+| The shop's question | Algorithm group | Author | Part |
 |---|---|---|---|
-| "กล้องรหัส CAM-0012 ว่างไหม" · รับของเข้า · ตัดของออก | Inserting · Deleting | Kim — ตารางแฮช | 1 |
-| "ขอเลนส์ตัวที่เคยเช่า" · "ว่างกี่ชิ้น เลยกำหนดกี่ใบ" · "อะไรครบก่อนวันที่ X" | Searching · Counting | Neo — binary search | 2 |
-| "ใบไหนค้างนานสุด" · "ของหมวดไหนมีอะไรบ้าง" | Sorting · Grouping | Kul — merge sort | 3 |
+| "Is camera CAM-0012 available?" · receiving stock · removing stock | Inserting · Deleting | Kim — hash table | 1 |
+| "The lens I rented before" · "How many are free, how many are overdue?" · "What is due before date X?" | Searching · Counting | Neo — binary search | 2 |
+| "Which rental has been out the longest?" · "What is in each category?" | Sorting · Grouping | Kul — merge sort | 3 |
 
-ทั้งสามส่วนเขียนอัลกอริทึมขึ้นเองทั้งหมด ไม่ใช้ `dict` · `bisect` · `sorted()` ของ Python เป็นตัวทำงาน
-ใช้ของ Python เป็น **ตัวเทียบ** เท่านั้น เพื่อแสดงว่าที่เขียนเองให้ผลถูก และเข้าใจว่าทำไมของ built-in เร็วกว่า
+All three parts implement their algorithms by hand. Python's `dict`, `bisect` and `sorted()` are never used to do the work.
+They are used only as **baselines**, to show that the hand-written code gives correct results and to explain why the built-ins are faster.
 
-โค้ดทั้งหมดอยู่ใน `backend-api/algorithms/` และ import ได้เฉพาะ standard library ของ Python
-ไฟล์เดียวกันนี้จึงรันได้ทั้งในเว็บจริงและใน Google Colab โดยไม่ต้องแก้สักบรรทัด
+All the code lives in `backend-api/algorithms/` and imports only the Python standard library.
+The same files therefore run both in the live web application and in Google Colab without changing a line.
 
-## ชุดข้อมูลที่ทั้งเล่มใช้ร่วมกัน
+## The shared data sets
 
-ทุกส่วนวัดบนชุดข้อมูลเดียวกันจาก `make_dataset()` ใน `datasets.py` ตัวเลขของสามส่วนจึงอ่านเทียบกันได้
-ใช้ seed ตายตัว ไม่ใช่สุ่มสด และตรึงวันอ้างอิงไว้ที่ `TODAY = 2026-10-01` รันกี่ครั้งก็ได้ข้อมูลเดิม
+Every part measures on the same data from `make_dataset()` in `datasets.py`, so the numbers of the three parts can be compared directly.
+The data uses fixed seeds rather than fresh random values, and a fixed reference date `TODAY = 2026-10-01`, so every run produces the same data.
 
-| ชุด | จำนวน | ชื่อซ้ำ | ของหมด | เลยกำหนด | ชำรุด | สร้างมาเพื่อพิสูจน์ |
+| Set | Size | Duplicate names | Out of stock | Overdue | Broken | Built to prove |
 |---|---:|---:|---:|---:|---:|---|
-| A | 10 | 0 | 1 | 3 | 1 | ทุกฟังก์ชันทำงานถูกในกรณีปกติ |
-| B | 12 | 6 | 5 | 4 | 1 | ชื่อซ้ำกัน — ค้นด้วยรหัสต้องได้ตัวที่ถูก ค้นด้วยชื่อต้องได้ทุกตัว |
-| C | 10 | 0 | 5 | 4 | 1 | ของหมดหลายรายการ — สถานะและการนับที่ขอบ |
-| D | 1,000 | 0 | 288 | 275 | 142 | ความต่างของ Big-O เมื่อข้อมูลโตขึ้น 100 เท่า |
+| A | 10 | 0 | 1 | 3 | 1 | Every function works in the normal case |
+| B | 12 | 6 | 5 | 4 | 1 | Duplicate names — search by code must return the right item, search by name must return every match |
+| C | 10 | 0 | 5 | 4 | 1 | Many items out of stock — status and counting at the edges |
+| D | 1,000 | 0 | 288 | 275 | 142 | How the Big-O difference shows when the data grows 100 times |
 
-ทุกชุดมีขนาดอย่างน้อย 10 รายการตามที่โจทย์กำหนด
-แต่ละรายการมี 8 ฟิลด์ `code` · `name` · `category` · `total` · `available` · `borrower` · `due_date` · `status`
+Every set has at least 10 records, as the assignment requires.
+Each record has 8 fields: `code` · `name` · `category` · `total` · `available` · `borrower` · `due_date` · `status`.
 
-## วิธีวัดเวลา
+## How time was measured
 
-ทั้งสามส่วนใช้วิธีเดียวกัน — `time.perf_counter()` รันซ้ำ 3 รอบแล้วเฉลี่ย ไม่นับเวลาเตรียมข้อมูล หน่วยเป็นมิลลิวินาที
+All three parts use the same method — `time.perf_counter()`, run 3 times and averaged, excluding the time spent preparing data. Times are in milliseconds.
 
-เวลาที่จับได้แกว่งตามจังหวะของเครื่องทุกครั้งที่รัน แต่ **ลำดับว่าวิธีไหนเร็วกว่าไม่เปลี่ยน**
-ตัวเลขในเล่มนี้จึงเป็นผลของการรันรอบเดียวกันทั้งเล่ม ห้ามผสมกับตัวเลขจาก notebook ของแต่ละคน
+The measured times vary slightly with the machine on every run, but **the order of which method is faster does not change**.
+For that reason every number in this report comes from the same single run. Numbers from individual members' notebooks must not be mixed in.
 
 ## Google Colab
 
-notebook ฉบับรวมที่รันแล้ว: <https://colab.research.google.com/drive/1K3JSlNVuN-mof98pjE09J_nFKhZEmyV8>
+The combined notebook, already run: <https://colab.research.google.com/drive/1K3JSlNVuN-mof98pjE09J_nFKhZEmyV8>
 
-> ⚠️ **ไม่ต้องกด Run all ในไฟล์ที่แชร์** — ผลที่บันทึกไว้ในไฟล์คือชุดเดียวกับที่อยู่ในเล่มนี้
-> ถ้ารันใหม่ เวลาจะเปลี่ยนตามเครื่อง แล้วตัวเลขจะไม่ตรงกับรายงาน
-> ถ้าต้องการลองรันเอง ให้ทำสำเนาไปไว้ใน Drive ของตัวเองก่อน (File → Save a copy in Drive)
+> ⚠️ **Do not press Run all in the shared file.** The saved output is the same run as in this report.
+> Running it again changes the times, and the numbers will no longer match the report.
+> To try it yourself, make a copy first (File → Save a copy in Drive).
 
-## ข้อกำหนดของวิชา — อยู่ตรงไหนในเล่ม
+## Course requirements — where to find them
 
-ทุกอัลกอริทึมต้องมีห้าอย่าง ตารางนี้บอกว่าแต่ละอย่างของแต่ละส่วนอยู่ที่หัวข้อไหน
+Every algorithm must include five things. This table shows where each one is for each part.
 
-| ข้อกำหนด | ส่วนที่ 1 (Kim) | ส่วนที่ 2 (Neo) | ส่วนที่ 3 (Kul) |
+| Requirement | Part 1 (Kim) | Part 2 (Neo) | Part 3 (Kul) |
 |---|---|---|---|
-| Big-O ทั้งเวลาและหน่วยความจำ พร้อมคำอธิบาย | 1.5 | 2.6 | ส่วนที่ 3 |
-| Flowchart | 1.8 · ภาคผนวก | 2.9 · ภาคผนวก | ส่วนที่ 3 · ภาคผนวก |
-| ผลรันจริงกับชุด A–D | 1.7 | 2.8 | ส่วนที่ 3 |
-| เวลาบนชุด D เทียบกับของที่ Python มีให้ | 1.7 — `dict` | 2.8 — การไล่ดูทั้ง list | ส่วนที่ 3 — `sorted()` |
-| ลิงก์ Colab | 1.9 | 2.10 | หัวข้อ Colab ข้างบน |
+| Big-O for time and memory, with an explanation | 1.5 | 2.6 | Part 3 |
+| Flowchart | 1.8 · Appendix | 2.9 · Appendix | Part 3 · Appendix |
+| Real results on sets A–D | 1.7 | 2.8 | Part 3 |
+| Time on set D compared with what Python provides | 1.7 — `dict` | 2.8 — scanning the whole list | Part 3 — `sorted()` |
+| Colab link | 1.9 | 2.10 | Colab section above |
 
-Flowchart ทั้ง 7 ภาพรวมไว้ในภาคผนวกท้ายเล่ม เรียงตามเลขภาพ
+All seven flowcharts are collected in the Appendix at the end, in figure order.

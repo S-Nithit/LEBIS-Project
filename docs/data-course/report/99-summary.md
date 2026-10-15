@@ -1,69 +1,69 @@
-# สรุป — สามอัลกอริทึมทำงานต่อกัน
+# Conclusion — Three Algorithms Working Together
 
-> ส่วนนี้เขียนโดยผู้รวมเล่ม (Neo) สรุปจากสามส่วนข้างต้น ตัวเลขทุกตัวมาจาก `LEBIS_Final.ipynb`
+> Written by the editor (Neo), summarising the three parts above. Every number comes from `LEBIS_Final.ipynb`.
 
-## คำถามเดียวที่ต้องใช้ทั้งสามคน
+## One question that needs all three members
 
-ร้านถามทุกเช้าว่า **"ใบไหนเลยกำหนดคืนแล้วบ้าง แล้วของชิ้นนั้นคืออะไร"**
-ไม่มีอัลกอริทึมไหนตอบคำถามนี้ได้คนเดียว ต้องส่งต่อกันสามทอด
+Every morning the shop asks: **"Which rentals are overdue, and what is each item?"**
+No single algorithm can answer this alone. It takes three steps, each handing its result to the next.
 
-| ขั้น | ใคร | ทำอะไร | เวลา |
+| Step | Who | What it does | Time |
 |---|---|---|---|
-| 1 | Kul — merge sort | เรียงใบยืมทั้งหมดตามวันครบกำหนด | O(n log n) |
-| 2 | Neo — binary search | ตัดเอาทุกใบที่ครบกำหนดก่อนวันนี้ออกมาทั้งก้อน | O(log n + k) |
-| 3 | Kim — ตารางแฮช | เปิดดูรายละเอียดของแต่ละชิ้นจากรหัส | O(1) ต่อชิ้น |
+| 1 | Kul — merge sort | Sorts every rental by due date | O(n log n) |
+| 2 | Neo — binary search | Cuts out every rental due before today in one block | O(log n + k) |
+| 3 | Kim — hash table | Looks up each item's details by its code | O(1) per item |
 
-บนชุด D มีใบยืมทั้งหมด **685 ใบ** สามขั้นนี้หาใบที่เลยกำหนดก่อน 2026-10-01 ได้ **275 ใบ**
-**ตรงกับการไล่ดูทีละตัว** ทุกใบ
+Set D has **685 rentals**. These three steps find **275 rentals overdue before 2026-10-01**,
+**exactly the same rentals as a full one-by-one scan**.
 
-แต่ละขั้นส่ง list ธรรมดาต่อให้ขั้นถัดไป ไม่มีใคร import โค้ดของใคร
-ถ้าคนใดคนหนึ่งเปลี่ยนรูปแบบข้อมูลที่ส่งออก เซลล์นี้ใน notebook จะล้มทันที
-จึงเป็นทั้งตัวอย่างการใช้งานและตัวทดสอบว่างานสามคนยังต่อกันได้
+Each step passes a plain list to the next, and nobody imports anyone else's code.
+If one member changed the format of the data they hand on, this notebook cell would fail immediately,
+so it serves both as an example of use and as a test that the three parts still fit together.
 
-ในเว็บจริงก็ใช้ลำดับเดียวกันนี้ ทุกเช้า 08:00 ระบบใช้ merge sort เรียงใบยืม
-แล้วใช้ binary search หาของที่ต้องคืน เพื่อส่งสรุปทาง LINE ให้เจ้าของร้าน
+The live web application uses the same sequence. Every morning at 08:00 it sorts the rentals with merge sort,
+then uses binary search to find what is due, and sends the shop owner a summary on LINE.
 
-## ตัวเลขสำคัญของทั้งเล่ม
+## Key numbers of the report
 
-เทียบอัลกอริทึมที่เขียนเองกับวิธีง่ายที่สุดที่ทำงานเดียวกัน บนชุด D (1,000 รายการ)
+Each hand-written algorithm against the simplest method that does the same job, on set D (1,000 records).
 
-| ส่วน | งาน | วิธีง่าย | ที่เขียนเอง | เร็วขึ้น | ของ Python (ตัวเทียบ) |
+| Part | Task | Simple method | Hand-written | Speed-up | Python's own (baseline) |
 |---|---|---|---|---:|---|
-| 1 — Kim | ค้นทุกรหัสหนึ่งครั้ง | วน list 21.753 ms | ตารางแฮช 1.530 ms | **14.2×** | `dict` 0.053 ms |
-| 2 — Neo | ค้นทุกรหัสหนึ่งครั้ง | ไล่ทีละตัว 21.812 ms | binary search 1.759 ms | **12.4×** | การไล่ดูทั้ง list (คอลัมน์ "วิธีง่าย") |
-| 3 — Kul | เรียงทั้งชุดหนึ่งรอบ | bubble sort 90.516 ms | merge sort 2.619 ms | **34.6×** | `sorted()` 0.124 ms |
+| 1 — Kim | Look up every code once | List scan 21.753 ms | Hash table 1.530 ms | **14.2×** | `dict` 0.053 ms |
+| 2 — Neo | Look up every code once | One-by-one scan 21.812 ms | Binary search 1.759 ms | **12.4×** | Scanning the whole list (the "simple method" column) |
+| 3 — Kul | Sort the whole set once | Bubble sort 90.516 ms | Merge sort 2.619 ms | **34.6×** | `sorted()` 0.124 ms |
 
-## ความซับซ้อนของทุกอัลกอริทึมในเล่ม
+## Complexity of every algorithm in the report
 
-| ส่วน | อัลกอริทึม | เวลา (เฉลี่ย) | เวลา (แย่สุด) | หน่วยความจำ |
+| Part | Algorithm | Time (average) | Time (worst) | Memory |
 |---|---|---|---|---|
-| 1 | ค้น · เพิ่ม · ลบ ด้วยตารางแฮช | O(1) | O(n) | O(n) |
-| 2 | binary search | O(log n) | O(log n) | O(1) |
-| 2 | คำถามแบบช่วง `find_due_before` | O(log n + k) | O(log n + k) | O(k) |
-| 2 | การนับ (`count_*`) | O(n) | O(n) | O(1) |
-| 3 | merge sort | O(n log n) | O(n log n) | O(n) |
-| 3 | การจัดกลุ่ม (`group_by_*`) | O(n) | O(n) | O(n) |
+| 1 | Lookup · insert · delete with the hash table | O(1) | O(n) | O(n) |
+| 2 | Binary search | O(log n) | O(log n) | O(1) |
+| 2 | Range query `find_due_before` | O(log n + k) | O(log n + k) | O(k) |
+| 2 | Counting (`count_*`) | O(n) | O(n) | O(1) |
+| 3 | Merge sort | O(n log n) | O(n log n) | O(n) |
+| 3 | Grouping (`group_by_*`) | O(n) | O(n) | O(n) |
 
-รายละเอียดและที่มาของแต่ละค่าอยู่ในหัวข้อ Big-O ของส่วนนั้น
+The reasoning behind each value is in the Big-O section of that part.
 
-## สิ่งที่ทั้งสามส่วนพบตรงกัน
+## What all three parts found
 
-**1. บนข้อมูลน้อย วิธีง่ายชนะ**
-ทั้งสามส่วนเจอเหมือนกันบนชุด A–C (10–12 รายการ) — วน list เร็วกว่าตารางแฮช
-ไล่ทีละตัวเร็วกว่า binary search และ bubble sort พอๆ กับหรือเร็วกว่า merge sort
-เพราะที่ n น้อย ค่าใช้จ่ายคงที่ของการคำนวณ (แฮช · หาตรงกลาง · แบ่งครึ่ง) มีน้ำหนักมากกว่างานจริง
-Big-O บอกว่าอะไร **โตช้ากว่า** ไม่ได้บอกว่าอะไร **เร็วกว่าที่ n ทุกค่า**
-ถ้าวัดแค่ชุดเล็กแล้วสรุป จะสรุปผิดทั้งสามส่วน
+**1. On small data, the simple method wins.**
+All three parts saw the same thing on sets A–C (10–12 records): a list scan beat the hash table,
+a one-by-one scan beat binary search, and bubble sort matched or beat merge sort.
+When n is small, the fixed cost of the clever part (hashing, finding the middle, splitting) outweighs the real work.
+Big-O tells us what **grows more slowly**, not what is **faster at every n**.
+Measuring only the small sets would lead to the wrong conclusion in all three parts.
 
-**2. บนข้อมูลมาก ความต่างของ Big-O วัดออกมาเป็นตัวเลขได้จริง**
-ข้อมูลโตขึ้น 100 เท่าจากชุด A ไป D ส่วนที่ 2 วัดได้ว่า binary search โต 293 เท่า
-ใกล้กับที่ O(log n) ทำนายไว้ที่ 300 เท่า และตารางแฮชโต 99 เท่า ใกล้กับที่ทำนายไว้ 100 เท่า
+**2. On large data, the Big-O difference shows up in the measurements.**
+From set A to set D the data grows 100 times. Part 2 measured binary search growing 293 times,
+close to the 300 times O(log n) predicts, and the hash table growing 99 times, close to the predicted 100.
 
-**3. ของ Python เร็วกว่าที่เราเขียนทุกตัว แต่เป็นเพราะภาษา C ไม่ใช่เพราะอัลกอริทึม**
-`dict` · `sorted()` · `bisect` เขียนด้วยภาษา C จึงเร็วกว่าที่เขียนด้วย Python หลายสิบเท่า
-แต่อยู่ในระดับ Big-O เดียวกัน คือโตในอัตราเดียวกันเมื่อข้อมูลโตขึ้น ต่างกันแค่ค่าคงที่
+**3. Python's built-ins beat every hand-written version — because of C, not because of the algorithm.**
+`dict`, `sorted()` and `bisect` are written in C, so they are many times faster than the same idea written in Python.
+They are in the same Big-O class, however: they grow at the same rate as the data grows, and differ only by a constant factor.
 
-**4. ไม่มีโครงสร้างข้อมูลไหนตอบได้ทุกคำถาม**
-ตารางแฮชเร็วที่สุดเมื่อรู้รหัสตรงเป๊ะ แต่ตอบคำถามแบบช่วงไม่ได้ และเรียงลำดับไม่ได้
-list ที่เรียงแล้วตอบคำถามแบบช่วงได้ แต่ต้องเรียงก่อน ซึ่งเป็นงานของ merge sort
-ระบบจริงจึงเก็บข้อมูลทั้งสองแบบ แล้วเลือกใช้ตามชนิดของคำถาม
+**4. No single data structure answers every question.**
+A hash table is fastest when the exact code is known, but it cannot answer range questions and cannot be sorted.
+A sorted list answers range questions, but it has to be sorted first, which is merge sort's job.
+The real system therefore keeps both, and chooses by the kind of question being asked.
