@@ -1,0 +1,156 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0">
+  <diagram id="Kuxq5UKm-CQMjf21PSdu" name="flow_kul_7_group">
+    <mxGraphModel dx="2838" dy="1278" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-1" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" value="Flowchart 7 — การจัดกลุ่ม: group_by_type และ group_by_status" vertex="1">
+          <mxGeometry height="34" width="787" x="20" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-2" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#555555;" value="sort_group.py · รับ items เข้ามาทางพารามิเตอร์ ไม่ได้ import ไฟล์ของใครในทีม · เดินข้อมูลรอบเดียวเหมือน count_by_status แต่เก็บรายการทั้งใบลงถัง ไม่ใช่แค่นับจำนวน" vertex="1">
+          <mxGeometry height="20" width="787" x="20" y="44" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;group_by_type(items) → dict&lt;/b&gt;&lt;br&gt;จัดกลุ่มตามหมวดอุปกรณ์ · O(n)&lt;br&gt;&lt;i&gt;ไม่รู้ล่วงหน้าว่ามีหมวดอะไรบ้าง&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="320" x="40" y="76" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="&lt;b&gt;group_by_status(items) → dict&lt;/b&gt;&lt;br&gt;จัดกลุ่มตามสถานะ · O(n)&lt;br&gt;&lt;i&gt;รู้ล่วงหน้าว่ามีแค่ 3 สถานะ&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="320" x="440" y="76" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-5" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="เริ่ม" vertex="1">
+          <mxGeometry height="44" width="200" x="100" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-6" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="เริ่ม" vertex="1">
+          <mxGeometry height="44" width="200" x="500" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" value="groups = { }&lt;br&gt;&lt;i&gt;เริ่มจาก dict เปล่า&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="320" x="40" y="196" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" value="groups = { ok: [ ], out: [ ], broken: [ ] }&lt;br&gt;&lt;i&gt;สร้างครบ 3 คีย์ตั้งแต่ต้น&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="320" x="440" y="196" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-9" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="ยังมีรายการถัดไปไหม?" vertex="1">
+          <mxGeometry height="90" width="320" x="40" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-10" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="ยังมีรายการถัดไปไหม?" vertex="1">
+          <mxGeometry height="90" width="320" x="440" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-11" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="มีคีย์ &quot;กล้อง&quot; ใน groups&lt;br&gt;แล้วหรือยัง?&lt;br&gt;&lt;i&gt;หมวดจริงจาก datasets.py: กล้อง · เลนส์&lt;br&gt;ขาตั้ง · ไฟ · ไมโครโฟน&lt;/i&gt;" vertex="1">
+          <mxGeometry height="100" width="320" x="40" y="388" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-12" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#333333;fontSize=12;" value="status เป็นหนึ่งใน&lt;br&gt;3 คีย์ที่รู้จักไหม?&lt;br&gt;&lt;i&gt;ค่าแปลกปลอมถูกข้าม ไม่ทำให้พัง&lt;/i&gt;" vertex="1">
+          <mxGeometry height="100" width="320" x="440" y="388" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-13" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="สร้างคีย์ใหม่ให้เป็น list ว่าง&lt;br&gt;&lt;i&gt;groups.setdefault ทำให้ในคำสั่งเดียว&lt;/i&gt;" vertex="1">
+          <mxGeometry height="60" width="320" x="40" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-14" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#777777;" value="&lt;i&gt;ไม่มีขั้นตอนสร้างคีย์&lt;br&gt;เพราะสร้างครบตั้งแต่ต้น&lt;/i&gt;" vertex="1">
+          <mxGeometry height="50" width="150" x="445" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="groups[category].append(item)" vertex="1">
+          <mxGeometry height="60" width="320" x="40" y="592" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="groups[status].append(item)" vertex="1">
+          <mxGeometry height="60" width="320" x="440" y="592" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="คืน groups&lt;br&gt;&lt;i&gt;มีเฉพาะหมวดที่พบจริงในข้อมูล&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="320" x="40" y="716" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="คืน groups&lt;br&gt;&lt;i&gt;ครบ 3 คีย์เสมอ แม้บางกลุ่มว่าง&lt;/i&gt;" vertex="1">
+          <mxGeometry height="70" width="320" x="440" y="716" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-19" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="จบ" vertex="1">
+          <mxGeometry height="44" width="200" x="100" y="818" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-20" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" value="จบ" vertex="1">
+          <mxGeometry height="44" width="200" x="500" y="818" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-21" parent="1" style="text;html=1;align=left;verticalAlign=top;fontSize=11;fillColor=#f9f9f9;strokeColor=#cccccc;spacing=10;" value="&lt;b&gt;ทำไมเดินรอบเดียวแล้วแบ่งถัง ถึงเร็วกว่าวนหาทีละหมวด&lt;/b&gt;&lt;br&gt;&lt;br&gt;• วิธีแบ่งถังอ่านข้อมูล &lt;b&gt;รอบเดียว&lt;/b&gt; ไม่ว่าจะมีกี่หมวด จึงเป็น &lt;b&gt;O(n)&lt;/b&gt;&lt;br&gt;• วิธีวนหาทีละหมวด (วนหาแต่ &quot;กล้อง&quot; ก่อน แล้ววนใหม่หา &quot;เลนส์&quot;) ต้องอ่านข้อมูลทั้งก้อนซ้ำ &lt;b&gt;เท่าจำนวนหมวด&lt;/b&gt; จึงเป็น &lt;b&gt;O(n × จำนวนหมวด)&lt;/b&gt;&lt;br&gt;• ชุดข้อมูลของทีมมี &lt;b&gt;5 หมวด&lt;/b&gt; (กล้อง · เลนส์ · ขาตั้ง · ไฟ · ไมโครโฟน) วิธีวนทีละหมวดจึงต้องอ่านข้อมูล &lt;b&gt;ซ้ำ 5 รอบ&lt;/b&gt; เพื่อให้ได้ผลลัพธ์เดียวกัน&lt;br&gt;• &lt;b&gt;หน่วยความจำ O(n)&lt;/b&gt; ทั้งสองฟังก์ชัน เพราะทุกรายการถูกเก็บลงถังใดถังหนึ่ง ไม่มีรายการไหนถูกคัดทิ้ง ต่างจากการนับที่ใช้ &lt;b&gt;O(1)&lt;/b&gt;&lt;br&gt;• ต่างจาก &lt;b&gt;count_by_status ของ Neo&lt;/b&gt; ตรงที่ตัวนั้นเก็บแค่ &lt;b&gt;จำนวน&lt;/b&gt; ส่วนตัวนี้เก็บ &lt;b&gt;รายการทั้งใบ&lt;/b&gt; ใช้ตอนต้องการรู้ว่า &quot;มีอะไรบ้าง&quot; ไม่ใช่แค่ &quot;กี่ชิ้น&quot;&lt;br&gt;• ทั้งสองฟังก์ชัน &lt;b&gt;คืนคีย์ตามที่สัญญาไว้เสมอ&lt;/b&gt; — group_by_status คืนครบ 3 คีย์แม้บางกลุ่มว่าง เพื่อไม่ให้คนเอาไปใช้ต่อต้องเขียน .get() ดักทุกที่ ซึ่งจะมีคนลืมสักที่แน่นอน" vertex="1">
+          <mxGeometry height="160" width="787" x="20" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-22" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-23" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-24" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-11" value="ยังมี">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-25" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-17" value="หมดแล้ว">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="398" y="321" />
+              <mxPoint x="398" y="751" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-26" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-13" value="ยังไม่มีคีย์นี้">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-27" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-15" value="มีแล้ว">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="374" y="438" />
+              <mxPoint x="374" y="622" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-28" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-29" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-9" value="วนไปดูรายการถัดไป">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="682" />
+              <mxPoint x="20" y="682" />
+              <mxPoint x="20" y="321" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-30" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-31" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-32" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-33" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-12" value="ยังมี">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-34" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-18" value="หมดแล้ว">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="321" />
+              <mxPoint x="790" y="751" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-35" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-16" value="ใช่">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-36" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-10" value="ไม่ — ข้ามไป">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="438" />
+              <mxPoint x="420" y="321" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-37" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="1EbR7DAvwTjFx6VMF4nU-10" value="วนไปดูรายการถัดไป">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="682" />
+              <mxPoint x="420" y="682" />
+              <mxPoint x="420" y="321" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1EbR7DAvwTjFx6VMF4nU-38" edge="1" parent="1" source="1EbR7DAvwTjFx6VMF4nU-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="1EbR7DAvwTjFx6VMF4nU-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
