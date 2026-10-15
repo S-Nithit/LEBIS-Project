@@ -78,7 +78,8 @@ step. The project uses no migration tool, and none is planned during the course.
 | Free account: `POST /api/items` with 50 items already stored | **403** |
 | Free account: `POST /api/line/digest` | **403** |
 | Pro account linked to LINE: `POST /api/line/test` | The message arrives in LINE |
-| Non-admin account: `GET /api/admin/*` (once the admin API exists) | **403** |
+| Non-admin account (Free or Pro): `GET /api/admin/overview` | **403** |
+| No token, or a forged token | **401** |
 | Register through the Vercel domain, then look for the row in Railway's database | The row exists — proves the rewrite reaches the production backend |
 
 ## 11.6 Rolling back
