@@ -119,7 +119,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   table { border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 9.5pt; page-break-inside: avoid; }
   th, td { border: 1px solid #c9d3d5; padding: 4pt 6pt; text-align: left; vertical-align: top; }
   th { background: #eef3f4; }
-  code { font-family: Menlo, monospace; font-size: 9pt; background: #f1f4f5; padding: 0 2pt; border-radius: 2pt; }
+  code { font-family: Menlo, "Sarabun", monospace; font-size: 9pt; background: #f1f4f5; padding: 0 2pt; border-radius: 2pt; }
   pre { background: #f1f4f5; padding: 8pt; border-radius: 4pt; white-space: pre-wrap; page-break-inside: avoid; }
   pre code { background: none; padding: 0; }
   img { max-width: 100%; display: block; margin: 8pt auto; page-break-inside: avoid; }
