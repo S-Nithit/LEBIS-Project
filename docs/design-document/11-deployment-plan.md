@@ -45,6 +45,7 @@ ignores; in production they are set in the Railway and Vercel dashboards.
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Railway | The operator account for the admin dashboard |
 | `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_CHANNEL_SECRET` | Railway | Sending LINE messages and verifying webhooks |
 | `LINE_ADD_FRIEND_URL` | Railway | Add-friend link for the LEBIS Official Account, shown on the settings page |
+| `LINE_DAILY_JOB` | Railway | `off` pauses the 08:00 summary; unset or any other value runs it. Paused between test rounds to save the 300-message monthly quota |
 | `BACKEND_URL` | Vercel | Where the `/api/*` rewrite forwards requests |
 
 The system starts without the LINE variables. LINE endpoints then answer
