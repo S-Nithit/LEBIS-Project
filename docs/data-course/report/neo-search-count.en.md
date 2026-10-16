@@ -2,7 +2,6 @@
 
 > English version of `neo-search-count.md`.
 > Every number comes from `LEBIS_Final.ipynb` (the combined notebook of all three members), committed in the repository — the same file linked from Colab.
-> If the notebook is run again, replace whole tables with numbers from that run; never mix two runs.
 
 ## 2.1 The process chosen
 

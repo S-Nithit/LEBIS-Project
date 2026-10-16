@@ -2,8 +2,6 @@
 
 > English translation of `kul-sort-group.md`, Kul's section. The content, analysis and numbers are Kul's; only the language has changed.
 > Every timing number comes from `LEBIS_Final.ipynb` (the combined notebook of all three members), sections 4 and 5, committed in the repository — the same file linked from Colab.
-> If the notebook is run again, replace whole tables with numbers from that run; never mix two runs.
-> When sharing the Colab link, do not press Run all in the shared file; the saved output is the run that matches this report.
 
 ## 3.1 The process chosen
 

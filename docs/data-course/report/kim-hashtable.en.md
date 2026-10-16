@@ -2,7 +2,6 @@
 
 > English translation of `kim-hashtable.md`, which was written by Kim. The content, analysis and numbers are Kim's; only the language has changed.
 > Every number comes from `LEBIS_Final.ipynb` (the combined notebook of all three members), committed in the repository — the same file linked from Colab.
-> If the notebook is run again, replace whole tables with numbers from that run; never mix two runs.
 
 ## 1.1 The process chosen
 
