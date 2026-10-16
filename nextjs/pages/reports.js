@@ -22,7 +22,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiDownload, apiFetch, errorMessage } from "@/lib/api";
-import { useAuth } from "@/lib/useAuth";
+import { isDeadToken, rememberSignOutReason, useAuth } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
 import { cn } from "@/lib/utils";
 
@@ -139,7 +139,7 @@ function TopItems({ items }) {
               <div className="min-w-0 flex-1">
                 <p className="t-body truncate font-medium">{item.name}</p>
                 <p className="t-caption">
-                  {item.code} · {fill(t("reports.topRentals"), { count: item.rentals })}
+                  {item.code} · {fill(t(item.rentals === 1 ? "reports.topRentalsOne" : "reports.topRentals"), { count: item.rentals })}
                 </p>
               </div>
               <span className="t-body font-medium">{formatMoney(item.revenue)}</span>
@@ -177,7 +177,7 @@ function History({ rows }) {
               <CardRow label={t("reports.colBorrowed")}>{formatDate(row.borrowed_at, language)}</CardRow>
               <CardRow label={t("reports.colReturned")}>{returned(row)}</CardRow>
               <CardRow label={t("reports.colAmount")}>
-                {formatMoney(row.amount)} · {fill(t("reports.days"), { count: row.days })}
+                {formatMoney(row.amount)} · {fill(t(row.days === 1 ? "reports.daysOne" : "reports.days"), { count: row.days })}
               </CardRow>
             </li>
           ))}
@@ -244,6 +244,11 @@ export default function ReportsPage() {
   // จำเลขคำขอล่าสุดไว้ คำตอบที่ไม่ใช่ของคำขอล่าสุดทิ้งไป — การกดครั้งล่าสุดต้องชนะเสมอ
   const latestRequest = useRef(0);
 
+  // logout จาก useAuth เป็นฟังก์ชันใหม่ทุกครั้งที่ render
+  // ใส่ลงใน deps ของ loadReport ตรงๆ จะทำให้ useEffect ข้างล่างโหลดรายงานซ้ำไม่จบ จึงเก็บใน ref
+  const logoutRef = useRef(logout);
+  logoutRef.current = logout;
+
   const loadReport = useCallback(async () => {
     const requestId = ++latestRequest.current;
     setReportLoading(true);
@@ -252,7 +257,15 @@ export default function ReportsPage() {
       const data = await apiFetch(reportPath(range));
       if (requestId === latestRequest.current) setReport(data);
     } catch (error) {
-      if (requestId === latestRequest.current) setReportError(errorMessage(error, t));
+      if (requestId !== latestRequest.current) return;
+      // token ตายระหว่างเปิดหน้านี้ — พาไปหน้าเข้าสู่ระบบ เหมือน account.js / settings.js
+      // ไม่ขึ้นกล่องแดง "ลองอีกครั้ง" ที่ส่ง token ใบที่ตายแล้วซ้ำไปเรื่อยๆ
+      if (isDeadToken(error)) {
+        rememberSignOutReason(error.code);
+        logoutRef.current();
+        return;
+      }
+      setReportError(errorMessage(error, t));
     } finally {
       if (requestId === latestRequest.current) setReportLoading(false);
     }
@@ -269,6 +282,11 @@ export default function ReportsPage() {
       await apiDownload(reportPath(range, ".csv"), "lebis-rentals.csv");
       toast.success(t("reports.exported"));
     } catch (error) {
+      if (isDeadToken(error)) {
+        rememberSignOutReason(error.code);
+        logout();
+        return;
+      }
       setExportError(errorMessage(error, t));
     } finally {
       setExporting(false);
@@ -315,7 +333,17 @@ export default function ReportsPage() {
 
         <div className="mb-5 flex flex-col gap-3">
           <RangePicker value={range} onChange={setChosenRange} pro={pro} />
-          {!pro ? <p className="t-caption">{t("reports.limited")}</p> : null}
+          {!pro ? (
+            <div>
+              <p className="t-caption">{t("reports.limited")}</p>
+              <Link
+                href="/pricing"
+                className="inline-flex min-h-[44px] items-center font-medium text-ink underline underline-offset-4 hover:no-underline"
+              >
+                {t("reports.seePlans")}
+              </Link>
+            </div>
+          ) : null}
         </div>
 
         {reportLoading && !report ? (

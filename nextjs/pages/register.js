@@ -19,7 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 
-import { apiFetch, errorMessage, fieldToInputId, getToken, saveToken } from "@/lib/api";
+import { apiFetch, errorMessage, fieldToInputId, hasLiveToken, saveToken } from "@/lib/api";
 import { useLanguage } from "@/lib/useLanguage";
 import { useSlowRequest } from "@/lib/useSlowRequest";
 import { AuthLayout } from "@/components/AuthLayout";
@@ -63,7 +63,8 @@ export default function Register() {
   //    ทางที่ถูกคือบอกให้รู้ แล้วให้เลือกเอง
   const [signedInAs, setSignedInAs] = useState("");
   useEffect(() => {
-    if (!getToken()) return;
+    // token หมดอายุแล้วไม่นับ — เดิมขึ้นว่า "ยังเข้าสู่ระบบอยู่" แล้วปุ่มไปหน้าบัญชีก็เด้งกลับมาที่นี่
+    if (!hasLiveToken()) return;
     // ถ้าไม่ได้ติ๊ก "จำฉันไว้" ไว้ เราก็ไม่รู้ว่าเป็นอีเมลอะไร
     // ห้ามโชว์เครื่องหมายคำถามให้ผู้ใช้อ่าน ให้ใช้ข้อความที่ไม่ต้องรู้อีเมลแทน
     try {

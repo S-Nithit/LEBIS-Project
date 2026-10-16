@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 import logging
 
+import asyncpg
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -84,6 +85,27 @@ async def handle_validation_error(request: Request, error: RequestValidationErro
                 "message": raw or "ข้อมูลที่กรอกไม่ถูกต้อง",
             }
         },
+    )
+
+
+# คำขอสองตัวมาพร้อมกันแล้วชน UNIQUE ของฐานข้อมูล (เช่นสองเครื่องเพิ่มรหัสเดียวกันในวินาทีเดียว)
+# route เช็กซ้ำก่อนเขียนแล้ว แต่ระหว่าง "เช็ก" กับ "เขียน" อีกคำขอแทรกได้
+# ไม่ดักไว้ = 500 "ระบบขัดข้อง" ทั้งที่ระบบไม่ได้พัง แค่ข้อมูลชนกัน
+@app.exception_handler(asyncpg.exceptions.UniqueViolationError)
+async def handle_unique_violation(request: Request, error: Exception):
+    return JSONResponse(
+        status_code=409,
+        content={"detail": {"code": "conflict", "message": "ข้อมูลนี้เพิ่งถูกบันทึกจากที่อื่นพร้อมกัน"}},
+    )
+
+
+# ตัวเลขเกินที่คอลัมน์รับได้ เช่น id = 99999999999 เกินขนาดของ INT ใน Postgres
+# เป็นข้อมูลที่ผู้ใช้ส่งมาผิด ไม่ใช่ระบบพัง — ตอบ 422 แทน 500
+@app.exception_handler(asyncpg.exceptions.DataError)
+async def handle_bad_value(request: Request, error: Exception):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": {"code": "invalid_input", "field": None, "message": "ข้อมูลที่กรอกไม่ถูกต้อง"}},
     )
 
 

@@ -31,6 +31,7 @@ module.exports = {
         // ขนาดตัวอักษรตามหัวข้อ 3 ของ brand.md — ใช้ชื่อพวกนี้แทนการใส่ px เอง
         eyebrow: ["var(--text-eyebrow)", { lineHeight: "1.4" }],
         label: ["var(--text-label)", { lineHeight: "1.4" }],
+        caption: ["var(--text-caption)", { lineHeight: "1.5" }],
         body: ["var(--text-body)", { lineHeight: "1.6" }],
         section: ["var(--text-section)", { lineHeight: "1.3" }],
         title: ["var(--text-page-title)", { lineHeight: "1.2" }],
