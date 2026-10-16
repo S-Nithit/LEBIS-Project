@@ -45,7 +45,13 @@ const TEAM = [
 function findSectionFiles() {
   const files = readdirSync(DOC_DIR).filter((f) => /^\d\d-.+\.md$/.test(f));
   const byNumber = new Map();
-  for (const f of files) byNumber.set(Number(f.slice(0, 2)), f);
+  for (const f of files) {
+    const n = Number(f.slice(0, 2));
+    // สองไฟล์เลขเดียวกัน (เช่น 10-timeline.md กับ 10-timeline_1.md ที่ลืมลบ)
+    // ถ้าเงียบ ตัวที่ถูกเลือกขึ้นกับลำดับชื่อไฟล์ — ฉบับเก่าอาจไปอยู่ในเล่มโดยไม่มีใครรู้
+    if (byNumber.has(n)) problems.push(`หัวข้อ ${n} มีสองไฟล์: ${byNumber.get(n)} กับ ${f} — ลบตัวที่ไม่ใช้ออก`);
+    byNumber.set(n, f);
+  }
   return byNumber;
 }
 
@@ -119,7 +125,7 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   table { border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 9.5pt; page-break-inside: avoid; }
   th, td { border: 1px solid #c9d3d5; padding: 4pt 6pt; text-align: left; vertical-align: top; }
   th { background: #eef3f4; }
-  code { font-family: Menlo, monospace; font-size: 9pt; background: #f1f4f5; padding: 0 2pt; border-radius: 2pt; }
+  code { font-family: Menlo, "Sarabun", monospace; font-size: 9pt; background: #f1f4f5; padding: 0 2pt; border-radius: 2pt; }
   pre { background: #f1f4f5; padding: 8pt; border-radius: 4pt; white-space: pre-wrap; page-break-inside: avoid; }
   pre code { background: none; padding: 0; }
   img { max-width: 100%; display: block; margin: 8pt auto; page-break-inside: avoid; }

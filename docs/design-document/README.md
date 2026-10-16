@@ -10,19 +10,19 @@
 | หัวข้อ | ไฟล์ | เจ้าของ | สถานะ |
 |---|---|---|---|
 | 1. Project Overview | `01-project-overview.md` | Kim | ✅ |
-| 2. Requirements (functional + non-functional) | `02-requirements.md` | Neo | |
-| 3. UI/UX Design (Figma wireframes + user flow) | `03-ui-ux-design.md` | Sea | |
+| 2. Requirements (functional + non-functional) | `02-requirements.md` | Neo | ✅ |
+| 3. UI/UX Design (Figma wireframes + user flow) | `03-ui-ux-design.md` | Sea | ✅ |
 | 4. System Design (architecture + ER diagram) | `04-system-design.md` | Kim | ✅ |
 | 5. Security Design (JWT, password hashing, RBAC) | `05-security-design.md` | Kul | |
 | 6. Monetization & Feature Gating | `06-monetization.md` | Kul | |
-| 7. Business Analytics Dashboard | `07-analytics-dashboard.md` | Sea | |
-| 8. External System Integration (LINE Messaging API) | `08-external-integration.md` | Neo | |
-| 9. Testing Plan | `09-testing-plan.md` | Neo | |
-| 10. Timeline and Milestones | `10-timeline.md` | Sea | |
+| 7. Business Analytics Dashboard | `07-analytics-dashboard.md` | Sea | ✅ |
+| 8. External System Integration (LINE Messaging API) | `08-external-integration.md` | Neo | ✅ |
+| 9. Testing Plan | `09-testing-plan.md` | Neo | ✅ |
+| 10. Timeline and Milestones | `10-timeline.md` | Sea | ✅ |
 | 11. Deployment Plan | `11-deployment-plan.md` | Kim | ✅ |
 
-> ลำดับและชื่อหัวข้อมาจากแผนที่แบ่งงานกันไว้ ก่อนเขียนให้เทียบกับแม่แบบของอาจารย์ใน Notion อีกรอบ
-> ถ้าแม่แบบมีหัวข้อย่อยที่บังคับ ต้องมีครบ
+> แม่แบบของอาจารย์อยู่ที่ [`template-2026.md`](template-2026.md) — ก่อนเขียนเปิดดูหัวข้อของตัวเอง
+> หัวข้อย่อยที่แม่แบบระบุ (เช่น 2.1, 2.2, 9.1–9.3, 11.1–11.2) ต้องมีครบ และใช้ชื่อเดียวกับแม่แบบ
 
 ## กติกาการเขียน
 

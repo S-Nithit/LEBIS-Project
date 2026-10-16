@@ -1,25 +1,35 @@
 # 1. Project Overview
 
-**LEBIS — Lab & Rental Equipment Borrow and Inventory System**
-Live system: <https://lebis-project.vercel.app>
+**Project name:** LEBIS — Lab & Rental Equipment Borrow and Inventory System
 
-## 1.1 The problem
+**Live system:** <https://lebis-project.vercel.app>
 
-Small rental shops still track their stock on paper or in one shared Excel file.
-This causes three problems that cost them money every week.
+**Team members:** Nithit Srisengsuwanchai (Kim) · Intuch Srisawat (Neo) ·
+Issaree Ausavapirom (Kul) · Pongsicha Seesavat (Sea). Responsibilities are in
+Section 1.7.
 
-1. **The owner does not know what is on the shelf right now.** A customer asks for
-   an item and someone has to walk to the shelf to check.
-2. **Nobody remembers who took what.** When an item is late, the shop usually
-   notices by accident. Some items come back days late, and some never come back.
-3. **The owner cannot tell which items earn.** There is no record of how often
-   each item goes out, so the shop cannot decide what to buy more of.
+## 1.1 Objective
 
-## 1.2 Who the product is for
+LEBIS is a web application for small equipment-rental shops. It shows what is on
+the shelf, who has each item and when it is due back, and reminds the owner on
+LINE before an item is late. Its primary goal is to cut the money a shop loses to
+late and lost items. It is intended for owners and staff of rental shops with one
+to three people who track their stock on paper or in a shared Excel file today.
 
-The owner of a small rental shop with one to three staff — camera rental, tool
-rental or event equipment rental. They use a phone more than a computer, they do
-not have an IT person, and they will not pay for software that takes a week to set up.
+## 1.2 Target user persona
+
+**Who:** the owner of a small rental shop with one to three staff — camera rental,
+tool rental or event equipment rental. They use a phone more than a computer, they
+do not have an IT person, and they will not pay for software that takes a week to
+set up.
+
+Their pain points, and how LEBIS resolves each one:
+
+| Pain point | What it costs the shop | How LEBIS resolves it |
+|---|---|---|
+| **The owner does not know what is on the shelf right now.** | A customer asks for an item and someone has to walk to the shelf to check | The Workspace page always shows three numbers: on the shelf, with customers, and overdue |
+| **Nobody remembers who took what.** | Late items are noticed by accident. Some come back days late, and some never come back | Every rental records the customer, phone number and due date. Pro shops get one LINE summary at 08:00 listing what is overdue, due today and due tomorrow |
+| **The owner cannot tell which items earn.** | The shop cannot decide what to buy more of | The Reports page ranks items by estimated revenue and keeps the rental history; Pro shops can export it as CSV |
 
 ## 1.3 What LEBIS does
 
@@ -85,12 +95,13 @@ stack unchanged.
 | External service | LINE Messaging API |
 | Hosting | Vercel (frontend), Railway (backend and database) |
 
-The search, count and hash-table code used by the backend is the same code
-submitted for the Data Structures and Algorithms course. It lives in one folder,
-`backend-api/algorithms/`, and uses only the Python standard library so it also
-runs unchanged in Google Colab.
+The merge sort, binary search and counting code used by the backend is the same
+code submitted for the Data Structures and Algorithms course. It lives in one
+folder, `backend-api/algorithms/`, and uses only the Python standard library so it
+also runs unchanged in Google Colab. The hash table in the same folder is measured
+in the course notebook and is not used by the web application (Section 4.1).
 
-## 1.7 Team
+## 1.7 Team members
 
 | Member | Responsibility |
 |---|---|

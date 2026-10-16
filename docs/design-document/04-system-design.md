@@ -3,7 +3,7 @@
 Diagram sources are in `docs/architecture.md` (Mermaid). The images below are
 rendered from that file.
 
-## 4.1 Architecture
+## 4.1 System Architecture
 
 ![System architecture](images/system-architecture.png)
 
@@ -57,12 +57,24 @@ identical to the queries they replaced.
 | Daily reminder job | Background task inside the backend, 08:00 Bangkok | Same |
 | LINE Messaging API | External service | External service |
 
-## 4.2 Data model
+## 4.2 Database Design
 
 ![Entity relationship diagram](images/er-diagram.png)
 
 Six tables: `users`, `items`, `borrows`, `subscriptions`, `transactions` and
-`notifications`.
+`notifications`. Every table except `users` belongs to one shop through a foreign
+key to `users.email`.
+
+| Table | What one row is | Key attributes | Relationships |
+|---|---|---|---|
+| `users` | One shop account (or the admin) | `email` (PK), `password` (bcrypt hash), `shop_name`, `role` (`admin` / `free` / `pro`), `line_user_id` | Owns items, rentals, subscriptions, transactions and notifications |
+| `items` | One kind of equipment a shop owns | `id` (PK), `owner_email` (FK), `code`, `category`, `total`, `available`, `status` (`ok` / `out` / `broken`), `daily_rate` | Belongs to one user · has many borrows |
+| `borrows` | One rental of one unit to one customer | `id` (PK), `item_id` (FK), `owner_email` (FK), `customer_name`, `customer_phone`, `borrowed_at`, `due_date`, `returned_at`, `status` | Belongs to one item and one user · has many notifications |
+| `subscriptions` | One period of the Pro plan | `id` (PK), `user_email` (FK), `tier`, `started_at`, `expires_at`, `status` (`active` / `cancelled` / `expired`) | Belongs to one user · has many transactions |
+| `transactions` | One payment attempt (simulated) | `id` (PK), `user_email` (FK), `subscription_id` (FK, empty until paid), `amount`, `method`, `status` (`pending` / `paid` / `failed`), `paid_at` | Belongs to one user · belongs to one subscription once paid |
+| `notifications` | One rental included in one LINE reminder | `id` (PK), `user_email` (FK), `borrow_id` (FK), `channel`, `sent_at`, `status` | Belongs to one user and one borrow |
+
+Design points:
 
 - **`users.email` is the primary key.** The boilerplate created the table that
   way. Keeping it means the existing sign-in code and the demo account still work.
@@ -82,7 +94,27 @@ Six tables: `users`, `items`, `borrows`, `subscriptions`, `transactions` and
 - **`notifications` has one row per rental included in a reminder**, so every
   message can be traced back to the rentals and due dates that produced it.
 
-## 4.3 Main flows
+## 4.3 Application Architecture
+
+### Application structure
+
+The repository extends the course boilerplate and keeps its layout. Each layer has
+one job, so a beginner can find where a change belongs.
+
+| Part | Folder | Job |
+|---|---|---|
+| Pages | `nextjs/pages/` | One file per page (Pages Router, JavaScript) |
+| Shared frontend code | `nextjs/lib/`, `nextjs/components/` | `api.js` attaches the JWT to every `/api/*` call; shared layout, forms, empty and loading states |
+| Routes | `backend-api/routes/` | One module per domain (auth, items, borrows, billing, reports, line, admin). Each protected route declares its authorization dependency and its Pydantic models |
+| Queries | `backend-api/queries/` | Every SQL statement, raw SQL with named parameters, one module per domain |
+| Services | `backend-api/services/` | Logic shared by several routes: JWT and roles (`security.py`), the LINE client and daily job (`line_notify.py`), the adapter to the course algorithms (`inventory.py`) |
+| Algorithms | `backend-api/algorithms/` | Data Structures course code, standard library only |
+
+A request flows one way: page → `lib/api.js` → Next.js rewrite → route (its
+authorization dependency and Pydantic request model) → query → PostgreSQL. JSON
+responses go back through Pydantic response models, never as raw database rows; the
+CSV export is the one response sent as a file. The flows below follow this path for
+the main features.
 
 ### Sign in
 
@@ -187,4 +219,4 @@ The owner never types a LINE user ID.
 | Checkout id is the id of a pending `transactions` row, confirmed under row locks | The server sets the amount and can check the id belongs to the caller; locking the user row makes double payment impossible even with several open checkouts | A random id that is never stored cannot be checked, so any confirm call would upgrade the account |
 | One LINE message per shop per day | A free LINE Official Account in Thailand can push 300 messages a month; a daily summary uses about 30 per shop | One message per rental would exhaust the quota for a single busy shop |
 | Reminder job inside the backend process | No extra service to deploy or pay for; the duplicate guards make restarts safe | A separate scheduler service adds cost and one more thing to keep running |
-| Items kept in a list with a hash-table index (algorithms module) | The hash table finds an item by code in O(1) on average; the list keeps an order for sorting and binary search | A hash table alone cannot be sorted or searched by range |
+| Course algorithms in one standard-library-only folder, reached through an adapter (`services/inventory.py`) | The same file runs in the product and in Google Colab; merge sort and binary search sit on the live request path | Writing the algorithms twice — once for the course, once for the product — would let the two copies drift apart |
