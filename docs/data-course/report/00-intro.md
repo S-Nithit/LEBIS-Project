@@ -16,7 +16,7 @@ A shop like this asks the same few questions every day, and each question suits 
 
 Each of us implemented the main algorithm by hand. Python's `dict`, `bisect` and `sorted()` are not used to do the actual work. We only use them as baselines, to check that our results are correct and to compare speed.
 
-All the code is in `backend-api/algorithms/` and imports only the Python standard library, so the same files run in the web application and in Google Colab without any changes.
+All the code is in `backend-api/algorithms/` and imports only the Python standard library, so every file runs unchanged in Google Colab. Some of the functions are also used by the live web application: the counting functions and the range search from Part 2, and the sort by due date from Part 3 (Sections 2.11 and 3.8). The hash table from Part 1 is used in the notebook only.
 
 ## The shared data sets
 

@@ -177,11 +177,21 @@ const coverHtml = `
   </table>
 </section>`;
 
-const tocHtml = `
-<section class="toc"><h2>Contents</h2><ol>
-  ${parts.map((p) => `<li>${esc(p.title)}${p.missing ? ' <span class="todo">(not submitted yet)</span>' : ""}</li>`).join("")}
-  <li>Appendix: Flowcharts</li>
+// สารบัญพร้อมเลขหน้า — เลขหน้ารู้ได้หลังพิมพ์แล้วเท่านั้น จึงพิมพ์สองรอบ (ดูหัวข้อ "พิมพ์เป็น PDF")
+// รอบแรก pages เป็น null ช่องเลขหน้าว่างไว้ก่อน สารบัญอยู่หน้าของมันเองหน้าเดียว
+// (ปกตัดหน้าหลังตัวเอง และ h1 แรกของเนื้อหาขึ้นหน้าใหม่) เลขที่เติมทีหลังจึงไม่ทำให้หน้าอื่นเลื่อน
+const tocTitles = [...parts.map((p) => p.title), "Appendix: Flowcharts"];
+
+function tocHtml(pages) {
+  const rows = tocTitles.map((title, i) => {
+    const todo = parts[i]?.missing ? ' <span class="todo">(not submitted yet)</span>' : "";
+    return `<li><span class="toc-title">${esc(title)}${todo}</span><span class="toc-dots"></span><span class="toc-page">${pages?.[i] ?? ""}</span></li>`;
+  });
+  return `
+<section class="toc"><h2>Contents</h2><ol class="toc-list">
+  ${rows.join("\n  ")}
 </ol></section>`;
+}
 
 const appendixHtml = `
 <h1>Appendix: Flowcharts</h1>
@@ -198,7 +208,7 @@ ${figures.map((f, i) => `
   <p class="caption">Figure ${f.number}: ${esc(f.title)} (${f.owner})${f.of > 1 ? `, page ${f.k} of ${f.of}` : ""}</p>
 </section>`).join("")}`;
 
-const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+const buildHtml = (tocPages) => `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <style>
@@ -238,13 +248,18 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
   .cover .who .gap { padding-top: 6pt; }
 
   .toc h2 { font-size: 16pt; margin-top: 0; }
-  .toc li { margin: 6pt 0; }
+  /* แต่ละแถว: ชื่อ ... จุดไข่ปลา ... เลขหน้าชิดขวา
+     ช่องจุดไม่มีตัวอักษร จึงจัดแนวด้วยขอบล่างของมัน ซึ่งตรงกับเส้นฐานของตัวหนังสือพอดี */
+  .toc-list { list-style: none; padding: 0; margin: 12pt 0 0; }
+  .toc-list li { display: flex; align-items: baseline; margin: 0 0 10pt; }
+  .toc-dots { flex: 1; min-width: 12pt; margin: 0 6pt; border-bottom: 1.2pt dotted #000; }
+  .toc-page { min-width: 16pt; text-align: right; }
 
   /* หน้ารูป: เว้นที่ว่างไว้ให้ PyMuPDF วาง flowchart ลงไป แล้วใส่คำบรรยายไว้ล่างสุด */
   .figpage { height: 245mm; page-break-before: always; display: flex; flex-direction: column; justify-content: space-between; }
   .figpage .slot { color: #fff; font-size: 5pt; line-height: 1; }
   .figpage .caption { text-align: center; font-style: italic; color: #555; font-size: 11pt; margin: 0; }
-</style></head><body>${coverHtml}${tocHtml}<div id="doc"></div>
+</style></head><body>${coverHtml}${tocHtml(tocPages)}<div id="doc"></div>
 <script id="parts" type="application/json">${JSON.stringify(parts).replace(/</g, "\\u003c")}</script>
 <script id="appendix" type="text/html">${appendixHtml.replace(/<\/script/g, "<\\/script")}</script>
 <script>
@@ -268,14 +283,66 @@ mkdirSync(outDir, { recursive: true });
 const out = join(outDir, FINAL ? "LEBIS_Data_Report.pdf" : "LEBIS_Data_Report_DRAFT.pdf");
 const raw = out + ".raw.pdf";
 
-if (!FINAL) writeFileSync(join(outDir, "preview.html"), html);
+// หาว่าหัวข้อแต่ละส่วนในสารบัญตกอยู่หน้าไหนของ PDF ที่พิมพ์แล้ว — คืน list เลขหน้า (ไม่เจอเป็น null)
+// หาง่ายเพราะ h1 ทุกตัวขึ้นหน้าใหม่ (page-break-before) ข้อความแรกของหน้านั้นจึงเป็นหัวข้อเสมอ
+// เริ่มหาตั้งแต่หน้า 3 ข้ามปกกับหน้าสารบัญที่มีชื่อหัวข้อเดียวกันอยู่
+// เลขที่ได้คือเลขหน้าจริงในไฟล์ (ปกเป็นหน้า 1) ตรงกับเลขที่ FINISH พิมพ์ไว้ท้ายหน้า
+// อ่าน stdin เป็น UTF-8 เอง เพราะ Python บน Windows อ่านตามภาษาของเครื่อง และชื่อหัวข้อมีตัวอย่าง "—"
+function locateHeadings(pdf) {
+  const py = `import sys, json, fitz
+titles = json.loads(sys.stdin.buffer.read().decode("utf-8"))
+doc = fitz.open(sys.argv[1])
+texts = [" ".join(p.get_text().split()) for p in doc]
+found = []
+for t in titles:
+    want = " ".join(t.split())
+    found.append(next((i + 1 for i in range(2, len(texts)) if texts[i].startswith(want)), None))
+sys.stdout.buffer.write(json.dumps(found).encode("utf-8"))`;
+  for (const exe of ["python3", "python"]) {
+    const run = spawnSync(exe, ["-c", py, pdf], { input: JSON.stringify(tocTitles), encoding: "utf8" });
+    if (run.status === 0 && run.stdout.trim()) return JSON.parse(run.stdout.trim());
+  }
+  return null;
+}
 
 const browser = await chromium.launch();
-const page = await browser.newPage();
-await page.setContent(html, { waitUntil: "networkidle", timeout: 60000 });
-await page.waitForSelector("body[data-ready='1']", { timeout: 30000 });
-await page.pdf({ path: raw, format: "A4", printBackground: true, margin: { top: "22mm", bottom: "22mm", left: "22mm", right: "22mm" } });
+
+// เปิดหน้าใหม่ทุกรอบ — setContent ซ้ำบนหน้าเดิมเขียนลง window เดิม
+// const parts ของรอบก่อนยังอยู่ สคริปต์รอบสองจึงพังตรงประกาศซ้ำ แล้วรอ data-ready ไม่มีวันมา
+async function printTo(file, tocPages) {
+  const page = await browser.newPage();
+  await page.setContent(buildHtml(tocPages), { waitUntil: "networkidle", timeout: 60000 });
+  await page.waitForSelector("body[data-ready='1']", { timeout: 30000 });
+  await page.pdf({ path: file, format: "A4", printBackground: true, margin: { top: "22mm", bottom: "22mm", left: "22mm", right: "22mm" } });
+  await page.close();
+}
+
+// พิมพ์สองรอบ — รอบแรกยังไม่มีเลขหน้าในสารบัญ เอาไปหาว่าหัวข้ออยู่หน้าไหน
+// รอบสองพิมพ์ใหม่พร้อมเลขหน้า แล้วหาซ้ำ ต้องได้เลขเดิม ถ้าไม่ตรงแปลว่าเลขหน้าในสารบัญเชื่อไม่ได้
+await printTo(raw, null);
+const tocPages = locateHeadings(raw);
+const tocIssues = [];
+if (tocPages) {
+  await printTo(raw, tocPages);
+  const again = locateHeadings(raw);
+  if (JSON.stringify(again) !== JSON.stringify(tocPages)) {
+    tocIssues.push(`เลขหน้าในสารบัญไม่ตรงกับหน้าจริง (รอบแรก ${tocPages.join(", ")} · รอบสอง ${again ? again.join(", ") : "-"})`);
+  }
+  const lost = tocTitles.filter((_, i) => !tocPages[i]);
+  if (lost.length) tocIssues.push(`หาหน้าของหัวข้อในสารบัญไม่เจอ: ${lost.join(" · ")}`);
+}
 await browser.close();
+
+// ฉบับจริงห้ามออกไปพร้อมเลขหน้าในสารบัญที่ผิด — ฉบับร่างแค่รายงานไว้ท้ายผล
+if (FINAL && tocIssues.length) {
+  rmSync(raw, { force: true });
+  console.error("❌ ยังรวมเล่มฉบับจริงไม่ได้\n");
+  for (const p of tocIssues) console.error("  - " + p);
+  process.exit(1);
+}
+problems.push(...tocIssues);
+
+if (!FINAL) writeFileSync(join(outDir, "preview.html"), buildHtml(tocPages));
 
 // ---------------------------------------------------------------------------
 // วางรูป วาดกรอบ ใส่เลขหน้า

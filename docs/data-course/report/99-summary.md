@@ -16,7 +16,7 @@ Set D has 685 rentals. These three steps find 275 rentals that were overdue befo
 
 Each step passes a plain list to the next one, and none of us imports anyone else's code. If one of us changed the format of the data being passed on, this notebook cell would fail straight away, so it works both as an example of how the parts are used and as a test that they still fit together.
 
-The live web application follows the same order. Every morning at 08:00 it sorts the rentals with merge sort, uses binary search to find what is due, and sends the shop owner a summary on LINE.
+The live web application uses the first two steps in the same order. Every morning at 08:00 it sorts the rentals with merge sort, uses binary search to find what is due, and sends the shop owner a summary on LINE. It does not need step 3, because it reads each item's details from the database.
 
 ## Main results
 
@@ -45,8 +45,8 @@ The reasoning behind each value is explained in the Big-O section of the matchin
 
 On small data, the simple method wins. All three parts saw this on sets A to C (10 to 12 records): the list scan beat the hash table, the one-by-one scan beat binary search, and bubble sort was as fast as merge sort or faster. With so few items, the fixed cost of the clever part (hashing, finding the middle, splitting the list) is larger than the actual work. Big-O tells us which method grows more slowly, not which one is faster for every n. If we had only measured the small sets, all three parts would have come to the wrong conclusion.
 
-On large data, the Big-O difference shows up clearly in the measurements. From set A to set D the data grows 100 times. In Part 2, binary search grew 293 times, close to the 300 times that O(log n) predicts, and the hash table grew 99 times, close to the predicted 100.
+On large data, the Big-O difference shows up clearly in the measurements. From set A to set D the data grows 100 times. The test in Part 2 looks up every code in the set, so it makes n lookups, not one. Binary search grew 293 times, close to the 300 times predicted for n lookups at O(log n) each (100 × 3), and the hash table grew 99 times, close to the 100 times predicted for n lookups at O(1) each. A single lookup grows much less: about 3 times for binary search, and not at all for the hash table.
 
-Python's built-in tools were faster than every one of our versions, but because they are written in C, not because they use a better algorithm. `dict`, `sorted()` and `bisect` are many times faster than the same idea written in Python. They are in the same Big-O class, though, so they grow at the same rate as the data and differ only by a constant factor.
+Python's built-in tools were faster than our versions because they are written in C, not because they use a better algorithm. On set D, `dict` and `sorted()` were many times faster than our hash table and our merge sort. They are in the same Big-O class, though, so they grow at the same rate as the data and differ only by a constant factor. (Neo's own notebook also compared `bisect` with our binary search, and `bisect` was only slightly faster.)
 
-No single data structure can answer every question. A hash table is the fastest when the exact code is known, but it cannot answer range questions and has no order. A sorted list can answer range questions, but it has to be sorted first, which is what merge sort is for. This is why the real system keeps both and picks one depending on the question.
+No single data structure can answer every question. A hash table is the fastest when the exact code is known, but it cannot answer range questions and has no order. A sorted list can answer range questions, but it has to be sorted first, which is what merge sort is for. This is why the inventory in our notebook keeps both and picks one depending on the question. In the web application, the database index plays the role of the hash table when an item is looked up by its code.
