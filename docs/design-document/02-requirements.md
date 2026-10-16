@@ -7,7 +7,11 @@ or page that implements it, so each one can be checked against the code.
 Everything listed here is implemented and running on the live system, unless it is
 marked *(planned)*.
 
-## 2.1 Users and roles
+## 2.1 Functional Requirements
+
+### Users and roles
+
+Every functional requirement below is written for one of three kinds of user.
 
 | User | Role in the database | Who they are |
 |---|---|---|
@@ -18,8 +22,6 @@ marked *(planned)*.
 A new account always starts as `free`. There is no way to sign up as an admin: the
 admin account is created when the backend starts, from the `ADMIN_EMAIL` and
 `ADMIN_PASSWORD` environment variables. `admin` passes every Pro check as well.
-
-## 2.2 Functional requirements
 
 ### Accounts and sign-in
 
@@ -97,21 +99,21 @@ The full design is in Section 8.
 | FR-33 | Every page is available in Thai and English. The language is chosen on the landing page, the sign-in and register pages, or the Account page. The choice is remembered in a cookie, so the server renders every later page in that language from the start | `LanguageToggle` · `lib/i18n.js` |
 | FR-34 | Error messages appear in the user's chosen language. The server returns a code, and the page translates it | `detail.code` in every error · `errorMessage()` |
 
-## 2.3 Non-functional requirements
+## 2.2 Non-functional Requirements
 
 Each requirement below has a check that fails when it is broken. Section 9 describes
-the checks.
+the checks, and Section 9.3 maps every requirement to the test that covers it.
 
 ### Security
 
 | ID | Requirement | How it is met | Checked by |
 |---|---|---|---|
 | NFR-1 | Passwords are never stored or logged in readable form | Hashed with bcrypt and a per-password salt | Code review |
-| NFR-2 | Every request that reads or changes shop data proves who sent it | JWT signed with HS256, 24-hour expiry (30 days with "remember me"), verified on every request. The backend refuses to start without `JWT_SECRET` rather than run with a guessable key | Edge cases 8–10 in Section 9.1 |
-| NFR-3 | Every plan limit and every role is enforced by the server, never only by hiding a button | `require_tier("pro")` and `require_role("admin")` on the route itself | Edge cases 1–7 in Section 9.1 |
-| NFR-4 | One shop can never read or change another shop's data | Every SQL statement filters by the signed-in user's `owner_email`. Another shop's id returns 404, which does not confirm the id exists | Edge case 18 |
+| NFR-2 | Every request that reads or changes shop data proves who sent it | JWT signed with HS256, 24-hour expiry (30 days with "remember me"), verified on every request. The backend refuses to start without `JWT_SECRET` rather than run with a guessable key | Cases 8–10 in Section 9.2 |
+| NFR-3 | Every plan limit and every role is enforced by the server, never only by hiding a button | `require_tier("pro")` and `require_role("admin")` on the route itself | Cases 1–7 in Section 9.2 |
+| NFR-4 | One shop can never read or change another shop's data | Every SQL statement filters by the signed-in user's `owner_email`. Another shop's id returns 404, which does not confirm the id exists | Case 18 in Section 9.2 |
 | NFR-5 | User input can never change the meaning of a database query | Every SQL statement uses named parameters; no query is built by joining strings | Code review |
-| NFR-6 | Calls claiming to come from LINE are rejected unless they really do | HMAC-SHA256 signature checked on the raw body (Section 8.8) | Code review · the LINE console's **Verify** button confirms a correctly signed request is accepted |
+| NFR-6 | Calls claiming to come from LINE are rejected unless they really do | HMAC-SHA256 signature checked on the raw body (Section 8.7) | Code review · the LINE console's **Verify** button confirms a correctly signed request is accepted |
 | NFR-7 | No secret is ever committed to the repository | Tokens, keys and passwords come from environment variables; `.env` is ignored by git | Code review |
 | NFR-8 | An exported CSV cannot run a formula when opened in Excel | Any cell starting with `=`, `+`, `-` or `@` is prefixed with `'` | Code review |
 
@@ -122,7 +124,7 @@ the checks.
 | NFR-9 | Lists stay fast as a shop grows | Item lists are paged, 20 per page and never more than 100 |
 | NFR-10 | Finding an item by code does not slow down in proportion to the number of items | Binary search, O(log n). On 1,000 items, all 1,000 lookups took 1.759 ms in total, 12.4 times faster than checking items one by one (Data Structures and Algorithms report, data set D) |
 | NFR-11 | The three numbers at the top of the Workspace page load without delaying the page | Measured on a local Docker setup on 4 October: 7 ms median, 27 ms slowest out of 10 requests |
-| NFR-12 | Reminders stay within LINE's free message quota | One message per shop per day — about 30 a month per shop, against a quota of 300 (Section 8.9) |
+| NFR-12 | Reminders stay within LINE's free message quota | One message per shop per day — about 30 a month per shop, against a quota of 300 (Section 8.8) |
 
 The backend runs on a free hosting tier, so the **first** request after a quiet
 period can take several seconds while the server starts. Later requests are not
@@ -166,7 +168,7 @@ target, not an afterthought.
 | NFR-26 | The algorithms code runs unchanged outside the web application | Files in `backend-api/algorithms/` import only the Python standard library, so they also run in Google Colab |
 | NFR-27 | Team conventions are checked by a program, not by memory | `npm run check` and `npm run check:pages` run before every pull request |
 
-## 2.4 Not implemented
+## 2.3 Not implemented
 
 These were considered and are not part of the current system.
 
@@ -177,4 +179,4 @@ These were considered and are not part of the current system.
 | Several branches or staff accounts under one shop | Out of scope (Section 1.5) |
 | Password reset by email | *(planned)* |
 | Limiting repeated sign-in attempts | *(planned)* — there is currently no limit on how many times a password can be tried |
-| Removing a linked LINE account from the website | *(planned)* — Section 8.11 |
+| Removing a linked LINE account from the website | *(planned)* — Section 8.10 |

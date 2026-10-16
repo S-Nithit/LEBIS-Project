@@ -1,27 +1,70 @@
 # 9. Testing Plan
 
-LEBIS is tested in four layers. Each layer catches a kind of mistake the others
-cannot see, and each one can be run with a single command.
+LEBIS is tested at three levels, following the template: single functions on their
+own (unit), the parts of the system working together (integration), and the system
+checked against its requirements (user acceptance). Each automated check runs with a
+single command.
 
-| Layer | Command | What it checks | When it runs |
+| Level | Command | What it checks | When it runs |
 |---|---|---|---|
-| Algorithm self-checks | `python3 backend-api/algorithms/search.py` (and `datasets.py`, `sort_group.py`) | The Data Structures and Algorithms code returns correct results | Every change to `backend-api/algorithms/` |
-| Code conventions | `npm run check` | Rules in the page code that a reviewer would otherwise have to catch by eye | Before every pull request |
-| Rendered pages | `npm run check:pages` | Opens every page in a real browser and checks what the user actually sees | Before every pull request |
-| Live edge cases | `node scripts/check-edge-cases.mjs` | The access rules, against the deployed system | The day before and the morning of the presentation |
+| Unit (9.1) | `python3 backend-api/algorithms/search.py` (and `datasets.py`, `sort_group.py`) | Each algorithm function returns the right result | Every change to `backend-api/algorithms/` |
+| Integration (9.2) | `node scripts/check-edge-cases.mjs` | The access rules, through the API of the deployed system | The day before and the morning of the presentation |
+| Integration (9.2) | `npm run check:pages` | The pages and the API together, in a real browser | Before every pull request |
+| Acceptance (9.3) | `npm run check` | Usability rules in the page code that a reviewer would otherwise have to catch by eye | Before every pull request |
 
-There is no automated backend unit-test suite. The backend rules are tested through
-the HTTP API instead — by the edge-case script and by the manual checks recorded in
-each pull request (Section 9.6).
+There are no unit tests for the API routes; the algorithm functions are
+unit-tested. The rules inside the routes are tested through the HTTP API instead
+(Section 9.2).
 
-## 9.1 Access control — what the lecturer will test live
+## 9.1 Unit Testing
+
+The search, count and sort code is also the Data Structures and Algorithms
+coursework, so each function is tested on its own, without the database or the web
+server.
+
+**Self-checks.** `datasets.py`, `search.py` and `sort_group.py` each have a `verify()`
+function that runs when the file is executed directly. Each check compares the
+hand-written function with a straightforward reference on the same data, and the
+file exits with an error if any check fails.
+
+| File | Checks | Examples of what is checked |
+|---|---:|---|
+| `datasets.py` | 15 | Every set has its planned size and at least 10 records; codes are unique; set A has no duplicate names and set B does; every set contains a broken item and an overdue rental; every record has exactly the 8 fields; the same set is built identically every time |
+| `search.py` | 23 | Binary search gives the same answer as a one-by-one scan for every code, for codes that do not exist, for the first and last item, and for an empty or one-item list; name search returns every match, not only the first; each count equals a count done by hand; the range query returns exactly the overdue rentals |
+| `sort_group.py` | 17 | Bubble sort and merge sort give the same order as Python's `sorted()`; merge sort keeps equal items in their original order and does not change the input list; every record lands in its own group and none is lost; `group_by_status` always returns all three keys |
+| **Total** | **55** | |
+
+**Shared test data.** Every member tests on the same four data sets from
+`make_dataset()`, built from fixed seeds so results repeat exactly:
+
+| Set | Size | Built to test |
+|---|---|---|
+| A | 10 | Basic correctness |
+| B | 12 | Duplicate names — name search must return every match, not the first |
+| C | 10 | Many items out of stock — counting at the edges |
+| D | 1,000 | Growth: how each method's time changes as data grows |
+
+Broken items are placed at every 7th position so that even the small sets contain
+one; otherwise the "skip broken items" rule would never be exercised.
+
+**Notebook.** `docs/data-course/LEBIS_Final.ipynb` runs every function on sets A–D
+and compares each result with a reference method on the same data. For example,
+the range query "everything due before 1 October" returns 275 rentals by binary
+search and 275 by a full scan of set D, and the two lists must match. The full
+results are in the Data Structures and Algorithms report.
+
+## 9.2 Integration Testing
+
+### Access control — what the lecturer will test live
 
 The presentation on 21 October includes live testing: the lecturer tries actions the
 system must refuse. Every case below is enforced **on the server**, so it holds whether
 the request comes from the website, from a script, or from the interactive API page
 at `/docs`.
 
-The first twelve rows are run automatically by `scripts/check-edge-cases.mjs`.
+The first twelve rows are run automatically by `scripts/check-edge-cases.mjs`
+against the deployed system: the website's API, its database and the sign-in tokens
+together.
 
 | # | Case | Request | Expected | Why it holds |
 |---|---|---|---|---|
@@ -40,7 +83,8 @@ The first twelve rows are run automatically by `scripts/check-edge-cases.mjs`.
 
 The script also confirms two preconditions, because a case is only meaningful if the
 data is set up for it: the Free demo shop must hold exactly 50 items with
-`item_limit = 50`, and the Pro demo shop must have a linked LINE account.
+`item_limit = 50`, and the Pro demo shop must have a linked LINE account. With the
+twelve cases, that makes 14 checks in one run.
 
 The script changes no data. Every request that would write is one that must be
 refused; if any of them is accepted, the script reports a failure.
@@ -56,7 +100,7 @@ Cases checked by hand on the day:
 | 17 | Return the same rental twice | **409** `borrow_already_returned` | The item is not added back to the shelf twice |
 | 18 | Open another shop's item by id | **404** `item_not_found` | Every query filters by `owner_email`. The answer is 404, not 403, so it does not confirm the item exists |
 
-## 9.2 Business rules and data integrity
+### Business rules and data integrity
 
 These rules protect the numbers the owner relies on. Each was tested through the API
 against a running database before its pull request was opened.
@@ -72,33 +116,59 @@ against a running database before its pull request was opened.
 | Broken items are not "with customers" | A shop with 5 cameras and 4 tripods rents 2 cameras, then marks the tripods broken | `borrowed_units` stays **2**. The previous formula reported 6 |
 | Summary counts match the algorithms module | Compare the summary against the SQL it replaced, on normal data and on edge cases (a broken item still holding stock, a rental due today, a rental due yesterday) | Every number identical |
 
-## 9.3 Algorithm correctness
+### Pages and API together
 
-The search, count, hash-table and sort code is also the Data Structures and Algorithms
-coursework, so it is tested on its own, without the database.
+`npm run check:pages` runs against the full local system started with
+`docker compose up` — the Next.js frontend, the FastAPI backend and PostgreSQL. It
+signs in through the real sign-in form with the local example account, then opens
+every page in Chromium: four public pages in light and dark mode for three kinds of
+visitor, plus every page that requires sign-in. It fails if:
 
-- **Self-checks.** `datasets.py`, `search.py` and `sort_group.py` each have a `verify()`
-  function that runs when the file is executed directly. Each check compares the
-  hand-written function with a straightforward reference on the same data.
-- **Shared test data.** Every member measures on the same four data sets from
-  `make_dataset()`, built from fixed seeds so results repeat exactly:
+- Sign-in through the form does not reach the Account page.
+- The page scrolls sideways at 390 px, the width of a common phone.
+- Text changes after the user has already seen it. Sections that are still waiting
+  for the API must declare `aria-busy="true"` and show a placeholder, not a value
+  that will change.
+- The `<html lang>` attribute does not match the language the visitor chose.
+- The browser was redirected to a different page, which would make every measurement
+  describe the wrong page.
+- The page throws a JavaScript error, logs a console error, or the server-rendered
+  page does not match what the browser renders (a hydration mismatch).
 
-  | Set | Size | Built to test |
-  |---|---|---|
-  | A | 10 | Basic correctness |
-  | B | 12 | Duplicate names — name search must return every match, not the first |
-  | C | 10 | Many items out of stock — counting at the edges |
-  | D | 1,000 | Growth: how each method's time changes as data grows |
+## 9.3 User Acceptance Testing
 
-  Broken items are placed at every 7th position so that even the small sets contain
-  one, otherwise the "skip broken items" rule would never be exercised.
-- **Cross-checks.** `scripts/data-course-benchmark.py` runs the three modules together.
-  For example, the range query "everything due before 1 October" returns 275 rentals
-  by binary search and 275 by a full scan of set D, and the two lists must match.
+### Tested against the requirements
 
-## 9.4 Frontend and usability
+Every requirement in Section 2 is accepted by at least one check. The two tables
+below show which one.
 
-**`npm run check`** reads the page code and fails on rules the team agreed in
+**Functional requirements (Section 2.1)**
+
+| Requirements | Accepted when | Checked by |
+|---|---|---|
+| FR-1 – FR-6 · Accounts | A user can register, sign in and edit their profile; a wrong email and a wrong password give the same answer | `check:pages` signs in through the form on every run · the rest by hand on the live site |
+| FR-7 – FR-13 · Equipment | Items can be added, searched, edited, marked broken and deleted only when safe; the three numbers are correct; the 51st Free item is refused | Business-rule tests in 9.2 · case 1 |
+| FR-14 – FR-17 · Rentals | A rental moves a unit off the shelf, a return puts it back once, impossible rentals are refused | Cases 15–17 · due-date rule in 9.2 |
+| FR-18 – FR-20 · Reports | Free sees 7 days, Pro sees everything; only Pro can export CSV | Cases 5, 11 and 13 |
+| FR-21 – FR-26 · Plans and checkout | Upgrading grants Pro once, at the server's price; the plan's limits come from the server; cancelling and expiry return to Free | Case 14 · `item_limit` test in 9.2 · cancel and expiry by code review |
+| FR-27 – FR-30 · LINE | Only Pro can link and send; a linked phone receives the message | Cases 2–4 and 12 · test message received on the demo phone, by hand |
+| FR-31 – FR-32 · Admin | Only an admin can open the dashboard | Cases 6, 7 and 9 |
+| FR-33 – FR-34 · Language | Every page renders in the chosen language from the start | `check:pages` (`<html lang>` for each kind of visitor) |
+
+**Non-functional requirements (Section 2.2)**
+
+| Requirements | Accepted when | Checked by |
+|---|---|---|
+| NFR-1 – NFR-8 · Security | Server-side checks hold against direct API calls | Cases 1–10 and 18 · code review for hashing, named parameters, secrets and CSV escaping · LINE console **Verify** for the webhook signature |
+| NFR-9 – NFR-12 · Performance | Lists are paged; lookups and the summary stay fast | Measured: algorithms notebook (set D) and the summary timing of 4 October (Section 2.2) |
+| NFR-13 – NFR-16 · Mobile | Usable on a 390 px phone | `check:pages` (no sideways scroll) · `npm run check` (44 px targets) · by hand (below) |
+| NFR-17 – NFR-22 · Usability | Errors stay in the page with a retry; loading is marked; keyboard and dark mode work | `npm run check` · `check:pages` |
+| NFR-23 – NFR-25 · Data integrity | Simultaneous actions cannot oversell or overfill; screen and report agree | Case 14 · summary-count comparison in 9.2 |
+| NFR-26 – NFR-27 · Maintainability | The algorithms run unchanged in Colab; conventions are checked by a program | `LEBIS_Final.ipynb` runs in Colab · `npm run check` and `npm run check:pages` |
+
+### Usability rules checked automatically
+
+`npm run check` reads the page code and fails on rules the team agreed in
 `docs/brand.md`, including:
 
 - An error shown in a toast. Failures must appear in the page, next to the action
@@ -108,23 +178,16 @@ coursework, so it is tested on its own, without the database.
 - A clickable element that is not a button or link, which a keyboard cannot reach.
 - An error message that does not offer a way to retry.
 
-**`npm run check:pages`** opens every page in Chromium — four public pages in light
-and dark mode for three kinds of visitor, plus every page that requires sign-in — and
-fails if:
+### Usability checked by hand
 
-- The page scrolls sideways at 390 px, the width of a common phone.
-- Text changes after the user has already seen it. Sections that are still loading
-  must declare `aria-busy="true"` and show a placeholder, not a value that will change.
-- The `<html lang>` attribute does not match the language the visitor chose.
-- The browser was redirected to a different page, which would make every measurement
-  describe the wrong page.
+**Mobile.** The Workspace page was checked at 390 px wide. An early version placed
+the action buttons in a table column off the right edge of the screen, with nothing
+telling the user to scroll; below the `sm` breakpoint the table is now a stack of
+cards, with every button on screen.
 
-**Mobile, by hand.** The Workspace page was checked at 390 px wide. An early version
-placed the action buttons in a table column off the right edge of the screen, with
-nothing telling the user to scroll; below the `sm` breakpoint the table is now a
-stack of cards, with every button on screen.
+No survey or usability study with real shop owners has been carried out (Section 9.6).
 
-## 9.5 Presentation-day procedure
+## 9.4 Presentation-day procedure
 
 From `docs/pitch-checklist.md`.
 
@@ -150,23 +213,27 @@ From `docs/pitch-checklist.md`.
 `demo-free` must not be upgraded before the refusal cases have been shown; once it is
 Pro, those cases can no longer be demonstrated.
 
-## 9.6 Results so far
+## 9.5 Results so far
 
-| Date | What was run | Result |
-|---|---|---|
-| 30 Sep | Summary counts: SQL against the algorithms module, normal data and edge cases | All numbers identical |
-| 2 Oct | `item_limit` through the API as Free and as Pro | `50` and `null` |
-| 4 Oct | Broken-item regression through the API | Old formula 6, new formula 2 (correct) |
-| 5 Oct | `check:pages` four runs in a row | 4 of 4 passed |
-| 6 Oct | `check`, `build`, and `check:pages` three runs in a row after the Settings page was merged | All passed |
+| Date | Level | What was run | Result |
+|---|---|---|---|
+| 30 Sep | Integration | Summary counts: SQL against the algorithms module, normal data and edge cases | All numbers identical |
+| 2 Oct | Integration | `item_limit` through the API as Free and as Pro | `50` and `null` |
+| 4 Oct | Integration | Broken-item regression through the API | Old formula 6, new formula 2 (correct) |
+| 5 Oct | Integration | `check:pages` four runs in a row | 4 of 4 passed |
+| 6 Oct | Integration | `check`, `build`, and `check:pages` three runs in a row after the Settings page was merged | All passed |
+| 15 Oct | Integration | `check-edge-cases.mjs` against the deployed system (run by Kim) | 14 of 14 checks passed |
+| 16 Oct | Unit | `datasets.py`, `search.py` and `sort_group.py` run directly | All 55 checks passed |
 
-`check-edge-cases.mjs` needs the demo password and runs against the deployed system;
-its results will be recorded on 20 and 21 October.
+The edge-case script will be run again on 20 and 21 October (Section 9.4).
 
-## 9.7 Known gaps
+## 9.6 Known gaps
 
-- **No backend unit tests.** Rules are tested through the HTTP API. A failure in a
-  rarely used path would only be found by running that path.
+- **No unit tests for the API routes.** The algorithm functions are unit-tested
+  (Section 9.1), but the rules inside the routes are tested through the HTTP API
+  only. A failure in a rarely used path would only be found by running that path.
+- **No survey or usability study with real users.** Usability is checked against
+  the rules in 9.3 and by the team on a phone, not by shop owners.
 - **No load testing.** LEBIS targets small shops with one to three staff; it has not
   been measured under many simultaneous users.
 - **LINE is tested against the real platform by hand.** There is no automated test
