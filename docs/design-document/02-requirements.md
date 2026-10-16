@@ -158,7 +158,7 @@ target, not an afterthought.
 | ID | Requirement | How it is met |
 |---|---|---|
 | NFR-23 | Two staff acting on the same item at once cannot rent more units than exist | The item row is locked while a rental or return is saved, in one transaction |
-| NFR-24 | Two tabs adding items at once cannot push a Free shop past 50 | The limit is counted inside the same transaction as the insert |
+| NFR-24 | Two tabs, or many API calls, adding items at once cannot push a Free shop past 50 | The shop's row in `users` is locked (`SELECT … FOR UPDATE`) before the items are counted, in the same transaction as the insert, so simultaneous requests are handled one at a time |
 | NFR-25 | The counts on screen and in the Data Structures and Algorithms report always agree | Both come from the same functions in `backend-api/algorithms/`; there is no second implementation in SQL |
 
 ### Maintainability
@@ -180,3 +180,13 @@ These were considered and are not part of the current system.
 | Password reset by email | *(planned)* |
 | Limiting repeated sign-in attempts | *(planned)* — there is currently no limit on how many times a password can be tried |
 | Removing a linked LINE account from the website | *(planned)* — Section 8.10 |
+
+### Known limitations
+
+These are how the current system behaves. They are known and accepted for this version.
+
+| Behaviour | Why it happens |
+|---|---|
+| Changing an item's daily rate also changes the estimated price of its past rentals, on the Workspace page and in the Reports page | The estimate is calculated from the item's current `daily_rate`; the rate at the time of the rental is not stored |
+| The Rentals tab shows at most 100 rentals | The list is capped at 100 and sorted with open rentals first, then by due date, oldest first. A shop with more than 100 returned rentals does not see the most recent returns in the "Returned" filter |
+| An item that has been rented can never be deleted, and it still counts towards the 50-item limit of the Free plan | Deleting it would lose rental history (FR-11). It can be marked as broken instead, but it keeps its place in the count |

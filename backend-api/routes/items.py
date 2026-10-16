@@ -239,11 +239,16 @@ async def get_item(item_id: int, user=Depends(get_current_user)):
 async def create_item(payload: ItemCreate, user=Depends(get_current_user)):
     """เพิ่มอุปกรณ์เข้าร้าน
 
-    ทำในทรานแซกชันเดียวกันทั้งการนับเพดานและการเพิ่ม เพื่อไม่ให้ผู้ใช้แพ็กเกจฟรี
-    ที่เปิดเว็บสองแท็บแล้วกดพร้อมกัน เพิ่มของทะลุ 50 ชิ้นไปได้
+    กันร้านฟรีเพิ่มของทะลุ 50 ชิ้นตอนมีหลายคำขอมาพร้อมกัน (เปิดสองแท็บ หรือยิง API รัวๆ)
+    การนับกับการเพิ่มอยู่ในทรานแซกชันเดียวกันอย่างเดียวไม่พอ — PostgreSQL ใช้ READ COMMITTED
+    ทุกคำขอนับได้ 49 พร้อมกันแล้วเพิ่มได้หมด (เคยลอง: มี 49 ยิงพร้อมกัน 8 คำขอ ได้ 53)
+    จึงล็อกแถว user ของร้านก่อนนับ คำขอที่มาพร้อมกันจะต่อคิว คนถัดไปนับหลังคนก่อน commit แล้ว
+    role อ่านจากแถวที่ล็อก ไม่ใช่จาก token เผื่อเพิ่งอัปเกรดหรือยกเลิกระหว่างนั้น
     """
     async with database.transaction():
-        if user["role"] == "free":
+        role = await items_query.lock_owner(user["email"])
+
+        if role == "free":
             count = await items_query.count_by_owner(user["email"])
 
             if count >= FREE_ITEM_LIMIT:
