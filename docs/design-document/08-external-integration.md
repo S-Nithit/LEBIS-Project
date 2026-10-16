@@ -6,9 +6,11 @@ to come back. This section describes the integration in full. The main flows are
 also summarised in Section 4.3; this section adds the endpoints, the failure
 handling, the security checks and the configuration.
 
-## 8.1 Why LINE
+## 8.1 External System Description
 
-The owner's second problem in Section 1.1 is that nobody remembers who took what,
+### Why LINE
+
+The owner's second problem in Section 1.2 is that nobody remembers who took what,
 and late items are noticed by accident. A reminder only helps if the owner actually
 reads it before the shop opens. Thai shop owners already read LINE all day, so the
 reminder goes where they look, instead of into an email inbox or a page they have
@@ -18,7 +20,7 @@ The message goes to the **shop owner**, not to the customer who rented the item.
 The owner knows the customer and decides how to follow up. Messaging customers is
 out of scope (Section 1.5).
 
-## 8.2 What the owner can do
+### What the owner can do
 
 | Step | What the owner does | What LEBIS does |
 |---|---|---|
@@ -28,11 +30,75 @@ out of scope (Section 1.5).
 
 **This is a Pro feature.** Free accounts see "Upgrade to Pro to enable LINE reminders"
 and a **View pricing** button in Settings instead of the linking controls. Hiding the controls is only for the user's convenience;
-the server rejects the request itself (Section 8.4).
+the server rejects the request itself (Section 8.3).
 
-## 8.3 Endpoints
+## 8.2 API Design
 
-All paths are under `/api/line`.
+The integration has two sides: the LINE platform endpoints that LEBIS calls (and the
+one call LINE makes to LEBIS), and the LEBIS endpoints that the Settings page calls.
+
+### LINE platform endpoints used by LEBIS
+
+All three are implemented in `backend-api/services/line_notify.py` and
+`backend-api/routes/line.py`.
+
+| Endpoint | Direction | Purpose | Counts against the quota |
+|---|---|---|---|
+| `POST https://api.line.me/v2/bot/message/push` | LEBIS → LINE | Send a message to one LINE user at any time: the daily summary and the test message | Yes (Section 8.8) |
+| `POST https://api.line.me/v2/bot/message/reply` | LEBIS → LINE | Answer a message the owner has just sent: the welcome message and the linking replies | No |
+| `POST /api/line/webhook` | LINE → LEBIS | LINE forwards events from the LEBIS LINE account: a new friend (`follow`) or a text message | — |
+
+**Data sent to LINE (JSON).** Both outgoing calls send a single text message.
+
+```
+POST /v2/bot/message/push
+Authorization: Bearer <channel access token>
+X-Line-Retry-Key: <UUID>
+Content-Type: application/json
+
+{"to": "<LINE user ID>", "messages": [{"type": "text", "text": "..."}]}
+```
+
+```
+POST /v2/bot/message/reply
+Authorization: Bearer <channel access token>
+Content-Type: application/json
+
+{"replyToken": "<token from the webhook event>", "messages": [{"type": "text", "text": "..."}]}
+```
+
+**Data LEBIS expects back.** LEBIS reads only the HTTP status, not the response body:
+200 means sent; 409 on a push with a retry key means the same push was already
+delivered; on a push, a 5xx answer or a timeout (10 seconds) is retried once — a
+reply is never retried; any other answer is a failure (Section 8.6).
+
+**Data received from LINE (JSON).** LINE sends a list of events. LEBIS reads only the
+fields below and ignores the rest.
+
+```
+POST /api/line/webhook
+x-line-signature: <Base64 HMAC-SHA256 of the raw body>
+
+{"events": [{"type": "message",
+             "replyToken": "...",
+             "source": {"type": "user", "userId": "U..."},
+             "message": {"type": "text", "text": "ABCD2345"}}]}
+```
+
+LEBIS answers `200 {"ok": true}`. When the **Verify** button in the LINE Developers
+Console is pressed, LINE sends an empty `events` list, which also receives 200.
+
+**Authentication and security.**
+
+| Call | How it is authenticated |
+|---|---|
+| LEBIS → LINE (push and reply) | `Authorization: Bearer` with the long-lived channel access token, read from `LINE_CHANNEL_ACCESS_TOKEN`. The token is never sent to the browser and never committed |
+| LINE → LEBIS (webhook) | No user token exists, so the `x-line-signature` header takes its place: an HMAC-SHA256 of the raw body keyed with `LINE_CHANNEL_SECRET`. A request that does not match receives 403 `bad_signature` (Section 8.7) |
+| Repeated pushes | Every push carries `X-Line-Retry-Key`, so a retry after a timeout cannot deliver the same message twice (Section 8.6) |
+
+### LEBIS endpoints for LINE
+
+These are the endpoints the Settings page calls. All paths are under `/api/line`.
 
 | Method and path | Who may call it | Purpose | Responses other than success |
 |---|---|---|---|
@@ -48,7 +114,7 @@ through the API; the Settings page does not have a button for it.
 `/status` is open to every plan on purpose. It sends nothing, and the Settings page
 needs it to decide whether to show the linking controls or the upgrade prompt.
 
-## 8.4 Pro only — how Free accounts are blocked
+## 8.3 Pro only — how Free accounts are blocked
 
 Every endpoint that sends a message or links an account is declared with
 `Depends(require_tier("pro"))` in `routes/line.py`. The check runs on the server
@@ -66,10 +132,10 @@ first downgrades any Pro subscription that has passed its expiry date. Without t
 a shop whose Pro expired but which never opened the website again would keep
 receiving messages for free.
 
-Three of the live-test cases in Section 9 check this boundary: a Free account asking
+Three of the live-test cases in Section 9.2 check this boundary: a Free account asking
 for a link code, sending a test message and sending a summary must all receive 403.
 
-## 8.5 Linking an account
+## 8.4 Linking an account
 
 The owner never types a LINE user ID. Linking proves that the same person holds both
 the LEBIS account (to get the code) and the LINE account (to send it).
@@ -80,7 +146,7 @@ the LEBIS account (to get the code) and the LINE account (to send it).
    event to the webhook, and LEBIS replies with a welcome message that explains
    what to send.
 3. The owner sends the code in the chat. LINE forwards it to `POST /webhook`.
-4. The backend verifies the signature (Section 8.8), then normalises the text —
+4. The backend verifies the signature (Section 8.7), then normalises the text —
    upper-case, spaces and dashes removed — so `abcd-2345` and `ABCD 2345` both work.
 5. One SQL statement checks that the code exists and has not expired, stores the
    LINE user ID and clears the code:
@@ -104,7 +170,7 @@ copying from a phone screen.
 
 Messages from group chats, and events LEBIS cannot reply to, are ignored.
 
-## 8.6 The daily summary
+## 8.5 The daily summary
 
 **When.** A background task started with the backend sleeps until 08:00 Bangkok time,
 sends the summaries, and sleeps until the next 08:00. If the backend starts between
@@ -145,7 +211,7 @@ link to the Workspace page for the full list. The message is written in Thai.
 **Record.** Every attempt writes one row per rental to the `notifications` table
 with the status `sent` or `failed`.
 
-## 8.7 Reliability
+## 8.6 Reliability
 
 The design goal is that a shop receives **exactly one** summary per day, even when
 the network fails or the backend restarts.
@@ -161,25 +227,26 @@ the network fails or the backend restarts.
 | The whole job raises an error | The error is written to the log and the task waits for the next 08:00 instead of stopping |
 
 The manual `POST /digest` deliberately skips the "already sent today" check and uses
-no retry key, so the owner can ask for a second copy.
+a new random retry key each time instead of the daily one, so the owner can ask for a
+second copy. The test message works the same way.
 
 Setting `LINE_DAILY_JOB=off` stops the background task. It is used when running
 tests, so they cannot send real messages.
 
-## 8.8 Security
+## 8.7 Security
 
 | Risk | Protection |
 |---|---|
 | Someone forges a webhook call to link their LINE account to another shop | Every webhook request must carry `x-line-signature`: an HMAC-SHA256 of the **raw** request body, keyed with the channel secret and Base64-encoded. The backend computes the same value and compares the two with `hmac.compare_digest`, so the comparison time does not reveal how many characters matched. A request that does not match receives 403 |
 | A signature is checked against re-encoded JSON | The signature is computed on the body exactly as received, before it is parsed. Parsing and re-serialising would change spacing or key order and break the check |
-| A link code is guessed or reused | 32-character alphabet, 8 characters, valid 10 minutes, usable once (Section 8.5) |
+| A link code is guessed or reused | 32-character alphabet, 8 characters, valid 10 minutes, usable once (Section 8.4) |
 | The channel token or secret leaks | Both are read from environment variables only. Neither appears in the repository |
-| A Free account sends messages by calling the API directly | `require_tier("pro")` on the server (Section 8.4) |
+| A Free account sends messages by calling the API directly | `require_tier("pro")` on the server (Section 8.3) |
 
 The webhook is the only LINE route without `require_tier`. LINE, not the user,
 calls it, so there is no user token to check; the signature takes its place.
 
-## 8.9 Message quota
+## 8.8 Message quota
 
 A free LINE Official Account in Thailand can **push** 300 messages a month. **Replies**
 do not count against the quota (source: lineforbusiness.com/th, checked
@@ -193,7 +260,7 @@ do not count against the quota (source: lineforbusiness.com/th, checked
 Linking uses replies only, so it costs nothing. This is why the summary is one
 message per shop per day rather than one message per rental (Section 4.4).
 
-## 8.10 Configuration
+## 8.9 Configuration
 
 | Variable | Required | Purpose |
 |---|---|---|
@@ -211,7 +278,7 @@ setup is in `docs/deployment.md`, step 5.
 endpoints answer 503 `line_not_configured`, and the daily task writes one line to
 the log and skips the run.
 
-## 8.11 Limitations
+## 8.10 Limitations
 
 These are things the integration does not do today.
 
