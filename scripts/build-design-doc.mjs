@@ -45,7 +45,13 @@ const TEAM = [
 function findSectionFiles() {
   const files = readdirSync(DOC_DIR).filter((f) => /^\d\d-.+\.md$/.test(f));
   const byNumber = new Map();
-  for (const f of files) byNumber.set(Number(f.slice(0, 2)), f);
+  for (const f of files) {
+    const n = Number(f.slice(0, 2));
+    // สองไฟล์เลขเดียวกัน (เช่น 10-timeline.md กับ 10-timeline_1.md ที่ลืมลบ)
+    // ถ้าเงียบ ตัวที่ถูกเลือกขึ้นกับลำดับชื่อไฟล์ — ฉบับเก่าอาจไปอยู่ในเล่มโดยไม่มีใครรู้
+    if (byNumber.has(n)) problems.push(`หัวข้อ ${n} มีสองไฟล์: ${byNumber.get(n)} กับ ${f} — ลบตัวที่ไม่ใช้ออก`);
+    byNumber.set(n, f);
+  }
   return byNumber;
 }
 
