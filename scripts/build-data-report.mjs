@@ -180,11 +180,11 @@ const coverHtml = `
 const tocHtml = `
 <section class="toc"><h2>Contents</h2><ol>
   ${parts.map((p) => `<li>${esc(p.title)}${p.missing ? ' <span class="todo">(not submitted yet)</span>' : ""}</li>`).join("")}
-  <li>Appendix — Flowcharts</li>
+  <li>Appendix: Flowcharts</li>
 </ol></section>`;
 
 const appendixHtml = `
-<h1>Appendix — Flowcharts</h1>
+<h1>Appendix: Flowcharts</h1>
 <p>All flowcharts in the report, in figure order, one per page. The draw.io sources and PDFs are in <code>docs/data-course/flowcharts/</code>.</p>
 <table><thead><tr><th>Figure</th><th>Subject</th><th>Author</th></tr></thead><tbody>
 ${flowFiles.map((m) => {
@@ -195,7 +195,7 @@ ${flowFiles.map((m) => {
 ${figures.map((f, i) => `
 <section class="figpage">
   <span class="slot">FIGSLOT-${String(i).padStart(2, "0")}-END</span>
-  <p class="caption">Figure ${f.number}: ${esc(f.title)} (${f.owner})${f.of > 1 ? ` — page ${f.k} of ${f.of}` : ""}</p>
+  <p class="caption">Figure ${f.number}: ${esc(f.title)} (${f.owner})${f.of > 1 ? `, page ${f.k} of ${f.of}` : ""}</p>
 </section>`).join("")}`;
 
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
