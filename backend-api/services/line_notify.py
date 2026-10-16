@@ -195,7 +195,11 @@ async def handle_event(event: dict) -> None:
         await _safe_reply(reply_token, "ส่งรหัส 8 ตัวจากหน้าตั้งค่าของร้านใน LEBIS มาในแชทนี้ได้เลย")
         return
 
-    shop = await notifications_query.link_by_code(code, source["userId"])
+    user_id = source.get("userId")
+    if not user_id:
+        return  # LINE ไม่ส่ง userId มา (เช่นผู้ใช้ไม่ยอมให้สิทธิ์) — ผูกไม่ได้ ข้ามไป
+
+    shop = await notifications_query.link_by_code(code, user_id)
     if shop is None:
         await _safe_reply(reply_token, "รหัสนี้ไม่ถูกต้องหรือหมดอายุแล้ว (ใช้ได้ 10 นาที)\n"
                           "ขอรหัสใหม่ที่หน้าตั้งค่าของร้าน")
@@ -223,6 +227,13 @@ def _thai_day(iso_day: str) -> str:
     return f"{day.day} {THAI_MONTHS[day.month - 1]}"
 
 
+def _clip(text, limit: int) -> str:
+    """ตัดข้อความยาวให้สั้นลง — LINE รับข้อความได้ไม่เกิน 5,000 ตัวอักษร
+    ชื่อของ (160) + ชื่อคนยืม (120) คูณ 15 บรรทัด เกินได้จริง แล้ว LINE จะตอบ 400 ทุกวัน"""
+    text = str(text or "")
+    return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
 def build_digest(shop_name: str, records: list, today: str) -> str:
     """ประกอบข้อความสรุป — แบ่งเป็นเลยกำหนด / ครบวันนี้ / ครบพรุ่งนี้"""
     tomorrow = (date.fromisoformat(today) + timedelta(days=1)).isoformat()
@@ -232,7 +243,7 @@ def build_digest(shop_name: str, records: list, today: str) -> str:
         ("ครบกำหนดพรุ่งนี้", [r for r in records if r["due_date"] == tomorrow]),
     ]
 
-    lines = [f"LEBIS · ของต้องคืน {_thai_day(today)}", f"ร้าน {shop_name}"]
+    lines = [f"LEBIS · ของต้องคืน {_thai_day(today)}", f"ร้าน {_clip(shop_name, 120)}"]
     shown = 0
     for title, group in groups:
         if not group:
@@ -241,7 +252,7 @@ def build_digest(shop_name: str, records: list, today: str) -> str:
         for record in group:
             if shown == MAX_LINES:
                 break
-            lines.append(f"• {record['code']} {record['name']} — {record['borrower']}"
+            lines.append(f"• {record['code']} {_clip(record['name'], 60)} — {_clip(record['borrower'], 40)}"
                          f" (ครบ {_thai_day(record['due_date'])})")
             shown += 1
 

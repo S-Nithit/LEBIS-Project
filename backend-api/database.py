@@ -18,7 +18,8 @@ SEED_DEMO_ACCOUNTS = os.getenv("SEED_DEMO_ACCOUNTS", "true").strip().lower() in 
 # บัญชีผู้ดูแลระบบ — มาจาก environment variable เท่านั้น ไม่มีรหัสผ่านอยู่ในโค้ด
 # ตั้งครบทั้งสองค่า = สร้างบัญชีให้ · ขาดค่าใดค่าหนึ่ง = ข้ามไปเฉยๆ ไม่ error
 # ต่างจากบัญชีทดลองตรงที่ตัวนี้ตั้งบน production ได้ เพราะรหัสไม่ได้อยู่ใน repo
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip()
+# ตัวพิมพ์เล็กเสมอ — หน้า login แปลงอีเมลเป็นตัวเล็กก่อนค้น ถ้าตั้ง Admin@... ไว้จะเข้าไม่ได้ตลอดไป
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip().lower()
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
 # โดเมนที่ตัวตรวจอีเมล (EmailStr ใน routes/auth.py) ไม่ยอมรับ

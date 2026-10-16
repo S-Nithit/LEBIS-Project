@@ -11,6 +11,8 @@
 
 from datetime import datetime
 
+import asyncpg
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -65,6 +67,16 @@ class RegisterRequest(BaseModel):
     @classmethod
     def normalize_email(cls, value: str) -> str:
         return value.strip().lower()
+
+    # ชื่อที่มีแต่ช่องว่าง min_length=1 ปล่อยผ่าน แล้วหัวเว็บจะขึ้นชื่อว่างๆ
+    # หน้าเว็บตัดช่องว่างให้อยู่แล้ว ตัวนี้กันคนที่เรียก API ตรง
+    @field_validator("name")
+    @classmethod
+    def name_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("invalid_input")
+        return value
 
     @field_validator("password")
     @classmethod
@@ -173,13 +185,21 @@ async def register(payload: RegisterRequest):
         )
 
     # เก็บลง DB เป็น hash เท่านั้น ไม่เคยเก็บรหัสจริง
-    user = await create_user(
-        email=payload.email,
-        hashed_password=hash_password(payload.password),
-        name=payload.name,
-        shop_name=payload.shop_name,
-        role="free",
-    )
+    # กดสมัครซ้ำเร็วๆ สองคำขอผ่านการเช็กข้างบนพร้อมกันได้ ตัวที่สองจะชน primary key
+    # ตอบเป็น email_taken เหมือนกรณีปกติ ไม่ใช่ 500
+    try:
+        user = await create_user(
+            email=payload.email,
+            hashed_password=hash_password(payload.password),
+            name=payload.name,
+            shop_name=(payload.shop_name or "").strip() or None,
+            role="free",
+        )
+    except asyncpg.exceptions.UniqueViolationError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "email_taken", "message": "อีเมลนี้ถูกใช้สมัครไปแล้ว"},
+        )
 
     token = create_access_token(user["email"], remember=payload.remember)
 
@@ -240,9 +260,17 @@ async def update_me(payload: UpdateProfileRequest, user=Depends(get_current_user
             return None
         return value.strip()
 
+    # ชื่อล้างให้ว่างไม่ได้ — หน้าบัญชีกันไว้แล้ว แต่คนเรียก API ตรงยังส่ง null / "" มาได้
+    name = resolve(payload.name, user["name"])
+    if name is None:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "invalid_input", "field": "name", "message": "ชื่อต้องไม่ว่าง"},
+        )
+
     updated = await update_user_profile(
         email=user["email"],
-        name=resolve(payload.name, user["name"]),
+        name=name,
         shop_name=resolve(payload.shop_name, user["shop_name"]),
     )
 

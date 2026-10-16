@@ -8,6 +8,7 @@
 """
 
 import json
+import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -15,6 +16,8 @@ from pydantic import BaseModel
 
 from services import line_notify
 from services.security import get_current_user, require_tier
+
+logger = logging.getLogger("lebis.line")
 
 router = APIRouter()
 
@@ -53,7 +56,9 @@ async def line_status(user=Depends(get_current_user)):
     return LineStatus(
         linked=bool(user["line_user_id"]),
         tier_ok=line_notify.is_pro(user),
-        configured=line_notify.is_configured(),
+        # ผูกบัญชีต้องใช้ทั้ง token (ตอบกลับ) และ secret (ตรวจ webhook)
+        # เดิมดูแค่ token — ตั้ง token แต่ลืม secret หน้าตั้งค่าจะโชว์ปุ่มขอรหัส แล้วกดได้ 503
+        configured=line_notify.is_configured() and line_notify.webhook_ready(),
     )
 
 
@@ -103,5 +108,9 @@ async def webhook(request: Request):
         fail(403, "bad_signature", "ลายเซ็นไม่ถูกต้อง")
 
     for event in json.loads(body).get("events", []):
-        await line_notify.handle_event(event)
+        # event เดียวพัง (เช่นฐานข้อมูลสะดุด) ต้องไม่ลากตัวที่เหลือในชุดเดียวกันพังไปด้วย
+        try:
+            await line_notify.handle_event(event)
+        except Exception:
+            logger.exception("จัดการ event จาก LINE ไม่สำเร็จ")
     return {"ok": True}

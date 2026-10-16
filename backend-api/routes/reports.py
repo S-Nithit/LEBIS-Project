@@ -12,6 +12,7 @@
 
 import csv
 import io
+import re
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
@@ -111,6 +112,10 @@ def bangkok_day(moment: datetime | None) -> str:
     return moment.astimezone(BANGKOK).date().isoformat() if moment else ""
 
 
+# ตัวเลข ช่องว่าง ขีด วงเล็บ นำด้วย + หรือ - ได้ — หน้าตาเบอร์โทร ไม่มีทางเป็นสูตร
+PHONE_LIKE = re.compile(r"^[+-]?[0-9][0-9 ()-]*$")
+
+
 def safe_cell(text: str | None) -> str:
     """กันสูตรอันตรายตอนเปิดใน Excel (CSV injection)
 
@@ -118,7 +123,11 @@ def safe_cell(text: str | None) -> str:
     ใส่ ' นำหน้าให้ Excel มองเป็นข้อความธรรมดา
     """
     text = text or ""
-    return "'" + text if text[:1] in ("=", "+", "-", "@") else text
+    # เบอร์โทรอย่าง +66812345678 เป็นข้อมูลปกติ ไม่ใช่สูตร — ใส่ ' นำหน้าแล้วจะติดมาให้เห็นในชีต
+    if PHONE_LIKE.match(text):
+        return text
+    # \t กับ \r นำหน้าก็ถูกบางโปรแกรมตัดทิ้งแล้วอ่านตัวถัดไปเป็นสูตรได้ (คำแนะนำของ OWASP)
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
 
 
 # ---------------------------------------------------------------------------

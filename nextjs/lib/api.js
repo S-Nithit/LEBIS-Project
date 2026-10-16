@@ -30,6 +30,22 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// token ที่เก็บไว้ยังมีอายุอยู่ไหม — อ่านวันหมดอายุ (exp) จากตัว token เอง ไม่ต้องถามเซิร์ฟเวอร์
+// ใช้ตอนหน้าเข้าสู่ระบบ/สมัครจะบอกว่า "เครื่องนี้ยังเข้าสู่ระบบอยู่"
+// token หมดอายุหรืออ่านไม่ออก = ไม่ได้เข้าสู่ระบบอยู่แล้ว ห้ามบอกว่ายังเข้าอยู่
+// (ลายเซ็นยังต้องตรวจที่เซิร์ฟเวอร์เหมือนเดิม ตัวนี้ใช้แค่ตัดสินว่าจะโชว์ข้อความไหม)
+export function hasLiveToken() {
+  const token = getToken();
+  if (!token) return false;
+  try {
+    const part = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(part.padEnd(part.length + ((4 - (part.length % 4)) % 4), "=")));
+    return typeof payload.exp === "number" && payload.exp * 1000 > Date.now();
+  } catch (error) {
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // ข้อผิดพลาดของ LEBIS
 //
