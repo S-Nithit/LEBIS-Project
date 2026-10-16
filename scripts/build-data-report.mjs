@@ -80,7 +80,8 @@ for (const [prefix, title, owner] of SECTIONS) {
   }
   const text = readFileSync(join(REPORT_DIR, file), "utf8");
   if (/^> \[Editor's note/m.test(text)) problems.push(`${file} ยังมี [Editor's note] ค้าง`);
-  const blank = text.match(/\[ ?(TBD|TODO|ใส่ตัวเลข|รอผล)[^\]]*\]/i);
+  // [___] คือช่องที่เว้นไว้รอตัวเลข — ถ้าไม่จับ ฉบับจริงจะออกไปพร้อมช่องว่าง
+  const blank = text.match(/\[ ?(TBD|TODO|ใส่ตัวเลข|รอผล|_{2,})[^\]]*\]/i);
   if (blank) problems.push(`${file} ยังมีช่องที่ไม่ได้กรอก: ${blank[0]}`);
   // ฉบับแปลยังมีไทยได้ถ้าเป็นค่าจริงในข้อมูล (เช่นชื่ออุปกรณ์ที่ใช้ค้นหา) — เตือนเฉพาะไฟล์ที่ยังไม่แปล
   if (!file.endsWith(".en.md") && THAI.test(text)) warnings.push(`${file} ยังมีภาษาไทยอยู่ — เล่มนี้เป็นภาษาอังกฤษ ควรมีฉบับแปล ${file.replace(/(\.en)?\.md$/, ".en.md")}`);

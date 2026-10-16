@@ -58,10 +58,10 @@ Every algorithm must include five things. This table shows where each one is for
 
 | Requirement | Part 1 (Kim) | Part 2 (Neo) | Part 3 (Kul) |
 |---|---|---|---|
-| Big-O for time and memory, with an explanation | 1.5 | 2.6 | Part 3 |
-| Flowchart | 1.8 · Appendix | 2.9 · Appendix | Part 3 · Appendix |
-| Real results on sets A–D | 1.7 | 2.8 | Part 3 |
-| Time on set D compared with what Python provides | 1.7 — `dict` | 2.8 — scanning the whole list | Part 3 — `sorted()` |
-| Colab link | 1.9 | 2.10 | Colab section above |
+| Big-O for time and memory, with an explanation | 1.5 | 2.6 | 3.5 |
+| Flowchart | 1.8 · Appendix | 2.9 · Appendix | 3.10 · Appendix |
+| Real results on sets A–D | 1.7 | 2.8 | 3.7 |
+| Time on set D compared with what Python provides | 1.7 — `dict` | 2.8 — scanning the whole list | 3.7 — `sorted()` |
+| Colab link | 1.9 | 2.10 | 3.11 |
 
 All seven flowcharts are collected in the Appendix at the end, in figure order.
