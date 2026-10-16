@@ -13,8 +13,9 @@
 // ของ GET /api/plans เพราะตอนนี้ backend ส่งเป็นข้อความไทยล้วน (ดู CLAUDE.md)
 
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -26,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { planFor } from "@/lib/plan";
-import { useAuth } from "@/lib/useAuth";
+import { isDeadToken, rememberSignOutReason, useAuth } from "@/lib/useAuth";
 import { useLanguage } from "@/lib/useLanguage";
 
 function formatDate(value, language) {
@@ -82,6 +83,11 @@ function PlanCard({ plan, isCurrent, onUpgrade, upgrading, isAdmin }) {
             {upgrading ? t("pricing.upgrading") : t("pricing.upgrade")}
           </Button>
         ) : null}
+        {!isFree && isCurrent ? (
+          <Button asChild variant="secondary">
+            <Link href="/settings">{t("pricing.manage")}</Link>
+          </Button>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -91,13 +97,20 @@ function PlanCard({ plan, isCurrent, onUpgrade, upgrading, isAdmin }) {
 // แผง QR จำลอง — เปิดหลังกดอัปเกรด ยอดเงินมาจาก checkout/session เท่านั้น
 // ---------------------------------------------------------------------------
 
-function CheckoutPanel({ amount, onConfirm, onCancel, busy, error }) {
+function CheckoutPanel({ amount, onConfirm, onCancel, busy, error, errorCode }) {
   const { t } = useLanguage();
+  const stuck = errorCode === "checkout_not_found" || errorCode === "already_pro";
+  const headingRef = useRef(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
 
   return (
     <Card className="mb-5">
       <CardHeader>
-        <CardTitle>{t("checkout.title")}</CardTitle>
+        <div ref={headingRef} tabIndex={-1} className="outline-none">
+          <CardTitle>{t("checkout.title")}</CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-baseline justify-between">
@@ -120,16 +133,21 @@ function CheckoutPanel({ amount, onConfirm, onCancel, busy, error }) {
 
         <p className="t-caption text-center">{t("checkout.methodNote")}</p>
 
-        <FormError message={error} onRetry={onConfirm} retrying={busy} />
+        {/* ใบนี้ใช้ไม่ได้แล้ว: ลองซ้ำก็ error เหมือนเดิม จึงพากลับไปเลือกแพ็กเกจแทน */}
+        <FormError message={error} onRetry={stuck ? undefined : onConfirm} retrying={busy} />
 
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button onClick={onConfirm} disabled={busy} aria-busy={busy}>
-            {busy ? t("checkout.paying") : t("checkout.pay")}
-          </Button>
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>
-            {t("item.cancel")}
-          </Button>
-        </div>
+        {stuck ? (
+          <Button onClick={onCancel}>{t("checkout.backToPlans")}</Button>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button onClick={onConfirm} disabled={busy} aria-busy={busy}>
+              {busy ? t("checkout.paying") : t("checkout.pay")}
+            </Button>
+            <Button type="button" variant="secondary" onClick={onCancel} disabled={busy}>
+              {t("item.cancel")}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -155,6 +173,7 @@ export default function Pricing() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutErrorCode, setCheckoutErrorCode] = useState("");
   const [upgrading, setUpgrading] = useState(false);
   // error ที่เกิดตอนกดปุ่มอัปเกรด (ก่อนแผง QR เปิด) เช่น already_pro
   const [upgradeError, setUpgradeError] = useState("");
@@ -199,8 +218,17 @@ export default function Pricing() {
       setCheckoutOpen(true);
       setCheckoutError("");
     } catch (error) {
-      // เช่น already_pro ถ้าอีกแท็บอัปเกรดไปก่อนแล้ว — โหลดสถานะล่าสุดมาแสดงด้วย
-      setUpgradeError(errorMessage(error, t));
+      if (isDeadToken(error)) {
+        rememberSignOutReason(error.code);
+        logout();
+        return;
+      }
+      if (error?.code === "already_pro") {
+        // อีกแท็บอัปเกรดไปแล้ว: ดึงข้อมูลใหม่ให้หน้าเลิกโชว์ว่าเป็น Free (ข้อ 4)
+        reload();
+      } else {
+        setUpgradeError(errorMessage(error, t));
+      }
       loadSubscription();
     } finally {
       setUpgrading(false);
@@ -209,6 +237,7 @@ export default function Pricing() {
 
   async function handleConfirmPayment() {
     setCheckoutBusy(true);
+    setCheckoutErrorCode("");
     setCheckoutError("");
     try {
       await apiFetch("/api/checkout/confirm", {
@@ -220,8 +249,14 @@ export default function Pricing() {
       // ป้าย Pro จึงขึ้นทันทีโดยไม่ต้องทำอะไรเพิ่มในไฟล์นี้
       router.replace("/account");
     } catch (error) {
-      // ขึ้นในแผง QR ไม่ใช่ toast เพราะผู้ใช้ต้องอ่านทันทีว่าจ่ายไม่ผ่านเพราะอะไร
+      if (isDeadToken(error)) {
+        rememberSignOutReason(error.code);
+        logout();
+        return;
+      }
       setCheckoutError(errorMessage(error, t));
+      setCheckoutErrorCode(error?.code || "");
+      if (error?.code === "already_pro") reload();
     } finally {
       setCheckoutBusy(false);
     }
@@ -232,6 +267,7 @@ export default function Pricing() {
     setCheckoutId(null);
     setCheckoutAmount(null);
     setCheckoutError("");
+    setCheckoutErrorCode("");
   }
 
   // ---- สถานะที่ 1 · กำลังโหลดครั้งแรก
@@ -316,6 +352,7 @@ export default function Pricing() {
                 amount={checkoutAmount}
                 busy={checkoutBusy}
                 error={checkoutError}
+                errorCode={checkoutErrorCode}
                 onConfirm={handleConfirmPayment}
                 onCancel={closeCheckout}
               />

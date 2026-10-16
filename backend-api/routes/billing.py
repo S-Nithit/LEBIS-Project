@@ -93,7 +93,16 @@ async def create_checkout_session(
         fail(409, "already_pro", "ร้านนี้ใช้แพ็กเกจ Pro อยู่แล้ว")
 
     amount = Decimal(str(PLANS["pro"]["price"]))
-    txn = await billing_query.insert_pending_transaction(user["email"], amount)
+    
+    async with database.transaction():
+        # ล็อกแถว user ก่อน เหมือน confirm ให้คำขอของคนเดียวกันเข้าคิวทีละใบ
+        role = await billing_query.get_user_role_for_update(user["email"])
+        if role == "pro":
+            fail(409, "already_pro", "ร้านนี้ใช้แพ็กเกจ Pro อยู่แล้ว")
+
+        # ใบ pending เก่าของคนนี้ใช้ไม่ได้อีก
+        await billing_query.fail_pending_transactions(user["email"])
+        txn = await billing_query.insert_pending_transaction(user["email"], amount)
 
     return CheckoutSessionResponse(checkout_id=txn["id"], tier="pro", amount=PLANS["pro"]["price"])
 
@@ -136,7 +145,9 @@ async def cancel_subscription(user=Depends(get_current_user)):
         fail(400, "not_pro", "ร้านนี้ไม่ได้ใช้แพ็กเกจ Pro อยู่")
 
     async with database.transaction():
+        await billing_query.get_user_role_for_update(user["email"])
         await billing_query.cancel_active(user["email"])
+        await billing_query.fail_pending_transactions(user["email"])
         await billing_query.update_user_role(user["email"], "free")
 
     return SubscriptionResponse(tier="free", status="cancelled")
