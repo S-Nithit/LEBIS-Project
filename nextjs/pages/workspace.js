@@ -272,6 +272,15 @@ function ItemForm({ item, onSaved, onCancel }) {
         return;
       }
 
+      // ลดจำนวนทั้งหมดต่ำกว่าที่ถูกยืมอยู่ — ผิดที่ช่อง "จำนวนทั้งหมด" โดยตรงเหมือนรหัสซ้ำ
+      // backend ไม่ได้ส่ง field มา เพราะเป็น 409 จากกติกาของร้าน ไม่ใช่ 422 จากการตรวจรูปแบบ
+      // จึงต้องจับจากรหัสเอง ไม่งั้นข้อความไปขึ้นในกล่องรวมข้างปุ่ม ห่างจากช่องที่ต้องแก้
+      if (error.code === "item_total_below_borrowed") {
+        setErrors({ total: t("error.item_total_below_borrowed") });
+        document.getElementById("total")?.focus();
+        return;
+      }
+
       // backend บอกมาว่าผิดช่องไหน (เช่นจำนวน 10000 เกินเพดาน) — ทำเครื่องหมายที่ช่องนั้นจริงๆ
       // ไม่งั้นกล่องรวมจะบอกให้ "ตรวจช่องที่ทำเครื่องหมาย" ทั้งที่ไม่มีช่องไหนถูกทำเครื่องหมาย
       const target = ITEM_FIELD_ERRORS[error.field];
@@ -1150,9 +1159,12 @@ export default function Workspace() {
             {borrowsLoading ? (
               <LoadingState rows={5} />
             ) : borrows.length === 0 ? (
+              /* "ร้านยังไม่มีอุปกรณ์เลย" ต้องดูจาก summary.item_rows ซึ่งนับของทั้งร้าน
+                 ไม่ใช่ itemsTotal ซึ่งเป็นผลของตัวกรองในแท็บอุปกรณ์ — คำค้นที่ค้างอยู่ทำให้เป็น 0 ได้
+                 ทั้งที่ร้านมีของ แล้วแท็บนี้จะบอกผิดว่ายังไม่มีอุปกรณ์ */
               <EmptyState
-                title={itemsTotal === 0 ? t("borrow.noItemTitle") : t("borrow.emptyTitle")}
-                description={itemsTotal === 0 ? t("borrow.noItemBody") : t("borrow.emptyBody")}
+                title={summary?.item_rows === 0 ? t("borrow.noItemTitle") : t("borrow.emptyTitle")}
+                description={summary?.item_rows === 0 ? t("borrow.noItemBody") : t("borrow.emptyBody")}
                 action={
                   <Button variant="secondary" onClick={() => setTab("items")}>
                     {t("workspace.tabItems")}
