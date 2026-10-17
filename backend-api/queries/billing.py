@@ -56,6 +56,16 @@ async def get_pending_transaction_for_update(transaction_id: int, user_email: st
         {"id": transaction_id, "user_email": user_email},
     )
 
+async def fail_pending_transactions(user_email: str):
+    """เปลี่ยนใบจ่ายเงินที่ค้าง pending ของ user เป็น failed — ใบเก่ายืนยันไม่ได้อีก"""
+    return await database.execute(
+        """
+        UPDATE transactions SET status = 'failed'
+        WHERE user_email = :user_email AND status = 'pending'
+        """,
+        {"user_email": user_email},
+    )
+
 async def get_user_role_for_update(user_email: str):
     """อ่าน role พร้อมล็อกแถว user จนจบทรานแซกชัน — ให้ confirm ของคนเดียวกันเข้าคิวทีละใบ"""
     return await database.fetch_val(
