@@ -1,0 +1,15 @@
+{
+  "_comment": "ข้อมูลหน้าปกรายงาน — ช่องที่ว่างอยู่ต้องกรอกก่อนรัน --final ไม่งั้นสคริปต์จะไม่ยอมสร้างฉบับจริง",
+  "institution": "KING MONGKUT'S INSTITUTE OF TECHNOLOGY LADKRABANG",
+  "school": "SCHOOL OF ENGINEERING",
+  "course_code": "",
+  "course_name": "Data Structures and Algorithms",
+  "report_title": "Project Report: LEBIS — Algorithms for an Equipment Rental System",
+  "instructor": "Dr. Anakkapon Saenthon",
+  "members": [
+    { "name": "NITHIT SRISENGSUWANCHAI", "id": "68011411" },
+    { "name": "INTUCH SRISAWAT", "id": "68011345" },
+    { "name": "ISSAREE AUSAVAPIROM", "id": "68011346" }
+  ],
+  "submitted": "18/10/2026"
+}
