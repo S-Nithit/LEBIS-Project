@@ -22,6 +22,19 @@ COLUMNS = (
 # อ่าน
 # ---------------------------------------------------------------------------
 
+async def lock_owner(owner_email: str):
+    """ล็อกแถว user ของร้านนี้จนจบทรานแซกชัน (FOR UPDATE) แล้วคืน role ปัจจุบัน
+
+    ใช้ก่อนนับเพดาน 50 ชิ้น — คำขอเพิ่มของของร้านเดียวกันที่มาพร้อมกันจะต่อคิวกันตรงนี้
+    ถ้าไม่ล็อก ทุกคำขอนับได้ 49 พร้อมกันแล้วเพิ่มได้หมด (READ COMMITTED ไม่กันให้)
+    ล็อกแถว users ไม่ใช่แถว items เพราะของชิ้นที่ 51 ยังไม่มีแถวให้ล็อก
+    """
+    return await database.fetch_val(
+        "SELECT role FROM users WHERE email = :owner_email FOR UPDATE",
+        {"owner_email": owner_email},
+    )
+
+
 async def count_by_owner(owner_email: str) -> int:
     """นับว่าร้านนี้มีอุปกรณ์กี่รายการ — ใช้เช็กเพดาน 50 ชิ้นของแพ็กเกจฟรี"""
     return await database.fetch_val(

@@ -68,7 +68,7 @@ together.
 
 | # | Case | Request | Expected | Why it holds |
 |---|---|---|---|---|
-| 1 | Free shop adds its 51st item | `POST /api/items` | **403** `item_limit_reached` | The count and the insert run in one transaction, so two tabs adding at the same time cannot both get through |
+| 1 | Free shop adds its 51st item | `POST /api/items` | **403** `item_limit_reached` | The shop's row in `users` is locked before counting, so requests sent at the same moment are handled one at a time and only one can take the 50th place. Counting and inserting in one transaction alone was not enough (Section 9.5, 16 Oct) |
 | 2 | Free shop requests a LINE link code | `POST /api/line/link-code` | **403** `tier_required` | `require_tier("pro")` |
 | 3 | Free shop sends a LINE test message | `POST /api/line/test` | **403** `tier_required` | `require_tier("pro")` |
 | 4 | Free shop sends a LINE summary | `POST /api/line/digest` | **403** `tier_required` | `require_tier("pro")` |
@@ -224,6 +224,8 @@ Pro, those cases can no longer be demonstrated.
 | 6 Oct | Integration | `check`, `build`, and `check:pages` three runs in a row after the Settings page was merged | All passed |
 | 15 Oct | Integration | `check-edge-cases.mjs` against the deployed system (run by Kim) | 14 of 14 checks passed |
 | 16 Oct | Unit | `datasets.py`, `search.py` and `sort_group.py` run directly | All 55 checks passed |
+| 16 Oct | Integration | A Free shop with 49 items sends 8 add requests at the same moment (local system, with a 0.3 s pause added between count and insert to make the timing reliable) | Before the fix: all 8 accepted, 57 items. After locking the shop's row: 1 accepted, 7 refused with 403, 50 items. Without the pause, 3 runs of 8 and 1 run of 20 requests also stayed at 50 |
+| 16 Oct | Integration | Workspace page at 390 px in Chromium, against the local system: editing two items in a row, panels scrolling into view, stale errors, deleting the last item of the last page, field errors, plan links, singular units in English, the broken-item button while saving | 13 of 13 checks passed |
 
 The edge-case script will be run again on 20 and 21 October (Section 9.4).
 

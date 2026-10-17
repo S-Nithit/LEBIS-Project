@@ -17,7 +17,8 @@
 //     ไม่ใช่ความผิดของช่องไหน -> กล่อง FormError ที่อยู่ติดปุ่มที่ผู้ใช้เพิ่งกด
 
 import Head from "next/head";
-import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/AppShell";
@@ -47,6 +48,32 @@ function fill(text, values) {
     text
   );
 }
+
+// คำนับตามจำนวน — ภาษาอังกฤษต้องแยก "1 unit" กับ "2 units" ส่วนภาษาไทยใช้คำเดียวกัน
+// คีย์เอกพจน์มีครบทั้งสองภาษา เพราะ translate() หาไม่เจอจะไปเอาภาษาไทยมาแทน
+// ส่งชื่อคีย์เต็มทั้งสองตัว ไม่ต่อสตริงเอา สคริปต์ตรวจคีย์ที่ไม่มีใครใช้จะได้มองเห็น
+function countWord(t, count, manyKey, oneKey) {
+  return Number(count) === 1 ? t(oneKey) : t(manyKey);
+}
+
+// ช่องที่ backend บอกว่าผิด (error.field) -> id ของ <input> และข้อความใต้ช่องนั้น
+// เขียนเป็นตารางแทน fieldToInputId() เพราะ id ในสองฟอร์มนี้เป็นแบบ daily_rate ตรงกับ backend
+// fieldToInputId() จะแปลงเป็น dailyRate ซึ่งไม่มีอยู่ในหน้านี้ ข้อความจะไปแปะช่องที่ไม่มีจริง
+const ITEM_FIELD_ERRORS = {
+  code: { id: "code", message: "validate.itemCode" },
+  name: { id: "name", message: "validate.itemName" },
+  category: { id: "category", message: "validate.itemCategory" },
+  total: { id: "total", message: "validate.itemTotal" },
+  daily_rate: { id: "daily_rate", message: "validate.itemRate" },
+};
+const BORROW_FIELD_ERRORS = {
+  customer_name: { id: "customer_name", message: "validate.customerName" },
+  due_date: { id: "due_date", message: "validate.dueDate" },
+};
+
+// เพดานเดียวกับ ItemCreate ใน backend-api/routes/items.py — ตรวจก่อนส่ง จะได้ไม่ต้องรอ 422
+const MAX_TOTAL = 9999;
+const MAX_DAILY_RATE = 999999;
 
 function formatDate(value, language) {
   if (!value) return "-";
@@ -175,6 +202,8 @@ function ItemForm({ item, onSaved, onCancel }) {
   // ขึ้นในกล่องที่อยู่ติดปุ่มบันทึก ไม่ใช่ toast (docs/brand.md หัวข้อ 6)
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
+  // ครบเพดานแพ็กเกจฟรี — กดลองใหม่กี่ครั้งก็ไม่ผ่าน ทางเดียวที่ไปต่อได้คือหน้าแพ็กเกจ
+  const [limitReached, setLimitReached] = useState(false);
 
   function change(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -188,10 +217,14 @@ function ItemForm({ item, onSaved, onCancel }) {
     if (!form.category.trim()) found.category = t("validate.itemCategory");
 
     const total = Number(form.total);
-    if (!Number.isInteger(total) || total < 1) found.total = t("validate.itemTotal");
+    if (!Number.isInteger(total) || total < 1 || total > MAX_TOTAL) {
+      found.total = t("validate.itemTotal");
+    }
 
     const rate = Number(form.daily_rate);
-    if (Number.isNaN(rate) || rate < 0) found.daily_rate = t("validate.itemRate");
+    if (Number.isNaN(rate) || rate < 0 || rate > MAX_DAILY_RATE) {
+      found.daily_rate = t("validate.itemRate");
+    }
 
     return found;
   }
@@ -220,6 +253,7 @@ function ItemForm({ item, onSaved, onCancel }) {
 
     setSaving(true);
     setFormError("");
+    setLimitReached(false);
     try {
       if (editing) {
         await apiFetch(`/api/items/${item.id}`, { method: "PUT", body });
@@ -238,8 +272,18 @@ function ItemForm({ item, onSaved, onCancel }) {
         return;
       }
 
+      // backend บอกมาว่าผิดช่องไหน (เช่นจำนวน 10000 เกินเพดาน) — ทำเครื่องหมายที่ช่องนั้นจริงๆ
+      // ไม่งั้นกล่องรวมจะบอกให้ "ตรวจช่องที่ทำเครื่องหมาย" ทั้งที่ไม่มีช่องไหนถูกทำเครื่องหมาย
+      const target = ITEM_FIELD_ERRORS[error.field];
+      if (target) {
+        setErrors({ [target.id]: t(target.message) });
+        document.getElementById(target.id)?.focus();
+        return;
+      }
+
       // 🔴 ต้องผ่าน errorMessage เสมอ ห้ามเอา error.message มาโชว์ตรงๆ
       setFormError(errorMessage(error, t));
+      setLimitReached(error.code === "item_limit_reached");
     } finally {
       setSaving(false);
     }
@@ -287,6 +331,7 @@ function ItemForm({ item, onSaved, onCancel }) {
               error={errors.total}
               type="number"
               min="1"
+              max={MAX_TOTAL}
               value={form.total}
               onChange={(event) => change("total", event.target.value)}
             />
@@ -297,6 +342,7 @@ function ItemForm({ item, onSaved, onCancel }) {
               error={errors.daily_rate}
               type="number"
               min="0"
+              max={MAX_DAILY_RATE}
               step="0.01"
               value={form.daily_rate}
               onChange={(event) => change("daily_rate", event.target.value)}
@@ -306,6 +352,14 @@ function ItemForm({ item, onSaved, onCancel }) {
           {/* กล่องนี้ต้องอยู่ติดปุ่มบันทึก เพราะบนมือถือฟอร์มนี้ยาวเกินหนึ่งจอ
               ถ้าไปอยู่บนสุด ผู้ใช้ที่กดปุ่มล่างสุดจะไม่เห็นว่าเกิดอะไรขึ้น */}
           <FormError message={formError} onRetry={handleSubmit} retrying={saving} />
+          {limitReached ? (
+            <Link
+              href="/pricing"
+              className="inline-flex min-h-[44px] items-center font-medium text-ink underline underline-offset-4 hover:no-underline"
+            >
+              {t("item.seePlans")}
+            </Link>
+          ) : null}
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button type="submit" disabled={saving}>
@@ -369,6 +423,19 @@ function BorrowForm({ item, onSaved, onCancel }) {
       toast.success(t("borrow.created"));
       onSaved();
     } catch (error) {
+      // วันคืนเป็นอดีตตามเวลาของ server (เช่นเปิดฟอร์มค้างข้ามเที่ยงคืน) — ผิดที่ช่องวันคืน
+      if (error.code === "due_date_past") {
+        setErrors({ due_date: t("validate.dueDatePast") });
+        document.getElementById("due_date")?.focus();
+        return;
+      }
+      const target = BORROW_FIELD_ERRORS[error.field];
+      if (target) {
+        setErrors({ [target.id]: t(target.message) });
+        document.getElementById(target.id)?.focus();
+        return;
+      }
+
       // เคสที่เจอบ่อยสุดคือของถูกยืมไปหมดแล้วระหว่างที่ฟอร์มนี้เปิดค้างอยู่
       // ซึ่งไม่ใช่ความผิดของช่องไหนเลย จึงขึ้นเป็นกล่องรวมข้างปุ่ม
       setFormError(errorMessage(error, t));
@@ -470,6 +537,10 @@ export default function Workspace() {
   const [panel, setPanel] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
+  // แผงอยู่บนสุดของหน้า แต่ปุ่มที่เปิดแผงอยู่ในแถวที่อาจเลื่อนลงไปไกล — ใช้เลื่อนจอกลับมาหาแผง
+  const panelAreaRef = useRef(null);
+  // อุปกรณ์ที่กำลังสลับสถานะชำรุดอยู่ กันกดรัวจนยิงคำขอซ้อนกัน
+  const [togglingId, setTogglingId] = useState(null);
 
   // ข้อผิดพลาดระดับหน้า — โหลดตารางไม่ขึ้น หรือสลับสถานะชำรุดไม่สำเร็จ
   // ขึ้นเป็นกล่องเหนือตาราง ไม่ใช่ toast (docs/brand.md หัวข้อ 6)
@@ -505,6 +576,7 @@ export default function Workspace() {
 
   const loadItems = useCallback(async () => {
     setItemsLoading(true);
+    let movingPage = false;
     try {
       const params = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
       if (keyword) params.set("q", keyword);
@@ -512,13 +584,23 @@ export default function Workspace() {
       if (statusFilter) params.set("status", statusFilter);
 
       const data = await apiFetch(`/api/items?${params.toString()}`);
+
+      // หน้านี้ว่างแต่ร้านยังมีของ — เช่นเพิ่งลบชิ้นสุดท้ายของหน้าสุดท้าย
+      // ถ้าโชว์ไปตรงๆ จะขึ้น "ยังไม่มีอุปกรณ์" และปุ่มเปลี่ยนหน้าหาย ผู้ใช้กลับไปหน้าก่อนไม่ได้
+      // จึงถอยไปหน้าสุดท้ายที่ยังมีของ แล้วปล่อยให้ effect โหลดหน้านั้นต่อ (ยังไม่ปิดสถานะโหลด)
+      if (data.items.length === 0 && data.total > 0 && page > 1) {
+        movingPage = true;
+        setPage(Math.ceil(data.total / PAGE_SIZE));
+        return;
+      }
+
       setItems(data.items);
       setItemsTotal(data.total);
       setPageError("");
     } catch (error) {
       setPageError(errorMessage(error, t));
     } finally {
-      setItemsLoading(false);
+      if (!movingPage) setItemsLoading(false);
     }
   }, [keyword, category, statusFilter, page, t]);
 
@@ -553,6 +635,33 @@ export default function Workspace() {
     loadSummary();
     loadCategories();
   }, [user, loadSummary, loadCategories]);
+
+  // เปิดได้ทีละอย่าง — ฟอร์มหรือแผงยืนยัน ไม่ซ้อนกันบนหัวตาราง
+  // ล้าง confirmError ทุกครั้งที่เปิด ไม่งั้นแผงของรายการใหม่จะโชว์ข้อผิดพลาดของรายการก่อน
+  function openPanel(next) {
+    setConfirm(null);
+    setConfirmError("");
+    setPanel(next);
+  }
+
+  function openConfirm(next) {
+    setPanel(null);
+    setConfirmError("");
+    setConfirm(next);
+  }
+
+  // บนมือถือ ปุ่มปล่อยเช่า/แก้ไข/ลบ/รับคืน อยู่ในการ์ดที่เลื่อนลงไปไกล แต่แผงเปิดที่หัวตาราง
+  // ถ้าไม่เลื่อนจอตามไป ผู้ใช้จะไม่เห็นว่ามีอะไรเปิดขึ้น แล้วนึกว่ากดไม่ติด
+  // โฟกัสช่องแรกให้ด้วย — แผงยืนยันได้ปุ่มยกเลิก (ปุ่มแรก) ไม่ใช่ปุ่มลบ กด Enter พลาดจะได้ไม่ลบของ
+  useEffect(() => {
+    if (!panel && !confirm) return;
+    const area = panelAreaRef.current;
+    if (!area) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    area.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    area.querySelector("input, select, textarea, button")?.focus({ preventScroll: true });
+  }, [panel, confirm]);
 
   // เรียกหลังทุกครั้งที่ข้อมูลเปลี่ยน เพราะตัวเลขบนแถบสถานะต้องตรงกับตารางเสมอ
   async function refreshAll() {
@@ -593,7 +702,11 @@ export default function Workspace() {
   }
 
   // สลับของชำรุด / กลับมาให้เช่าได้ — ส่งแค่ช่อง status ช่องเดียว
+  // ปุ่มกดไม่ได้จนกว่าตารางจะโหลดใหม่เสร็จ ไม่งั้นกดรัวแล้วคำขอที่สองส่งค่าเดิมซ้ำ
+  // (ป้ายบนปุ่มยังเป็นค่าเก่าอยู่) และ toast "บันทึกแล้ว" ขึ้นซ้อนกันหลายอัน
   async function toggleBroken(item) {
+    if (togglingId) return;
+    setTogglingId(item.id);
     setPageError("");
     try {
       await apiFetch(`/api/items/${item.id}`, {
@@ -604,7 +717,14 @@ export default function Workspace() {
       await refreshAll();
     } catch (error) {
       setPageError(errorMessage(error, t));
+    } finally {
+      setTogglingId(null);
     }
+  }
+
+  function brokenLabel(item) {
+    if (togglingId === item.id) return t("item.saving");
+    return item.status === "broken" ? t("item.markOk") : t("item.markBroken");
   }
 
   function clearFilters() {
@@ -631,7 +751,7 @@ export default function Workspace() {
           title={t("workspace.title")}
           description={t("workspace.subtitle")}
           action={
-            <Button onClick={() => setPanel({ mode: "new" })}>{t("item.add")}</Button>
+            <Button onClick={() => openPanel({ mode: "new" })}>{t("item.add")}</Button>
           }
         />
 
@@ -640,19 +760,19 @@ export default function Workspace() {
           <StatCard
             label={t("workspace.statAvailable")}
             value={summary?.available_units}
-            unit={t("workspace.unit")}
+            unit={countWord(t, summary?.available_units, "workspace.unit", "workspace.unitOne")}
             loading={!summary}
           />
           <StatCard
             label={t("workspace.statBorrowed")}
             value={summary?.borrowed_units}
-            unit={t("workspace.unit")}
+            unit={countWord(t, summary?.borrowed_units, "workspace.unit", "workspace.unitOne")}
             loading={!summary}
           />
           <StatCard
             label={t("workspace.statOverdue")}
             value={summary?.overdue_borrows}
-            unit={t("workspace.unitBorrow")}
+            unit={countWord(t, summary?.overdue_borrows, "workspace.unitBorrow", "workspace.unitBorrowOne")}
             loading={!summary}
           />
         </div>
@@ -664,12 +784,20 @@ export default function Workspace() {
             ซึ่งเป็นเรื่องของ server ถ้าหน้าเว็บเดาเอง วันที่กติกาเปลี่ยนจะมีสองที่ที่ต้องแก้
             แล้ววันหนึ่งจะแก้ไม่ครบ ผู้ใช้ Pro จะเห็นแถบเตือนเพดานทั้งที่ไม่มีเพดาน */}
         {summary?.item_limit && summary.item_rows >= summary.item_limit * 0.8 ? (
-          <p className="t-caption mb-4">
-            {fill(t("item.limitBanner"), {
-              limit: summary.item_limit,
-              count: summary.item_rows,
-            })}
-          </p>
+          <div className="mb-4">
+            <p className="t-caption">
+              {fill(t("item.limitBanner"), {
+                limit: summary.item_limit,
+                count: summary.item_rows,
+              })}
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-flex min-h-[44px] items-center font-medium text-ink underline underline-offset-4 hover:no-underline"
+            >
+              {t("item.seePlans")}
+            </Link>
+          </div>
         ) : null}
 
         {/* ปุ่มสลับแท็บ */}
@@ -690,49 +818,65 @@ export default function Workspace() {
           </Button>
         </div>
 
-        {/* แผงฟอร์ม — เปิดได้ทีละหนึ่ง */}
-        {panel?.mode === "new" ? (
-          <ItemForm onSaved={refreshAll} onCancel={() => setPanel(null)} />
-        ) : null}
+        {/* แผงฟอร์มและแผงยืนยัน — เปิดได้ทีละหนึ่ง (openPanel / openConfirm)
+            scroll-mt-20 เว้นที่ให้แถบหัวเว็บที่ลอยอยู่ (สูง h-16) ไม่ให้บังหัวแผงตอนเลื่อนมาหา */}
+        <div ref={panelAreaRef} className="scroll-mt-20">
+          {panel?.mode === "new" ? (
+            <ItemForm onSaved={refreshAll} onCancel={() => setPanel(null)} />
+          ) : null}
 
-        {panel?.mode === "edit" ? (
-          <ItemForm item={panel.item} onSaved={refreshAll} onCancel={() => setPanel(null)} />
-        ) : null}
+          {/* key = id ของอุปกรณ์ — กด "แก้ไข" ของ A แล้วกดของ B ต่อทันที React จะเห็นเป็นฟอร์มตัวเดิม
+              แล้วเก็บค่าในช่องของ A ไว้ (useState อ่านค่าตั้งต้นแค่ตอนสร้างครั้งแรก)
+              กดบันทึกจึงเอาค่าของ A ไปเขียนทับ B ใส่ key ให้ต่างกัน ฟอร์มจะถูกสร้างใหม่ทุกครั้ง */}
+          {panel?.mode === "edit" ? (
+            <ItemForm
+              key={`edit-${panel.item.id}`}
+              item={panel.item}
+              onSaved={refreshAll}
+              onCancel={() => setPanel(null)}
+            />
+          ) : null}
 
-        {panel?.mode === "borrow" ? (
-          <BorrowForm item={panel.item} onSaved={refreshAll} onCancel={() => setPanel(null)} />
-        ) : null}
+          {panel?.mode === "borrow" ? (
+            <BorrowForm
+              key={`borrow-${panel.item.id}`}
+              item={panel.item}
+              onSaved={refreshAll}
+              onCancel={() => setPanel(null)}
+            />
+          ) : null}
 
-        {confirm?.kind === "delete" ? (
-          <ConfirmPanel
-            message={fill(t("item.confirmDelete"), { name: confirm.item.name })}
-            confirmLabel={t("item.delete")}
-            busy={busy}
-            error={confirmError}
-            onConfirm={() => handleDelete(confirm.item)}
-            onCancel={() => {
-              setConfirm(null);
-              setConfirmError("");
-            }}
-          />
-        ) : null}
+          {confirm?.kind === "delete" ? (
+            <ConfirmPanel
+              message={fill(t("item.confirmDelete"), { name: confirm.item.name })}
+              confirmLabel={t("item.delete")}
+              busy={busy}
+              error={confirmError}
+              onConfirm={() => handleDelete(confirm.item)}
+              onCancel={() => {
+                setConfirm(null);
+                setConfirmError("");
+              }}
+            />
+          ) : null}
 
-        {confirm?.kind === "return" ? (
-          <ConfirmPanel
-            message={fill(t("borrow.confirmReturn"), {
-              name: confirm.borrow.item_name,
-              customer: confirm.borrow.customer_name,
-            })}
-            confirmLabel={t("borrow.return")}
-            busy={busy}
-            error={confirmError}
-            onConfirm={() => handleReturn(confirm.borrow)}
-            onCancel={() => {
-              setConfirm(null);
-              setConfirmError("");
-            }}
-          />
-        ) : null}
+          {confirm?.kind === "return" ? (
+            <ConfirmPanel
+              message={fill(t("borrow.confirmReturn"), {
+                name: confirm.borrow.item_name,
+                customer: confirm.borrow.customer_name,
+              })}
+              confirmLabel={t("borrow.return")}
+              busy={busy}
+              error={confirmError}
+              onConfirm={() => handleReturn(confirm.borrow)}
+              onCancel={() => {
+                setConfirm(null);
+                setConfirmError("");
+              }}
+            />
+          ) : null}
+        </div>
 
         {/* โหลดตารางไม่ขึ้น หรือสลับสถานะชำรุดไม่สำเร็จ — ขึ้นเหนือตารางพร้อมปุ่มลองใหม่
             ไม่ใช่ toast เพราะผู้ใช้ต้องอ่านทันว่าตัวเลขบนแถบสถานะที่เห็นอยู่ยังเชื่อได้ไหม */}
@@ -816,7 +960,7 @@ export default function Workspace() {
                       {t("workspace.clearFilter")}
                     </Button>
                   ) : (
-                    <Button onClick={() => setPanel({ mode: "new" })}>{t("item.add")}</Button>
+                    <Button onClick={() => openPanel({ mode: "new" })}>{t("item.add")}</Button>
                   )
                 }
               />
@@ -854,7 +998,7 @@ export default function Workspace() {
                         <div className="flex flex-wrap gap-2">
                           <Button
                             size="sm"
-                            onClick={() => setPanel({ mode: "borrow", item })}
+                            onClick={() => openPanel({ mode: "borrow", item })}
                             disabled={item.available <= 0 || item.status === "broken"}
                           >
                             {t("borrow.open")}
@@ -862,17 +1006,23 @@ export default function Workspace() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setPanel({ mode: "edit", item })}
+                            onClick={() => openPanel({ mode: "edit", item })}
                           >
                             {t("item.edit")}
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => toggleBroken(item)}>
-                            {item.status === "broken" ? t("item.markOk") : t("item.markBroken")}
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setConfirm({ kind: "delete", item })}
+                            onClick={() => toggleBroken(item)}
+                            disabled={togglingId === item.id}
+                            aria-busy={togglingId === item.id}
+                          >
+                            {brokenLabel(item)}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openConfirm({ kind: "delete", item })}
                           >
                             {t("item.delete")}
                           </Button>
@@ -911,7 +1061,7 @@ export default function Workspace() {
                               <div className="flex flex-wrap gap-2">
                                 <Button
                                   size="sm"
-                                  onClick={() => setPanel({ mode: "borrow", item })}
+                                  onClick={() => openPanel({ mode: "borrow", item })}
                                   disabled={item.available <= 0 || item.status === "broken"}
                                 >
                                   {t("borrow.open")}
@@ -919,7 +1069,7 @@ export default function Workspace() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setPanel({ mode: "edit", item })}
+                                  onClick={() => openPanel({ mode: "edit", item })}
                                 >
                                   {t("item.edit")}
                                 </Button>
@@ -927,13 +1077,15 @@ export default function Workspace() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => toggleBroken(item)}
+                                  disabled={togglingId === item.id}
+                                  aria-busy={togglingId === item.id}
                                 >
-                                  {item.status === "broken" ? t("item.markOk") : t("item.markBroken")}
+                                  {brokenLabel(item)}
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setConfirm({ kind: "delete", item })}
+                                  onClick={() => openConfirm({ kind: "delete", item })}
                                 >
                                   {t("item.delete")}
                                 </Button>
@@ -1043,12 +1195,12 @@ export default function Workspace() {
                           {formatMoney(borrow.estimated_price)}
                           <span className="t-caption">
                             {" "}
-                            · {fill(t("borrow.dayCount"), { days: borrow.days })}
+                            · {fill(countWord(t, borrow.days, "borrow.dayCount", "borrow.dayCountOne"), { days: borrow.days })}
                           </span>
                         </CardRow>
 
                         {borrow.returned_at ? null : (
-                          <Button size="sm" onClick={() => setConfirm({ kind: "return", borrow })}>
+                          <Button size="sm" onClick={() => openConfirm({ kind: "return", borrow })}>
                             {t("borrow.return")}
                           </Button>
                         )}
@@ -1088,7 +1240,7 @@ export default function Workspace() {
                               {formatMoney(borrow.estimated_price)}
                               <span className="t-caption">
                                 {" "}
-                                · {fill(t("borrow.dayCount"), { days: borrow.days })}
+                                · {fill(countWord(t, borrow.days, "borrow.dayCount", "borrow.dayCountOne"), { days: borrow.days })}
                               </span>
                             </td>
                             <td className="p-4">{borrowStatusBadge(borrow.status, t)}</td>
@@ -1096,7 +1248,7 @@ export default function Workspace() {
                               {borrow.returned_at ? null : (
                                 <Button
                                   size="sm"
-                                  onClick={() => setConfirm({ kind: "return", borrow })}
+                                  onClick={() => openConfirm({ kind: "return", borrow })}
                                 >
                                   {t("borrow.return")}
                                 </Button>
