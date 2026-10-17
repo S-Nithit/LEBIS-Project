@@ -63,11 +63,11 @@ export default function LandingPage() {
 
             <LanguageToggle />
 
-            <Button asChild variant="ghost" className="hidden sm:inline-flex min-h-[44px] px-3 text-label">
+            <Button asChild variant="ghost" className="min-h-[44px] px-2 sm:px-3 text-label whitespace-nowrap">
               <Link href="/login">{t("landing.nav.login")}</Link>
             </Button>
 
-            <Button asChild className="min-h-[44px] px-3 sm:px-4 text-label whitespace-nowrap">
+            <Button asChild className="hidden sm:inline-flex min-h-[44px] px-3 sm:px-4 text-label whitespace-nowrap">
               <Link href="/register">{t("landing.nav.getStarted")}</Link>
             </Button>
           </nav>

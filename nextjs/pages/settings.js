@@ -43,7 +43,7 @@ function formatDate(iso, language) {
 }
 
 // ===== ส่วนที่ 1: แจ้งเตือน LINE =====
-function LineSection({ t, onDeadToken }) {
+function LineSection({ t, onDeadToken, reloadKey }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [data, setData] = useState(null); // { linked, tier_ok, configured }
@@ -51,6 +51,8 @@ function LineSection({ t, onDeadToken }) {
   const [requestingCode, setRequestingCode] = useState(false);
   const [codeData, setCodeData] = useState(null); // { code, expires_at }
   const [codeError, setCodeError] = useState(null);
+  // รหัสหมดอายุแล้ว (เกิน 10 นาที) — โชว์ข้อความบอกตอนปุ่ม "ขอรหัส" กลับมา
+  const [codeExpired, setCodeExpired] = useState(false);
   const codeAbortRef = useRef(null);
   const codeSlow = useSlowRequest(requestingCode);
 
@@ -77,15 +79,37 @@ function LineSection({ t, onDeadToken }) {
     }
   }
 
+  // โหลดตอนเปิดหน้า และโหลดใหม่ทุกครั้งที่ reloadKey เปลี่ยน
+  // (เช่นหลังยกเลิก Pro — สิทธิ์ LINE หายทันที กล่องนี้ต้องเปลี่ยนตาม ไม่งั้นยังขึ้น "ผูกแล้ว")
   useEffect(() => {
+    setCodeData(null);
     load();
-    // ตั้งใจให้ทำครั้งเดียวตอน mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadKey]);
+
+  // รหัสผูก LINE มีอายุ 10 นาที (expires_at มาจาก API)
+  // หมดเวลาแล้วล้างรหัสทิ้ง ปุ่ม "ขอรหัส" จะกลับมาเอง ไม่ต้องรีเฟรชหน้า
+  useEffect(() => {
+    if (!codeData?.expires_at) return undefined;
+    const msLeft = new Date(codeData.expires_at).getTime() - Date.now();
+    const expire = () => {
+      setCodeData(null);
+      setCheckMessage("");
+      setCheckError(null);
+      setCodeExpired(true);
+    };
+    if (!(msLeft > 0)) {
+      expire();
+      return undefined;
+    }
+    const timer = setTimeout(expire, msLeft);
+    return () => clearTimeout(timer);
+  }, [codeData]);
 
   async function requestCode() {
     setRequestingCode(true);
     setCodeError(null);
+    setCodeExpired(false);
     codeAbortRef.current = new AbortController();
     try {
       const result = await apiFetch("/api/line/link-code", {
@@ -188,6 +212,11 @@ function LineSection({ t, onDeadToken }) {
               </>
             ) : !codeData ? (
               <>
+                {codeExpired ? (
+                  <p role="status" className="t-caption">
+                    {t("settings.line.codeExpired")}
+                  </p>
+                ) : null}
                 <p className="t-caption">{t("settings.line.howTo")}</p>
                 <Button onClick={requestCode} disabled={requestingCode}>
                   {requestingCode
@@ -383,6 +412,13 @@ function SubscriptionSection({ t, language, user, onDeadToken, onCancelled }) {
 export default function Settings() {
   const { user, loading, loadError, reload, logout } = useAuth({ redirectTo: "/login" });
   const { t, language } = useLanguage();
+  // เปลี่ยนค่านี้เพื่อสั่งให้กล่อง LINE โหลดสถานะใหม่
+  const [lineReloadKey, setLineReloadKey] = useState(0);
+
+  function handleCancelled() {
+    reload(); // แพ็กเกจบนแถบหัวเว็บเปลี่ยนตาม
+    setLineReloadKey((key) => key + 1); // กล่อง LINE เปลี่ยนเป็น "ต้องเป็น Pro"
+  }
 
   function handleDeadToken(error) {
     rememberSignOutReason(error.code);
@@ -418,8 +454,8 @@ export default function Settings() {
         <PageHeader title={t("settings.title")} description={t("settings.subtitle")} />
 
         <div className="flex max-w-3xl flex-col gap-5">
-          <LineSection t={t} onDeadToken={handleDeadToken} />
-          <SubscriptionSection t={t} language={language} user={user} onDeadToken={handleDeadToken} onCancelled={reload} />
+          <LineSection t={t} onDeadToken={handleDeadToken} reloadKey={lineReloadKey} />
+          <SubscriptionSection t={t} language={language} user={user} onDeadToken={handleDeadToken} onCancelled={handleCancelled} />
         </div>
       </AppShell>
     </>
