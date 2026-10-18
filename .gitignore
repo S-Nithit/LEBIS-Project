@@ -51,3 +51,6 @@ docs/design-document/build/
 
 # ฉบับร่างรายงานวิชา Data (สร้างใหม่ได้ทุกเมื่อด้วย scripts/build-data-report.mjs)
 docs/data-course/report/build/
+
+# ไฟล์ที่เตรียมส่งต่อให้เพื่อน / อาจารย์ (zip, PDF ส่งงาน) — ไม่เก็บในรีโป
+/_handoff/
