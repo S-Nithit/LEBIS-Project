@@ -6,7 +6,7 @@
 
 **Team members:** Nithit Srisengsuwanchai (Kim) · Intuch Srisawat (Neo) ·
 Issaree Ausavapirom (Kul) · Pongsicha Seesavat (Sea). Responsibilities are in
-Section 1.7.
+Section 1.8.
 
 ## 1.1 Objective
 
@@ -81,7 +81,43 @@ calls the API directly to add a 51st item, or to trigger a LINE reminder, receiv
   customer and decides how to follow up.
 - Multiple branches per shop and staff accounts under one shop.
 
-## 1.6 Technology
+## 1.6 Competitor comparison
+
+A small rental shop has two kinds of alternative to LEBIS: the free tools it already
+uses, and rental-management software built for larger businesses.
+
+| | Paper notebook | Excel / Google Sheets | Booqable | EZRentOut | **LEBIS** |
+|---|---|---|---|---|---|
+| Type | Manual | General spreadsheet | Rental software (international) | Rental software (international) | Rental software for small Thai shops |
+| Monthly cost | Free | Free | 35 per month, or 29 per month billed yearly; no free plan (14-day trial) | USD 59 per month for the entry plan; no free plan | **Free** up to 50 items · **Pro 299 THB** |
+| Shows what is on the shelf right now | No — someone checks the shelf | Only if every rental is typed in and the sheet is built for it | Yes | Yes | Yes — three live numbers on the Workspace page |
+| Reminds the shop before an item is due | No | No | Email templates for reminders | Not confirmed | **One LINE summary every morning** (Pro) |
+| Thai language | — | Yes | Not in the website's language list | Not confirmed | Thai and English |
+| Setup | None | The shop builds its own sheet | Store setup aimed at online booking | Order and asset setup for teams | Add items, then rent out |
+
+Prices were checked on 18 October 2026 and can change. Booqable's price comes from
+its own pricing page, which shows no currency symbol; third-party listings give the
+same figures in US dollars. EZRentOut's price comes from its Capterra listing, because
+the vendor's pricing page did not load its plan details when checked.
+
+**What the international tools do better.** Between them they offer online booking
+stores, payment processing, barcode labels and support for several locations. LEBIS
+does none of these (Section 1.5). They suit rental businesses with a website and a
+team.
+
+**Where LEBIS fits.** The target shop has one to three staff, works on a phone, and
+talks to its customers on LINE. The free tools cost nothing but cannot show live
+stock or warn the owner before a return is late. The international tools can, but
+charge a monthly fee from the first day with no free plan, and neither Booqable's
+pricing page nor EZRentOut's listing mentions LINE. LEBIS covers that gap: a free tier large enough to run the whole
+shop, live counts of what is out, and the reminder delivered in the app the owner
+already checks every morning.
+
+Sources (checked 18 October 2026):
+Booqable pricing — <https://booqable.com/pricing/> ·
+EZRentOut on Capterra — <https://www.capterra.com/p/134914/EZRentOut/pricing/>
+
+## 1.7 Technology
 
 The project extends the `acpapp` boilerplate provided by the course and keeps its
 stack unchanged.
@@ -101,7 +137,7 @@ folder, `backend-api/algorithms/`, and uses only the Python standard library so 
 also runs unchanged in Google Colab. The hash table in the same folder is measured
 in the course notebook and is not used by the web application (Section 4.1).
 
-## 1.7 Team members
+## 1.8 Team members
 
 | Member | Responsibility |
 |---|---|
